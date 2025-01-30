@@ -45,7 +45,7 @@
 
             <!-- Recaptcha -->
             <div class="mt-4">
-              <vue-recaptcha sitekey="your-site-key" @verify="onVerify"></vue-recaptcha>
+              <VueRecaptcha sitekey="your-site-key" @verify="onVerify"></VueRecaptcha>
             </div>
           </v-form>
         </v-card>
@@ -58,7 +58,7 @@
 import { VueRecaptcha } from 'vue-recaptcha-v3';
 
 export default {
-  name: 'HelloWorld',
+  name: 'LoginForm',
   components: {
     VueRecaptcha
   },
@@ -74,7 +74,16 @@ export default {
   methods: {
     login() {
       console.log('Usuario:', this.username, 'Contraseña:', this.password);
-      // Aquí puedes agregar la lógica para autenticar al usuario
+
+      // Validar si las credenciales son correctas
+      if (this.username === 'usuario' && this.password === 'contraseña') {
+        // Si las credenciales son correctas, redirige a la página principal
+        this.$router.push({ name: 'principal' }).catch(err => {
+        console.error('Error en la redirección:', err);
+        });
+      } else {
+        alert('Credenciales incorrectas');
+      }
     },
     recoverPassword() {
       console.log('Recuperación de contraseña solicitada');
