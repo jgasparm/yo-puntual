@@ -1,16 +1,12 @@
 <template>
-  <img alt="Vue logo" src="/logo.png">
-  <LoginPage msg="Bienvenido"/>
+  <v-app>
+    <router-view />
+  </v-app>
 </template>
 
 <script>
-import LoginPage from './components/Login.vue'
-
 export default {
-  name: 'App',
-  components: {
-    LoginPage
-  }
+  name: 'App'
 }
 </script>
 

@@ -10,15 +10,28 @@ const routes = [
     component: Login
   },
   {
-    path: '/',
+    path: '/principal',
     name: 'principal',
-    component: Principal
+    component: Principal,
+    meta: { requiresAuth: true }  // Se marca esta ruta como protegida
   }
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+//  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes
+});
+
+// Guardia de navegación para proteger rutas
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem('auth') === 'true';
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/'); // Redirige a login si no está autenticado
+  } else {
+    next(); // Permite el acceso a la ruta
+  }
 });
 
 export default router;

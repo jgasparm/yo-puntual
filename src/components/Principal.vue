@@ -17,7 +17,7 @@
     </header>
 
     <!-- Imagen de Bienvenida -->
-    <v-img src="./center-image.png" height="200px" class="mb-4"></v-img>
+    <v-img src="./logo.png" height="200px" class="mb-4"></v-img>
     
     <!-- Saludo Personalizado -->
     <div class="welcome-message">
@@ -79,9 +79,12 @@ export default {
   methods: {
     logout() {
       // Lógica para cerrar sesión
+      localStorage.removeItem('auth'); // Eliminar el estado de autenticación
+      this.$router.push('/'); // Redirigir al login
     },
     goToProfile() {
       // Lógica para ir a la configuración de perfil
+      console.log('Ir al perfil');
     }
   }
 };

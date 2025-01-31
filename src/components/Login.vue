@@ -76,9 +76,12 @@ export default {
       console.log('Usuario:', this.username, 'Contraseña:', this.password);
 
       // Validar si las credenciales son correctas
-      if (this.username === 'usuario' && this.password === 'contraseña') {
+      if (this.username === 'a' && this.password === 'a') {
+        // Guardar estado de autenticación en LocalStorage
+        localStorage.setItem('auth', 'true');
         // Si las credenciales son correctas, redirige a la página principal
-        this.$router.push({ name: 'principal' }).catch(err => {
+        this.$router.push('/principal')
+        .catch(err => {
         console.error('Error en la redirección:', err);
         });
       } else {
