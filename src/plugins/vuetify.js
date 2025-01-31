@@ -2,10 +2,14 @@ import 'vuetify/styles';
 import { createVuetify } from 'vuetify';
 import * as components from 'vuetify/components'; // Agregar esta línea
 import * as directives from 'vuetify/directives'; // Agregar esta línea
+import '@mdi/font/css/materialdesignicons.css' // Importa los iconos
 
 const vuetify = createVuetify({
   components,
   directives,
+  icons: {
+    defaultSet: 'mdi', // Asegura que los iconos sean de MDI
+  },
 });
 
 export default vuetify;

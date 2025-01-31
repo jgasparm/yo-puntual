@@ -58,6 +58,20 @@
     <footer>
       <p>Contacto: contacto@centroeducativo.com</p>
       <p>Siguenos en nuestras redes sociales</p>
+      <v-btn icon href="https://www.facebook.com" target="_blank">
+        <v-icon>mdi-facebook</v-icon>
+      </v-btn>
+      <v-btn icon href="https://www.twitter.com" target="_blank">
+        <v-icon>mdi-twitter</v-icon>
+      </v-btn>
+
+      <v-btn icon href="https://www.instagram.com" target="_blank">
+        <v-icon>mdi-instagram</v-icon>
+      </v-btn>
+
+      <v-btn icon href="https://www.linkedin.com" target="_blank">
+        <v-icon>mdi-linkedin</v-icon>
+      </v-btn>
     </footer>
   </div>
 </template>
@@ -110,5 +124,14 @@ footer {
   padding: 10px;
   background-color: #f4f4f9;
   margin-top: 40px;
+}
+
+footer v-btn {
+  margin: 5px;
+  color: #2c3e50; /* Color oscuro por defecto */
+}
+
+footer v-btn:hover {
+  color: #1976D2; /* Azul de Vuetify al pasar el mouse */
 }
 </style>
