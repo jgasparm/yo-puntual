@@ -1,7 +1,8 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../components/Login.vue';
-import Principal from '../components/Principal.vue';
+import Principal from '../components/PaginaPrincipal.vue';
+import Inicio from '../components/PaginaInicio.vue';
 
 const routes = [
   {
@@ -14,7 +15,14 @@ const routes = [
     name: 'principal',
     component: Principal,
     meta: { requiresAuth: true }  // Se marca esta ruta como protegida
+  },
+  {
+    path: "/inicio",
+    name: "inicio",
+    component: Inicio,
+    meta: { requiresAuth: true }  // Se marca esta ruta como protegida
   }
+  
 ];
 
 const router = createRouter({
