@@ -11,8 +11,8 @@
           <v-form>
             <!-- Campo de Usuario -->
             <v-text-field
-              v-model="username"
-              label="Usuario"
+              v-model="document_number"
+              label="Número de documento"
               prepend-icon="mdi-account"
               required
               outlined
@@ -33,7 +33,7 @@
               color="primary"
               block
               @click="login"
-              :disabled="!username || !password"
+              :disabled="!document_number || !password"
             >
               Iniciar sesión
             </v-btn>
@@ -62,30 +62,46 @@ export default {
   components: {
     VueRecaptcha
   },
-  props: {
-    msg: String
-  },
   data() {
     return {
-      username: '',
-      password: ''
+      document_number: '',
+      password: '',
+      loading: false
     };
   },
   methods: {
-    login() {
-      console.log('Usuario:', this.username, 'Contraseña:', this.password);
+    async login() {
+      if (!this.document_number || !this.password) {
+        alert('Ingrese su número de documento y contraseña.');
+        return;
+      }
 
-      // Validar si las credenciales son correctas
-      if (this.username === 'a' && this.password === 'a') {
-        // Guardar estado de autenticación en LocalStorage
-        localStorage.setItem('auth', 'true');
-        // Si las credenciales son correctas, redirige a la página principal
-        this.$router.push('/principal')
-        .catch(err => {
-        console.error('Error en la redirección:', err);
-        });
-      } else {
-        alert('Credenciales incorrectas');
+      this.loading = true; // Activa el estado de carga
+
+      const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWeb.php?ai_tipo_documento=1&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const result = await response.json();
+
+        if (result.status && result.data.length > 0) {
+          const userData = result.data[0];
+
+          // Guardar datos del usuario en localStorage
+          localStorage.setItem('auth', 'true');
+          localStorage.setItem('token', userData.token);
+          localStorage.setItem('user', JSON.stringify(userData));
+
+          // Redirigir a la página principal
+          this.$router.push('/principal');
+        } else {
+          alert('Credenciales incorrectas');
+        }
+      } catch (error) {
+        console.error('Error en la solicitud:', error);
+        alert('Error al conectar con el servidor.');
+      } finally {
+        this.loading = false; // Desactiva el estado de carga
       }
     },
     recoverPassword() {
@@ -97,6 +113,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 h3 {

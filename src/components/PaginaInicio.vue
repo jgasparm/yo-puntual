@@ -1,4 +1,3 @@
-
 <template>
   <v-container>
     <!-- Banner Superior -->
@@ -9,7 +8,7 @@
       </h2>
       <v-carousel hide-delimiters cycle>
         <v-carousel-item v-for="(item, i) in bannerItems" :key="i">
-          <v-img :src="item.src" contain height="200"></v-img>
+          <v-img :src="item.src" contain height="auto" width="100%" class="banner-img"></v-img>
         </v-carousel-item>
       </v-carousel>
     </v-sheet>
@@ -17,7 +16,7 @@
     <!-- Sección de bienvenida -->
     <v-row class="my-4" align="center" justify="center">
       <v-col cols="12" md="8" class="text-center">
-        <v-img src="/welcome.png" max-height="120" contain class="mb-3"></v-img>
+        <v-img src="@/assets/welcome.png" max-height="120" contain class="mb-3"></v-img>
         <h3 class="text-h6">Bienvenido, <strong class="primary--text">Juan G.</strong></h3>
         <p>¡Bienvenido a tu Portal del Estudiante!</p>
       </v-col>
@@ -67,15 +66,15 @@ export default {
   data() {
     return {
       bannerItems: [
-        { src: '/banner1.jpg' },
-        { src: '/banner2.jpg' },
-        { src: '/banner3.jpg' }
+        { src: require('@/assets/images_inicio/lider_school_01.jpg') },
+        { src: require('@/assets/images_inicio/lider_school_02.jpg') },
+        { src: require('@/assets/images_inicio/lider_school_03.jpg') }
       ],
       accesosDirectos: [
-        { nombre: 'Matrícula en Línea', icon: '/matricula.png' },
-        { nombre: 'Aula virtual - Blackboard', icon: '/blackboard.png' },
-        { nombre: 'Explora UPC', icon: '/explora.png' },
-        { nombre: 'Mis Calendarios Académicos', icon: '/calendario.png' }
+        { nombre: 'Matrícula en Línea', icon: require('@/assets/images_inicio/lider_school_01.jpg') },
+        { nombre: 'Aula virtual - Blackboard', icon: require('@/assets/images_inicio/lider_school_01.jpg') },
+        { nombre: 'Explora UPC', icon: require('@/assets/images_inicio/lider_school_01.jpg') },
+        { nombre: 'Mis Calendarios Académicos', icon: require('@/assets/images_inicio/lider_school_01.jpg') }
       ]
     };
   }
@@ -85,5 +84,11 @@ export default {
 <style scoped>
 .text-h5 {
   font-weight: bold;
+}
+
+.banner-img {
+  object-fit: cover;
+  width: 100%;
+  height: auto;
 }
 </style>

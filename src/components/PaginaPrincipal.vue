@@ -2,28 +2,33 @@
   <v-app>
     <!-- Barra de navegación superior -->
     <v-app-bar app color="primary" dark>
-      <v-img src="/logo.png" max-height="40" max-width="40" class="mr-3"></v-img>
-      <v-toolbar-title>{{ centroEducativo.nombre }}</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-menu offset-y>
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn text v-bind="attrs" v-on="on">
-            <v-avatar class="mr-2" size="40">
-              <img :src="usuario.imagenPerfil" alt="Perfil" style="width: 100%; height: 100%; object-fit: cover;" />
-            </v-avatar>
-            {{ usuario.nombre }}
-            <v-icon>mdi-chevron-down</v-icon>
-          </v-btn>
-        </template>
-        <v-list>
-          <v-list-item @click="verPerfil">
-            <v-list-item-title>Ver perfil</v-list-item-title>
-          </v-list-item>
-          <v-list-item @click="cerrarSesion">
-            <v-list-item-title>Cerrar sesión</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+      <v-container class="d-flex align-center">
+        <v-img src="/logo.png" max-height="40" max-width="40" class="mr-3"></v-img>
+        <v-toolbar-title class="text-h5 font-weight-bold">{{ centroEducativo.nombre }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+
+        <!-- Menú desplegable -->
+         <v-menu v-model="menuVisible" offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn text v-bind="attrs" v-on="on">
+              <v-avatar class="mr-2" size="40">
+                <img :src="usuario.imagenPerfil" alt="Perfil" style="width: 100%; height: 100%; object-fit: cover;" />
+              </v-avatar>
+              {{ usuario.nombre }}
+              <v-icon>{{ menuVisible ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+            </v-btn>
+          </template>
+
+          <v-list>
+            <v-list-item @click="verPerfil">
+              <v-list-item-title>Ver perfil</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="cerrarSesion">
+              <v-list-item-title>Cerrar sesión</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-container>
     </v-app-bar>
 
     <!-- Contenido de la página -->
@@ -92,6 +97,7 @@ import Incidencias from "@/components/PaginaIncidencias.vue";
 export default {
   data() {
     return {
+      menuVisible: false, // Control del estado del menú desplegable
       centroEducativo: {
         nombre: "Colegio San Martín"
       },
@@ -140,5 +146,9 @@ export default {
 
 .v-navigation-drawer {
   border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.v-menu__content {
+  z-index: 9999 !important;  /* Forzamos que el menú se muestre por encima de otros elementos */
 }
 </style>
