@@ -4,17 +4,17 @@
     <v-app-bar app color="primary" dark>
       <v-container class="d-flex align-center">
         <v-img src="/logo.png" max-height="40" max-width="40" class="mr-3"></v-img>
-        <v-toolbar-title class="text-h5 font-weight-bold">{{ centroEducativo.nombre }}</v-toolbar-title>
+        <v-toolbar-title class="text-h5 font-weight-bold">{{ centroEducativo }}</v-toolbar-title>
         <v-spacer></v-spacer>
 
         <!-- Menú desplegable -->
-         <v-menu v-model="menuVisible" offset-y>
+        <v-menu v-model="menuVisible" offset-y>
           <template v-slot:activator="{ on, attrs }">
             <v-btn text v-bind="attrs" v-on="on">
               <v-avatar class="mr-2" size="40">
-                <img :src="usuario.imagenPerfil" alt="Perfil" style="width: 100%; height: 100%; object-fit: cover;" />
+                <img src="@/assets/images_perfil/10030796.jpg" alt="Perfil" style="width: 100%; height: 100%; object-fit: cover;" />
               </v-avatar>
-              {{ usuario.nombre }}
+              {{ usuarioNombre }}
               <v-icon>{{ menuVisible ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
             </v-btn>
           </template>
@@ -51,15 +51,15 @@
 
                   <v-list-item
                     v-for="modulo in modulos"
-                    :key="modulo.id"
+                    :key="modulo.modu_id"
                     @click="cambiarVista(modulo.ruta)"
                     link
                   >
                     <v-list-item-icon>
-                      <v-icon>{{ modulo.icono }}</v-icon>
+                      <v-icon>mdi-folder</v-icon> <!-- Se puede personalizar por módulo -->
                     </v-list-item-icon>
                     <v-list-item-content>
-                      <v-list-item-title>{{ modulo.nombre }}</v-list-item-title>
+                      <v-list-item-title>{{ modulo.modu_nombre }}</v-list-item-title>
                     </v-list-item-content>
                   </v-list-item>
                 </v-list-item-group>
@@ -86,7 +86,6 @@
 </template>
 
 <script>
-// Importamos los componentes de cada módulo
 import Inicio from "@/components/PaginaInicio.vue";
 import Asistencia from "@/components/PaginaAsistencia.vue";
 import Estudios from "@/components/PaginaEstudios.vue";
@@ -97,22 +96,19 @@ import Incidencias from "@/components/PaginaIncidencias.vue";
 export default {
   data() {
     return {
-      menuVisible: false, // Control del estado del menú desplegable
-      centroEducativo: {
-        nombre: "Colegio San Martín"
-      },
-      usuario: {
-        nombre: "Juan Pérez",
-        imagenPerfil: require("@/assets/images_perfil/10030796.jpg")
-      },
-      vistaActual: "Inicio", // Vista por defecto
-      modulos: [
-        { id: 1, nombre: "Mi asistencia", icono: "mdi-check", ruta: "Asistencia" },
-        { id: 2, nombre: "Mis estudios", icono: "mdi-book", ruta: "Estudios" },
-        { id: 3, nombre: "Mis trámites", icono: "mdi-file-document", ruta: "Tramites" },
-        { id: 4, nombre: "Mis finanzas", icono: "mdi-cash", ruta: "Finanzas" },
-        { id: 5, nombre: "Incidencias", icono: "mdi-alert", ruta: "Incidencias" }
-      ]
+      menuVisible: false,
+      usuarioNombre: "",
+      centroEducativo: "",
+      vistaActual: Inicio, // Se usa el componente, no una string
+      modulos: [],
+      componentes: {
+        inicio: Inicio,
+        'mi-asistencia': Asistencia,
+        'mis-estudios': Estudios,
+        'mis-tramites': Tramites,
+        'mis-finanzas': Finanzas,
+        'incidencias': Incidencias
+      }
     };
   },
   methods: {
@@ -121,11 +117,32 @@ export default {
     },
     cerrarSesion() {
       localStorage.removeItem("auth");
+      localStorage.removeItem("user");
       this.$router.push("/login");
     },
     cambiarVista(vista) {
-      this.vistaActual = vista;
+      if (this.componentes[vista]) {
+        this.vistaActual = this.componentes[vista]; // Asigna el componente real
+      } else {
+        //console(this.vistaActual);
+        //console(`a`);
+        console.warn(`Vista '${vista}' no encontrada`);
+      }
+    },
+    cargarDatosUsuario() {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (userData) {
+        this.usuarioNombre = `${userData.pers_nombres} ${userData.pers_apellidos}`;
+        this.centroEducativo = userData.cliente;
+        this.modulos = userData.modulos.map((modulo) => ({
+          ...modulo,
+          ruta: modulo.modu_nombre.toLowerCase().replace(/\s+/g, '-')
+        }));
+      }
     }
+  },
+  mounted() {
+    this.cargarDatosUsuario();
   },
   components: {
     Inicio,
@@ -149,6 +166,6 @@ export default {
 }
 
 .v-menu__content {
-  z-index: 9999 !important;  /* Forzamos que el menú se muestre por encima de otros elementos */
+  z-index: 9999 !important;
 }
 </style>
