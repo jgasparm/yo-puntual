@@ -43,7 +43,7 @@
               ¿Olvidaste tu contraseña?
             </v-btn>
 
-            <!-- Recaptcha -->
+            <!-- Recaptcha (si se requiere) -->
             <div class="mt-4">
               <VueRecaptcha sitekey="your-site-key" @verify="onVerify"></VueRecaptcha>
             </div>
@@ -66,7 +66,8 @@ export default {
     return {
       document_number: '',
       password: '',
-      loading: false
+      loading: false,
+      msg: 'Bienvenido'
     };
   },
   methods: {
@@ -92,6 +93,24 @@ export default {
           localStorage.setItem('token', userData.token);
           localStorage.setItem('user', JSON.stringify(userData));
 
+          // Llamar al servicio wsConsultaUsuarioPermisos con ai_perf_id obtenido del usuario
+          const submenuUrl = `https://amsoftsolution.com/amss/ws/wsConsultaUsuarioPermisos.php?ai_perf_id=${userData.id_perfil}`;
+          
+          // Llamar al servicio con el Bearer Token en los encabezados
+          const submenuResponse = await fetch(submenuUrl, {
+            method: "GET", // O el método requerido por el servicio
+            headers: {
+              "Authorization": `Bearer ${userData.token}`, // Incluir el Bearer Token
+              "Content-Type": "application/json", // Asegurar que el servidor reciba JSON
+            }
+          });
+          const submenuResult = await submenuResponse.json();
+          if (submenuResult.status) {
+            localStorage.setItem('submenus', JSON.stringify(submenuResult));
+          } else {
+            console.error("Error al obtener submenús:", submenuResult.message);
+          }
+
           // Redirigir a la página principal
           this.$router.push('/principal');
         } else {
@@ -113,7 +132,6 @@ export default {
   }
 };
 </script>
-
 
 <style scoped>
 h3 {
