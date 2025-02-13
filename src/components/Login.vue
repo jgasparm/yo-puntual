@@ -91,6 +91,7 @@ export default {
           // Guardar datos del usuario en localStorage
           localStorage.setItem('auth', 'true');
           localStorage.setItem('token', userData.token);
+          localStorage.setItem('profile', userData.profile);
           localStorage.setItem('user', JSON.stringify(userData));
 
           // Llamar al servicio wsConsultaUsuarioPermisos con ai_perf_id obtenido del usuario

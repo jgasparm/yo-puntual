@@ -45,8 +45,8 @@
                 <li
                   v-for="item in submenusGrouped[mod.modu_id] || []"
                   :key="item.permiso_id"
-                  @click.stop="mostrarVista(item.menu_opcion)"
-                  :class="{ selected: activeSubmenu === item.menu_opcion }"
+                  @click.stop="mostrarVista(item.menu_nombre)"
+                  :class="{ selected: activeSubmenu === item.menu_nombre }"
                 >
                   {{ item.menu_nombre }}
                 </li>
@@ -153,8 +153,23 @@ export default {
       this.$router.push("/");
     },
     mostrarVista(vista) {
-      this.vistaActual = vista;
-      this.activeSubmenu = vista;
+      console.log(`Vista: ${vista}`);
+      const vistasDisponibles = {
+        Inicio: "Inicio",
+        "Consulta de asistencias": "ConsultaAsistencia",
+        "Registro de asistencias": "RegistroAsistencia",
+        "Mis notas": "MisNotas",
+        "Mis cursos": "MisCursos"
+      };
+
+      // Verificar si la vista seleccionada existe en la lista
+      if (vistasDisponibles[vista]) {
+        this.vistaActual = vistasDisponibles[vista];
+        this.activeSubmenu = vista;
+      } else {
+        console.warn(`Vista no encontrada para: ${vista}`);
+      }
+
       if (vista === "Inicio") {
         this.activeMenu = "Inicio";
         this.openSubmenu = null;
@@ -202,10 +217,12 @@ export default {
       // Recupera los datos del servicio wsConsultaUsuarioPermisos desde localStorage.
       // Se asume que en el login se guardó la respuesta completa bajo la clave "submenus".
       const subData = JSON.parse(localStorage.getItem("submenus"));
+      console.log("Datos de submenus obtenidos:", subData); // Depuración
       if (subData && subData.data) {
         // Agrupa los submenús por modu_id.
         this.submenusGrouped = {};
         subData.data.forEach(item => {
+          console.log("Submenú procesado:", item); // Verificar estructura de datos
           // Se asume que cada objeto tiene la propiedad 'modu_id'
           const mid = item.modu_id;
           if (!this.submenusGrouped[mid]) {
