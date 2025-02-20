@@ -1,20 +1,9 @@
 <template>
   <v-container fluid>    
     <!-- Sección de bienvenida -->
-    <v-row class="my-4" align="start" justify="center">
-      <v-col cols="12" class="pa-0">
-        <v-img
-         :src="require('@/assets/images_inicio/banner_principal_demo.png')"
-         height="auto"
-         max-height="120"
-         contain
-         class="mx-auto w-100"
-        ></v-img>
-     </v-col>
-   </v-row>
-
     <v-row class="my-4" align="center" justify="center">
       <v-col cols="12">
+        <v-img src="@/assets/welcome.png" max-height="120" contain class="mb-3 mx-auto"></v-img>
         <h3 class="text-h6">Bienvenido, <strong class="primary--text">{{ formattedUserName }}</strong></h3>
         <p>¡Bienvenido a tu Portal del Estudiante!</p>
       </v-col>
@@ -72,7 +61,7 @@ export default {
       accesosDirectos: [
         { nombre: 'Matrícula en Línea', icon: require('@/assets/images_inicio/lider_school_01.jpg') },
         { nombre: 'Aula virtual - Blackboard', icon: require('@/assets/images_inicio/lider_school_01.jpg') },
-        { nombre: 'Explora', icon: require('@/assets/images_inicio/lider_school_01.jpg') },
+        { nombre: 'Explora UPC', icon: require('@/assets/images_inicio/lider_school_01.jpg') },
         { nombre: 'Mis Calendarios Académicos', icon: require('@/assets/images_inicio/lider_school_01.jpg') }
       ]
     };

@@ -105,12 +105,7 @@
             ¡Visita nuestra web y conoce más de nosotros! 
             <v-icon color="red">mdi-hand-pointing-right</v-icon>
           </h2>
-          <v-carousel
-            class="banner-carousel"
-            hide-delimiters
-            cycle
-            interval="5000"
-          >
+          <v-carousel hide-delimiters cycle>
             <v-carousel-item v-for="(item, i) in bannerItems" :key="i">
               <v-img :src="item.src" contain height="auto" width="100%" class="banner-img"></v-img>
             </v-carousel-item>
@@ -150,11 +145,9 @@ import ConsultaAsistenciaAlumnos from "@/components/Asistencia/PaginaConsultaAsi
 import ConsultaAsistenciaEmpleados from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleados.vue";
 import ConsultaAsistenciaAlumno from "@/components/Asistencia/PaginaConsultaAsistenciaAlumno.vue";
 import ConsultaAsistenciaEmpleado from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue";
-import CalendarioEscolar from "@/components/Estudios/PaginaCalendarioEscolar.vue";
 import MisNotas from "@/components/PaginaEstudios.vue";
 import MisCursos from "@/components/PaginaEstudios.vue";
 import DashboardAlumno from "@/components/Dashboard/PaginaDashboardAlumno.vue";
-
 
 
 // Para validar si venció el token
@@ -169,7 +162,6 @@ export default {
     ConsultaAsistenciaEmpleados,
     ConsultaAsistenciaAlumno,
     ConsultaAsistenciaEmpleado,
-    CalendarioEscolar,
     MisNotas,
     MisCursos,
     DashboardAlumno
@@ -276,7 +268,6 @@ export default {
         "Consulta de asistencia de empleados": "ConsultaAsistenciaEmpleados",
         "Consulta de asistencia del alumno": "ConsultaAsistenciaAlumno",
         "Consulta de asistencia de empleado": "ConsultaAsistenciaEmpleado",
-        "Calendario escolar": "CalendarioEscolar",
         "Registro de asistencias": "RegistroAsistencia",
         "Mis notas": "MisNotas",
         "Mis cursos": "MisCursos",
@@ -568,18 +559,7 @@ export default {
   text-align: center;
 }
 
-/* 🔹 Ajuste del carrusel */
-.banner-carousel {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-}
 
-/* 🔹 Ocultar los botones de navegación del carrusel */
-.banner-carousel .v-carousel__controls,
-.banner-carousel .v-carousel__controls button {
-  display: none !important;
-}
 
 /* Transición para el submenu */
 .fade-enter-active, .fade-leave-active {
