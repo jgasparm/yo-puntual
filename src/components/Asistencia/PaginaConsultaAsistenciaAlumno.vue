@@ -279,13 +279,13 @@ export default {
   mounted() {
     const token = localStorage.getItem("token");
     const profile = localStorage.getItem("profile");
-    const anio_academico = localStorage.getItem("anio_academico");
+    const anio_escolar = localStorage.getItem("anio_escolar");
     const usua_id = localStorage.getItem("usua_id");
     if (!token || !profile) {
       console.warn("Falta token o profile en localStorage.");
       return;
     }
-    this.cargarInformacionAlumno(token, profile, anio_academico, usua_id);
+    this.cargarInformacionAlumno(token, profile, anio_escolar, usua_id);
   },
   methods: {
     formatearFecha(fecha) {
@@ -307,10 +307,10 @@ export default {
       this.filtros.fechaFinal = this.formatearFecha(this.fechaFinalObjeto);
       this.menuFechaFinal = false;
     },
-    async cargarInformacionAlumno(token, profile, anio_academico, usua_id) {
+    async cargarInformacionAlumno(token, profile, anio_escolar, usua_id) {
       try {
         // Se obtienen los valores del localStorage
-        const url = `https://amsoftsolution.com/amss/ws/wsConsultaInformacionAlumno.php?ai_usua_id=${usua_id}&ac_anio_academico=${anio_academico}&av_profile=${profile}`;
+        const url = `https://amsoftsolution.com/amss/ws/wsConsultaInformacionAlumno.php?ai_usua_id=${usua_id}&ac_anio_escolar=${anio_escolar}&av_profile=${profile}`;
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const response = await axios.get(url, config);
             if (response.data.status) {
@@ -331,7 +331,7 @@ export default {
     async consultarAsistencia() {
       this.loading = true; 
       const profile = localStorage.getItem("profile");
-      const anio_academico = localStorage.getItem("anio_academico");
+      const anio_escolar = localStorage.getItem("anio_escolar");
       const usua_id = localStorage.getItem("usua_id");
       try {
         const fechaInicio = this.toApiDate(this.filtros.fechaInicio);
@@ -347,7 +347,7 @@ export default {
           ai_asju_id: 0,
           ac_aprobacion: "T",
           ai_asde_id: 0,
-          ac_anio_academico: anio_academico,
+          ac_anio_escolar: anio_escolar,
           av_profile: profile,
         };
         const token = localStorage.getItem("token");

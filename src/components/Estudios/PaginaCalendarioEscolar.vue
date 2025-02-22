@@ -3,7 +3,7 @@
     <!-- Encabezado -->
     <v-row class="py-4">
       <v-col cols="12" class="text-center">
-        <h1 class="text-h4">Calendario Escolar {{ anioAcademico }}</h1>
+        <h1 class="text-h4">Calendario Escolar {{ anioEscolar }}</h1>
       </v-col>
     </v-row>
 
@@ -23,7 +23,7 @@
 
     <!-- Texto: MES - AÑO -->
     <span class="mx-2 month-year-label">
-      {{ currentMonthLabel }} - {{ anioAcademico }}
+      {{ currentMonthLabel }}
     </span>
 
     <!-- Botón mes siguiente -->
@@ -95,13 +95,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 
-// Obtenemos el año académico desde localStorage
-const anioAcademico = ref(localStorage.getItem("anio_academico"))
+// Obtenemos el año escolar desde localStorage
+const anioEscolar = ref(localStorage.getItem("anio_escolar"))
 
 // Opciones de meses para el encabezado
 const monthOptions = [
@@ -213,7 +213,7 @@ async function calendarioEscolar() {
     console.log("Ejecutando consulta a la API...")
     const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaCalendarioEscolar.php"
     const params = {
-      ac_anio_academico: anioAcademico.value,
+      ac_anio_escolar: anioEscolar.value,
       av_profile: profile,
     }
 
@@ -257,7 +257,7 @@ function nextMonth() {
   if (selectedMonth.value === 12) {
     selectedMonth.value = 1
     // Si deseas cambiar el año al llegar a diciembre, hazlo aquí
-    // anioAcademico.value = parseInt(anioAcademico.value) + 1
+    // anioEscolar.value = parseInt(anioEscolar.value) + 1
   } else {
     selectedMonth.value++
   }
@@ -271,7 +271,7 @@ function prevMonth() {
   if (selectedMonth.value === 1) {
     selectedMonth.value = 12
     // Si deseas cambiar el año al llegar a enero, hazlo aquí
-    // anioAcademico.value = parseInt(anioAcademico.value) - 1
+    // anioEscolar.value = parseInt(anioEscolar.value) - 1
   } else {
     selectedMonth.value--
   }
@@ -281,25 +281,29 @@ function prevMonth() {
 /**
  * Genera un PDF con la información mostrada
  */
-async function downloadPDF() {
+ async function downloadPDF() {
   try {
-    const element = calendarContent.value
-    if (!element) return
+    // Esperamos a que el DOM se actualice para asegurarnos que el elemento esté adjunto
+    await nextTick();
+    // Si calendarContent es un componente, accedemos a su elemento nativo
+    const element = calendarContent.value.$el || calendarContent.value;
+    if (!element) return;
 
-    const canvas = await html2canvas(element)
-    const imgData = canvas.toDataURL('image/png')
-    const pdf = new jsPDF('p', 'pt', 'a4')
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const imgProps = pdf.getImageProperties(imgData)
-    const imgRatio = imgProps.height / imgProps.width
-    const imageHeight = pdfWidth * imgRatio
+    const canvas = await html2canvas(element);
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'pt', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const imgProps = pdf.getImageProperties(imgData);
+    const imgRatio = imgProps.height / imgProps.width;
+    const imageHeight = pdfWidth * imgRatio;
 
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imageHeight)
-    pdf.save(`CalendarioEscolar_${anioAcademico.value}.pdf`)
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imageHeight);
+    pdf.save(`CalendarioEscolar_${anioEscolar.value}.pdf`);
   } catch (error) {
-    console.error('Error al generar PDF:', error)
+    console.error('Error al generar PDF:', error);
   }
 }
+
 
 // Computed para mostrar el nombre del mes actual
 const currentMonthLabel = computed(() => {

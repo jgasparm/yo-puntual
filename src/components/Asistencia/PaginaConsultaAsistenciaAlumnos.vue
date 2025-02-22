@@ -405,16 +405,16 @@ export default {
   mounted() {
     const token = localStorage.getItem("token");
     const profile = localStorage.getItem("profile");
-    const anio_academico = localStorage.getItem("anio_academico");
+    const anio_escolar = localStorage.getItem("anio_escolar");
     if (!token || !profile) {
       console.warn("Falta token o profile en localStorage.");
       return;
     }
     // await this.cargarFiltrosAlumno(profile, token);
     // this.onChangeNivel();
-    // this.cargarListaAlumno(anio_academico, profile, token);
+    // this.cargarListaAlumno(anio_escolar, profile, token);
 
-    this.cargarListaAlumno(anio_academico, profile, token);
+    this.cargarListaAlumno(anio_escolar, profile, token);
     this.cargarFiltrosAlumno(profile, token)
     .then(() => {
       this.onChangeNivel();
@@ -471,9 +471,9 @@ export default {
         console.error("Error en cargarFiltrosAlumno:", error);
       }
     },
-    async cargarListaAlumno(anio_academico, profile, token) {
+    async cargarListaAlumno(anio_escolar, profile, token) {
       try {
-        const url = `https://amsoftsolution.com/amss/ws/wsListaAlumnosMatriculados.php?ac_anio_academico=${anio_academico}&ac_indicador_todos=S&av_profile=${profile}`;
+        const url = `https://amsoftsolution.com/amss/ws/wsListaAlumnosMatriculados.php?ac_anio_escolar=${anio_escolar}&ac_indicador_todos=S&av_profile=${profile}`;
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const response = await axios.get(url, config);
         if (response.data.status) {
@@ -553,7 +553,7 @@ export default {
     async consultarAsistencia() {
       this.loading = true;
       const profile = localStorage.getItem("profile");
-      const anio_academico = localStorage.getItem("anio_academico");
+      const anio_escolar = localStorage.getItem("anio_escolar");
       try {
         const fechaInicio = this.toApiDate(this.filtros.fechaInicio);
         const fechaFinal = this.toApiDate(this.filtros.fechaFinal);
@@ -573,7 +573,7 @@ export default {
           ai_asju_id: 0,
           ac_aprobacion: "T",
           ai_asde_id: 0,
-          ac_anio_academico: anio_academico,
+          ac_anio_escolar: anio_escolar,
           av_profile: profile,
         };
         const token = localStorage.getItem("token");

@@ -106,7 +106,7 @@ export default {
           localStorage.setItem('auth', 'true');
           localStorage.setItem('token', userData.token);
           localStorage.setItem('profile', userData.profile);
-          localStorage.setItem('anio_academico', userData.anio_academico);
+          localStorage.setItem('anio_escolar', userData.anio_escolar);
           localStorage.setItem('usua_id', userData.usua_id);
           localStorage.setItem('pers_id', userData.pers_id);              
           localStorage.setItem('user', JSON.stringify(userData));
