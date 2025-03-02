@@ -33,11 +33,11 @@
         <v-list-item>
           <div class="menu-header">
             <img src="/logo.png" alt="Logo" class="menu-logo-mobile">
-            <h2 class="menu-title">{{ centroEducativo }}</h2>
+            <h4 class="menu-title">{{ centroEducativo }}</h4>
           </div>
         </v-list-item>
         <v-divider></v-divider>
-        <v-list-item @click="mostrarVista('Inicio')">
+        <v-list-item @click="$router.push({ name: 'inicio' })">
           <v-icon>mdi-home</v-icon> Inicio
         </v-list-item>
         <v-list-item v-for="mod in modulosLogin" :key="mod.modu_id" @click="toggleSubmenu(mod.modu_id)">
@@ -64,7 +64,7 @@
       <aside class="sidebar">
         <ul class="menu">
           <!-- Menú fijo: Inicio -->
-          <li @click="mostrarVista('Inicio')" :class="{ active: activeMenu === 'Inicio' }">
+          <li @click="$router.push({ name: 'inicio' })" :class="{ active: activeMenu === 'Inicio' }">
             <v-icon>mdi-home</v-icon> Inicio
           </li>
           <!-- Menús dinámicos obtenidos desde wsLoginWeb -->
@@ -94,7 +94,7 @@
 
       <!-- Columna Central: Contenido -->
       <section class="content">
-        <component :is="vistaActual"></component>
+        <router-view></router-view>
       </section>
 
       <!-- Columna Derecha: Banner y Anuncios/Noticias -->
@@ -144,36 +144,25 @@
 
 <script>
 // Importa tus componentes reales. Aquí se usan nombres de ejemplo.
-import Inicio from "@/components/PaginaInicio.vue";
-import RegistroAsistencia from "@/components/Asistencia/PaginaAsistencia.vue";
-import ConsultaAsistenciaAlumnos from "@/components/Asistencia/PaginaConsultaAsistenciaAlumnos.vue";
-import ConsultaAsistenciaEmpleados from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleados.vue";
-import ConsultaAsistenciaAlumno from "@/components/Asistencia/PaginaConsultaAsistenciaAlumno.vue";
-import ConsultaAsistenciaEmpleado from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue";
-import CalendarioEscolar from "@/components/Estudios/PaginaCalendarioEscolar.vue";
-import MisNotas from "@/components/PaginaEstudios.vue";
-import MisCursos from "@/components/PaginaEstudios.vue";
-import DashboardAlumno from "@/components/Dashboard/PaginaDashboardAlumno.vue";
+// import Inicio from "@/components/PaginaInicio.vue";
+// import RegistroAsistencia from "@/components/Asistencia/PaginaAsistencia.vue";
+// import ConsultaAsistenciaAlumnos from "@/components/Asistencia/PaginaConsultaAsistenciaAlumnos.vue";
+// import ConsultaAsistenciaEmpleados from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleados.vue";
+// import ConsultaAsistenciaAlumno from "@/components/Asistencia/PaginaConsultaAsistenciaAlumno.vue";
+// import ConsultaAsistenciaEmpleado from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue";
+// import CalendarioEscolar from "@/components/Estudios/PaginaCalendarioEscolar.vue";
+// import MisNotas from "@/components/Estudios/PaginaAlumnoMisNotas.vue";
+// import DocenteMisCursos from "@/components/Estudios/PaginaDocenteMisCursos.vue";
+// import DocenteMisCursosDetalle from "@/components/Estudios/PaginaDocenteMisCursosDetalle.vue";
+// import DashboardAlumno from "@/components/Dashboard/PaginaDashboardAlumno.vue";
 
 
 
 // Para validar si venció el token
-import { jwtDecode } from 'jwt-decode';
+//import jwtDecode from 'jwt-decode';
 
 export default {
   name: "MainLayoutDesign1",
-  components: {
-    Inicio,
-    RegistroAsistencia,
-    ConsultaAsistenciaAlumnos,
-    ConsultaAsistenciaEmpleados,
-    ConsultaAsistenciaAlumno,
-    ConsultaAsistenciaEmpleado,
-    CalendarioEscolar,
-    MisNotas,
-    MisCursos,
-    DashboardAlumno
-  },
   data() {
     return {
       centroEducativo: "Centro Educativo Demo",
@@ -234,22 +223,51 @@ export default {
         console.error("Token no válido:", token);
         return true;
       }
-
-      try {
-        //console.log('Token recibido:', token);
-        const decoded = jwtDecode(token);
-        //console.log('Token decodificado:', decoded);
-        
+      try { 
+        const decoded = this.parseJwt(token);
+        if (!decoded || !decoded.exp) {
+          throw new Error("Token mal formado");
+        }
         const currentTime = Math.floor(Date.now() / 1000);
-        //console.log('Expiración del token:', decoded.exp);
-        //console.log('Tiempo actual:', currentTime);
-
         return decoded.exp < currentTime;
       } catch (error) {
         console.error("Error al decodificar el token:", error);
         return true;
       }
     },
+
+    // tokenExpirado(token) {
+    //   if (!token) {
+    //     console.error("Token no válido:", token);
+    //     return true;
+    //   }
+
+    //   try {
+    //     let decoded;
+    //     // Si jwt_decode es una función, úsala directamente
+    //     if (typeof jwt_decode === 'function') {
+    //       decoded = jwtDecode(token);
+    //     } else if (jwtDecode && typeof jwtDecode.default === 'function') {
+    //       // Si la función se encuentra en la propiedad default, úsala
+    //       decoded = jwtDecode.default(token);
+    //     } else {
+    //       throw new Error("jwt_decode no es una función");
+    //     }
+
+    //     //console.log('Token recibido:', token);
+    //     ////const decoded = jwtDecode(token);
+    //     //console.log('Token decodificado:', decoded);
+        
+    //     const currentTime = Math.floor(Date.now() / 1000);
+    //     //console.log('Expiración del token:', decoded.exp);
+    //     //console.log('Tiempo actual:', currentTime);
+
+    //     return decoded.exp < currentTime;
+    //   } catch (error) {
+    //     console.error("Error al decodificar el token:", error);
+    //     return true;
+    //   }
+    // },
     toggleUserMenu() {
       this.showUserMenu = !this.showUserMenu;
     },
@@ -279,13 +297,15 @@ export default {
         "Calendario escolar": "CalendarioEscolar",
         "Registro de asistencias": "RegistroAsistencia",
         "Mis notas": "MisNotas",
-        "Mis cursos": "MisCursos",
+        "Mis cursos": "DocenteMisCursos",
+        "Mis cursos detalle": "DocenteMisCursosDetalle",
         "Dashboard del alumno": "DashboardAlumno"
       };
 
       // Verificar si la vista seleccionada existe en la lista
       if (vistasDisponibles[vista]) {
-        this.vistaActual = vistasDisponibles[vista];
+        //this.vistaActual = vistasDisponibles[vista];
+        this.$router.push({ name: vistasDisponibles[vista] })
         this.activeSubmenu = vista;
       } else {
         console.warn(`Vista no encontrada para: ${vista}`);
@@ -322,6 +342,8 @@ export default {
           if (mod.modu_nombre === "Mi asistencia") {
             mod.icono = "mdi-calendar-check";
           } else if (mod.modu_nombre === "Mis estudios") {
+            mod.icono = "mdi-book";
+          } else if (mod.modu_nombre === "Mis cursos") {
             mod.icono = "mdi-book"; 
           } else if (mod.modu_nombre === "Mis trámites") {
             mod.icono = "mdi-note-outline";
@@ -356,7 +378,24 @@ export default {
       } else {
         console.error("No se encontraron datos de submenús en localStorage.");
       }
+    },
+    parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        console.error("Error al decodificar el token manualmente:", e);
+        return null;
+      }
     }
+
   },
   mounted() {
     //Para mobile
@@ -601,6 +640,25 @@ export default {
   }
   .rightbar {
     width: 100%;
-  }  
+  }
+  .menu-header {
+    display: flex;
+    align-items: center;
+    /* Opcional: un padding o margin si deseas */
+    /* padding: 8px; */
+  }
+
+  .menu-logo-mobile {
+    max-width: 40px; /* Ajusta este valor a tu preferencia */
+    height: auto;
+    margin-right: 8px; /* separa un poco la imagen del texto */
+  }
+
+  @media (max-width: 768px) {
+    /* Ajustes extra si deseas que sea aún más pequeño en móviles */
+    .menu-logo-mobile {
+      max-width: 35px;
+    }
+  }
 }
 </style>

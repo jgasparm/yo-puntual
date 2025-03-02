@@ -39,11 +39,12 @@ export default {
   /* Para pruebas, un fondo semitransparente para verificar su visibilidad */
   background-color: rgba(255, 0, 0, 0.3);
 }
-.v-data-table-header th {
-  color: #000 !important;
+.v-data-table__header th {
+  color: #26995a !important;
   font-weight: bold;
   display: table-cell !important;
 }
+
 .v-menu__content {
   overflow: auto !important;
 }

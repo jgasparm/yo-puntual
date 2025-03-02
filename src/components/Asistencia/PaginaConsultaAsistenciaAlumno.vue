@@ -211,7 +211,7 @@
       </v-card-text>
     </v-card>
 
-    <!-- Modal de "No se encontraron resultados" -->
+  <!-- Modal de "No se encontraron resultados" -->
   <v-dialog v-model="dialogNoResults" max-width="400">
     <v-card>
       <v-card-title class="headline">No se encontraron resultados</v-card-title>

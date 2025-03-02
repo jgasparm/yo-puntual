@@ -95,6 +95,7 @@
       <!-- Columna Central: Contenido -->
       <section class="content">
         <component :is="vistaActual"></component>
+        <router-view></router-view>
       </section>
 
       <!-- Columna Derecha: Banner y Anuncios/Noticias -->
@@ -105,7 +106,12 @@
             ¡Visita nuestra web y conoce más de nosotros! 
             <v-icon color="red">mdi-hand-pointing-right</v-icon>
           </h2>
-          <v-carousel hide-delimiters cycle>
+          <v-carousel
+            class="banner-carousel"
+            hide-delimiters
+            cycle
+            interval="5000"
+          >
             <v-carousel-item v-for="(item, i) in bannerItems" :key="i">
               <v-img :src="item.src" contain height="auto" width="100%" class="banner-img"></v-img>
             </v-carousel-item>
@@ -145,13 +151,16 @@ import ConsultaAsistenciaAlumnos from "@/components/Asistencia/PaginaConsultaAsi
 import ConsultaAsistenciaEmpleados from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleados.vue";
 import ConsultaAsistenciaAlumno from "@/components/Asistencia/PaginaConsultaAsistenciaAlumno.vue";
 import ConsultaAsistenciaEmpleado from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue";
-import MisNotas from "@/components/PaginaEstudios.vue";
-import MisCursos from "@/components/PaginaEstudios.vue";
+import CalendarioEscolar from "@/components/Estudios/PaginaCalendarioEscolar.vue";
+import MisNotas from "@/components/Estudios/PaginaAlumnoMisNotas.vue";
+import DocenteMisCursos from "@/components/Estudios/PaginaDocenteMisCursos.vue";
+import DocenteMisCursosDetalle from "@/components/Estudios/PaginaDocenteMisCursosConsultaNotas.vue";
 import DashboardAlumno from "@/components/Dashboard/PaginaDashboardAlumno.vue";
 
 
+
 // Para validar si venció el token
-import { jwtDecode } from 'jwt-decode';
+//import jwtDecode from 'jwt-decode';
 
 export default {
   name: "MainLayoutDesign1",
@@ -162,8 +171,10 @@ export default {
     ConsultaAsistenciaEmpleados,
     ConsultaAsistenciaAlumno,
     ConsultaAsistenciaEmpleado,
+    CalendarioEscolar,
     MisNotas,
-    MisCursos,
+    DocenteMisCursos, 
+    DocenteMisCursosDetalle,
     DashboardAlumno
   },
   data() {
@@ -226,22 +237,51 @@ export default {
         console.error("Token no válido:", token);
         return true;
       }
-
-      try {
-        //console.log('Token recibido:', token);
-        const decoded = jwtDecode(token);
-        //console.log('Token decodificado:', decoded);
-        
+      try { 
+        const decoded = this.parseJwt(token);
+        if (!decoded || !decoded.exp) {
+          throw new Error("Token mal formado");
+        }
         const currentTime = Math.floor(Date.now() / 1000);
-        //console.log('Expiración del token:', decoded.exp);
-        //console.log('Tiempo actual:', currentTime);
-
         return decoded.exp < currentTime;
       } catch (error) {
         console.error("Error al decodificar el token:", error);
         return true;
       }
     },
+
+    // tokenExpirado(token) {
+    //   if (!token) {
+    //     console.error("Token no válido:", token);
+    //     return true;
+    //   }
+
+    //   try {
+    //     let decoded;
+    //     // Si jwt_decode es una función, úsala directamente
+    //     if (typeof jwt_decode === 'function') {
+    //       decoded = jwtDecode(token);
+    //     } else if (jwtDecode && typeof jwtDecode.default === 'function') {
+    //       // Si la función se encuentra en la propiedad default, úsala
+    //       decoded = jwtDecode.default(token);
+    //     } else {
+    //       throw new Error("jwt_decode no es una función");
+    //     }
+
+    //     //console.log('Token recibido:', token);
+    //     ////const decoded = jwtDecode(token);
+    //     //console.log('Token decodificado:', decoded);
+        
+    //     const currentTime = Math.floor(Date.now() / 1000);
+    //     //console.log('Expiración del token:', decoded.exp);
+    //     //console.log('Tiempo actual:', currentTime);
+
+    //     return decoded.exp < currentTime;
+    //   } catch (error) {
+    //     console.error("Error al decodificar el token:", error);
+    //     return true;
+    //   }
+    // },
     toggleUserMenu() {
       this.showUserMenu = !this.showUserMenu;
     },
@@ -268,9 +308,11 @@ export default {
         "Consulta de asistencia de empleados": "ConsultaAsistenciaEmpleados",
         "Consulta de asistencia del alumno": "ConsultaAsistenciaAlumno",
         "Consulta de asistencia de empleado": "ConsultaAsistenciaEmpleado",
+        "Calendario escolar": "CalendarioEscolar",
         "Registro de asistencias": "RegistroAsistencia",
         "Mis notas": "MisNotas",
-        "Mis cursos": "MisCursos",
+        "Mis cursos": "DocenteMisCursos",
+        "Mis cursos detalle": "DocenteMisCursosDetalle",
         "Dashboard del alumno": "DashboardAlumno"
       };
 
@@ -313,6 +355,8 @@ export default {
           if (mod.modu_nombre === "Mi asistencia") {
             mod.icono = "mdi-calendar-check";
           } else if (mod.modu_nombre === "Mis estudios") {
+            mod.icono = "mdi-book";
+          } else if (mod.modu_nombre === "Mis cursos") {
             mod.icono = "mdi-book"; 
           } else if (mod.modu_nombre === "Mis trámites") {
             mod.icono = "mdi-note-outline";
@@ -347,7 +391,24 @@ export default {
       } else {
         console.error("No se encontraron datos de submenús en localStorage.");
       }
+    },
+    parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        console.error("Error al decodificar el token manualmente:", e);
+        return null;
+      }
     }
+
   },
   mounted() {
     //Para mobile
@@ -559,7 +620,18 @@ export default {
   text-align: center;
 }
 
+/* 🔹 Ajuste del carrusel */
+.banner-carousel {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
 
+/* 🔹 Ocultar los botones de navegación del carrusel */
+.banner-carousel .v-carousel__controls,
+.banner-carousel .v-carousel__controls button {
+  display: none !important;
+}
 
 /* Transición para el submenu */
 .fade-enter-active, .fade-leave-active {
