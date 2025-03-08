@@ -70,39 +70,23 @@
             v-for="(header, colIndex) in dynamicHeaders"
             :key="colIndex"
           >
-            <!-- 1) Si la columna es "prom", se muestra el valor o "0", sin clic -->
-            <template v-if="header.key === 'prom'">
-              <div class="cell-custom">
-                {{ row.prom || '0' }}
-              </div>
-            
-            <!-- 2) Si la columna incluye 'nota_', va con <v-tooltip> y @click -->
-            </template>
-            <template v-else-if="header.key.includes('nota_')">
-              <v-tooltip location="bottom">
-                <template #activator="{ props }">
-                  <div
-                    v-bind="props"
-                    class="cell-custom"
-                    :style="{
-                      backgroundColor: header.bgColor || 'transparent',
-                      cursor: 'pointer'
-                    }"
-                    @click.stop="openNoteDialog(row, header)"
-                  >
-                    {{ row[header.key] || 'Agregar' }}
-                  </div>
-                </template>
-                Clic para agregar o modificar nota
-              </v-tooltip>
-            
-            <!-- 3) De lo contrario (ej: "N°", "Alumno"), solo muestra el valor sin clic -->
-            </template>
-            <template v-else>
-              <div class="cell-custom">
-                {{ row[header.key] }}
-              </div>
-            </template>
+            <!-- Tu tooltip y click -->
+            <v-tooltip bottom>
+              <template #activator="{ props }">
+                <div
+                  v-bind="props"
+                  class="cell-custom"
+                  :style="{
+                    backgroundColor: header.bgColor || 'transparent',
+                    cursor: 'pointer'
+                  }"
+                  @click.stop="openNoteDialog(row, header)"
+                >
+                  {{ row[header.key] || 'Agregar' }}
+                </div>
+              </template>
+              Clic para agregar o modificar nota
+            </v-tooltip>
           </td>
         </tr>
       </tbody>

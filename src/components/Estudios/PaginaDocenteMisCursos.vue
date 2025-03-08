@@ -28,13 +28,15 @@
         <!-- Slot de acciones: ícono de consulta y de registro de notas -->
         <!-- eslint-disable-next-line vue/valid-v-slot -->
         <template v-slot:item.accion="{ item }">
-          <v-btn icon color="primary" @click="verNotas(item)">
-            <v-icon>mdi-eye</v-icon>
+        <div class="table-action">
+          <v-btn icon color="primary" class="action-btn" @click="verNotas(item)">
+            <v-icon size="24">mdi-eye</v-icon>
           </v-btn>
-          <v-btn icon color="secondary" @click="registrarNotas(item)">
-            <v-icon>mdi-pencil</v-icon>
+          <v-btn icon color="secondary" class="action-btn" @click="registrarNotas(item)">
+            <v-icon size="24">mdi-pencil</v-icon>
           </v-btn>
-        </template>
+        </div>
+      </template>
       </v-data-table>
     </div>
 
@@ -216,12 +218,12 @@ async function verNotas(curso) {
   const profile = localStorage.getItem("profile") || "demo"
   const ai_usua_id = localStorage.getItem("ai_usua_id") || 5
   const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
-  const dtng_id = curso.dtng_id
+  const doad_id = curso.doad_id
 
   const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"
   const params = {
     ai_usua_id,
-    ai_dtng_id: dtng_id,
+    ai_doad_id: doad_id,
     ac_anio_escolar,
     av_profile: profile
   }
@@ -269,5 +271,18 @@ function registrarNotas(curso) {
 </script>
 
 <style scoped>
-/* Puedes agregar estilos personalizados para mejorar la visualización en mobile si lo requieres */
+/* Encapsula los botones en un contenedor flex para desktop */
+.table-action {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Forzar estilos para los botones en desktop */
+.action-btn {
+  padding: 4px !important;
+  min-width: 0 !important;
+  /* Puedes ajustar márgenes o font-size si fuera necesario */
+}
 </style>

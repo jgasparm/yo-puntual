@@ -31,12 +31,24 @@
       </v-col>
     </v-row>
 
+    <!-- CAJA DE BÚSQUEDA -->
+    <v-row class="mb-4">
+      <v-col cols="12" sm="6" md="4">
+        <v-text-field
+          v-model="searchQuery"
+          label="Buscar alumno"
+          clearable
+          solo
+        />
+      </v-col>
+    </v-row>
+
     <!-- TABLA DE NOTAS DINÁMICA (solo se muestra cuando ya se tienen headers) -->
     <div v-if="isDesktop">
       <v-data-table
         v-if="dynamicHeaders.length > 0"
         :headers="dynamicHeaders"
-        :items="tableItems"
+        :items="filteredItems"
         :items-per-page="10"
         class="elevation-1 mt-4"
       >
@@ -144,17 +156,9 @@ import axios from 'axios'
 const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
 
-const paginatedItems = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  return tableItems.value.slice(start, start + itemsPerPage.value)
-})
-
-const paginatedPages = computed(() => {
-  return Math.ceil(tableItems.value.length / itemsPerPage.value)
-})
-
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
+const searchQuery = ref("") // Variable reactiva para la búsqueda
 
 const router = useRouter()
 const route = useRoute()
@@ -178,6 +182,25 @@ const tableItems = ref([])
 
 const titulo = ref('Detalle de Notas')
 
+// Computed para filtrar alumnos por nombre
+const filteredItems = computed(() => {
+  if (!searchQuery.value) return tableItems.value
+  return tableItems.value.filter(item => 
+    item.alumno.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+})
+
+// Computed para paginación en vista móvil usando los items filtrados
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredItems.value.slice(start, start + itemsPerPage.value)
+})
+
+const paginatedPages = computed(() => {
+  return Math.ceil(filteredItems.value.length / itemsPerPage.value)
+})
+
+
 onMounted(() => {
   if (!cursoSeleccionado.value || !bimestreSeleccionado.value) {
     router.push({ name: 'DocenteMisCursos' })
@@ -196,13 +219,13 @@ onMounted(() => {
     }
   } else {
     // Opcional: En caso de que no venga la información, se puede llamar al API como fallback
-    const dtng_id = cursoSeleccionado.value.dtng_id
-    fetchDetalle(dtng_id)
+    const doad_id = cursoSeleccionado.value.doad_id
+    fetchDetalle(doad_id)
   }
 })
 
 
-async function fetchDetalle(dtng_id) {
+async function fetchDetalle(doad_id) {
   try {
     const token = localStorage.getItem("token")
     const profile = localStorage.getItem("profile") || "demo"
@@ -217,7 +240,7 @@ async function fetchDetalle(dtng_id) {
     const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"
     const params = {
       ai_usua_id,
-      ai_dtng_id: dtng_id,
+      ai_doad_id: doad_id,
       ac_anio_escolar,
       av_profile: profile
     }
@@ -285,8 +308,11 @@ function parseDataForTable() {
   })
 
   const builtHeaders = []
-  //builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' })
-  //builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' })
+
+  if (isDesktop.value) {
+    builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' }) //
+    builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' }) //
+  }
 
   Object.keys(evalMap).forEach(evalId => {
     const evalInfo = evalMap[evalId]
@@ -309,7 +335,10 @@ function parseDataForTable() {
     })
   })
 
-  //builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false })
+  if (isDesktop.value) {
+    builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false }) //
+  }
+  
 
   const builtItems = dataBimestre.map((alumnoItem, index) => {
     const row = {}

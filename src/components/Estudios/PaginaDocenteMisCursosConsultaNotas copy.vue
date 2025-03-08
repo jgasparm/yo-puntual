@@ -5,57 +5,131 @@
       Regresar
     </v-btn>
 
-    <!-- ENCABEZADO INSTITUCIÓN -->
-    <v-row class="text-center mb-2">
-      <v-col cols="12">
-        <h2 class="text-h6">Institución Educativa Privada "Líder School"</h2>
-        <p>R.D. N° 713 - 2016 / UGEL 04 COMAS</p>
-      </v-col>
-    </v-row>
-
     <!-- REGISTRO Y BIMESTRE -->
     <v-row class="mb-2">
-      <v-col cols="12" class="d-flex justify-space-between">
-        <div>
-          <strong>Registro Auxiliar - 2023</strong>
-        </div>
-        <div>
-          <strong>{{ bimestreSeleccionado?.peed_nombre }}</strong>
-        </div>
+      <v-col cols="12" sm="6" class="mb-2">
+        <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+      </v-col>
+      <v-col cols="12" sm="6" class="mb-2">
+        <strong>Bimestre:</strong> {{ bimestreSeleccionado?.peed_nombre }}
       </v-col>
     </v-row>
 
     <!-- DATOS DEL CURSO / PROFESOR -->
     <v-row class="mb-4">
-      <v-col cols="12" class="d-flex justify-space-between">
-        <div><strong>Profesor:</strong> SANDRA MENDOZA LUNA</div>
-        <div><strong>Grado:</strong> {{ cursoSeleccionado?.grad_nombre }}</div>
-        <div><strong>Curso:</strong> {{ cursoSeleccionado?.curs_nombre }}</div>
+      <v-col cols="12" sm="6" md="3">
+        <strong>Turno:</strong> {{ cursoSeleccionado?.turn_nombre }}
+      </v-col>
+      <v-col cols="12" sm="6" md="3">
+        <strong>Nivel:</strong> {{ cursoSeleccionado?.nive_nombre }}
+      </v-col>
+      <v-col cols="12" sm="6" md="3">
+        <strong>Grado:</strong> {{ cursoSeleccionado?.grad_nombre }}
+      </v-col>
+      <v-col cols="12" sm="6" md="3">
+        <strong>Sección:</strong> {{ cursoSeleccionado?.secc_nombre }}
+      </v-col>
+    </v-row>
+
+    <!-- CAJA DE BÚSQUEDA -->
+    <v-row class="mb-4">
+      <v-col cols="12" sm="6" md="4">
+        <v-text-field
+          v-model="searchQuery"
+          label="Buscar alumno"
+          clearable
+          solo
+        />
       </v-col>
     </v-row>
 
     <!-- TABLA DE NOTAS DINÁMICA (solo se muestra cuando ya se tienen headers) -->
-    <v-data-table
-      v-if="dynamicHeaders.length > 0"
-      :headers="dynamicHeaders"
-      :items="tableItems"
-      :items-per-page="10"
-      class="elevation-1 mt-4"
-    >
-      <!-- Slot específico para la columna 'alumno', si deseas personalización -->
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
-      <template #item.alumno="{ item }">
-        {{ item.alumno }}
-      </template>
+    <div v-if="isDesktop">
+      <v-data-table
+        v-if="dynamicHeaders.length > 0"
+        :headers="dynamicHeaders"
+        :items="filteredItems"
+        :items-per-page="10"
+        class="elevation-1 mt-4"
+      >
+        <!-- Slot específico para la columna 'alumno', si deseas personalización -->
+        <!-- eslint-disable-next-line vue/valid-v-slot -->
+        <template #item.alumno="{ item }">
+          {{ item.alumno }}
+        </template>
 
-      <!-- Slot global para personalizar cada celda -->
-      <template #cell="{ item, column }">
-        <div class="cell-custom" :style="{ backgroundColor: column.bgColor || 'transparent' }">
-          {{ item[column.key] }}
-        </div>
-      </template>
-    </v-data-table>
-    
+        <!-- Slot global para personalizar cada celda -->
+        <template #cell="{ item, column }">
+          <div class="cell-custom" :style="{ backgroundColor: column.bgColor || 'transparent' }">
+            {{ item[column.key] }}
+          </div>
+        </template>
+      </v-data-table>
+    </div>
+
+    <!-- VISTA MÓVIL: tarjetas con paginación -->
+    <div v-else>
+      <v-alert
+        v-if="dynamicHeaders.length === 0 || tableItems.length === 0"
+        type="info"
+      >
+        No hay notas disponibles
+      </v-alert>
+
+      <v-row v-else dense>
+        <v-col
+          v-for="(item, index) in paginatedItems"
+          :key="index"
+          cols="12"
+          class="mb-2"
+        >
+          <v-card outlined>
+            <v-col cols="12">
+              <strong>N°:</strong> {{ item.numero }}
+            </v-col>
+            <v-card-title class="subtitle-2 font-weight-bold text-start multiline2-ellipsis">
+              {{ item.alumno }}
+            </v-card-title>
+            <v-card-text class="text-start">
+              <v-row dense>
+                <v-col cols="12">
+                  <h3> <strong>Promedio Bimestral: {{ item.promBim }} </strong></h3>
+                </v-col>
+
+                <!-- Si quieres mostrar todas las columnas dinámicas,
+                     puedes iterar sobre dynamicHeaders y usar item[header.key] -->
+                <v-col
+                  v-for="(header, i) in dynamicHeaders"
+                  :key="i"
+                  cols="12"
+                  :style="{ backgroundColor: header.bgColor || 'transparent' }"
+                >
+                  <strong :class="{'prom-header-mobile': header.key.includes('_prom')}">
+                    {{ header.title }}:
+                   {{ item[header.key] }}
+                  </strong>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Paginación para móvil -->
+      <v-pagination
+        v-if="paginatedPages > 1"
+        v-model="currentPage"
+        :length="paginatedPages"
+        :total-visible="3"
+        show-first-last
+        first-icon="mdi-chevron-double-left"
+        last-icon="mdi-chevron-double-right"
+        prev-icon="mdi-chevron-left"
+        next-icon="mdi-chevron-right"
+        class="mt-2 custom-pagination"
+      />
+    </div>
+
     <!-- Modal de "No se encontraron resultados" -->
     <v-dialog v-model="dialogNoResults" max-width="400">
       <v-card>
@@ -73,9 +147,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed  } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useDisplay } from 'vuetify' // <-- Importar
 import axios from 'axios'
+
+// Detecta si la pantalla es "md" o mayor
+const { mdAndUp } = useDisplay()
+const isDesktop = mdAndUp
+
+const currentPage = ref(1)
+const itemsPerPage = ref(5)
+const searchQuery = ref("") // Variable reactiva para la búsqueda
 
 const router = useRouter()
 const route = useRoute()
@@ -99,14 +182,48 @@ const tableItems = ref([])
 
 const titulo = ref('Detalle de Notas')
 
+// Computed para filtrar alumnos por nombre
+const filteredItems = computed(() => {
+  if (!searchQuery.value) return tableItems.value
+  return tableItems.value.filter(item => 
+    item.alumno.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+})
+
+// Computed para paginación en vista móvil usando los items filtrados
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredItems.value.slice(start, start + itemsPerPage.value)
+})
+
+const paginatedPages = computed(() => {
+  return Math.ceil(filteredItems.value.length / itemsPerPage.value)
+})
+
+
 onMounted(() => {
   if (!cursoSeleccionado.value || !bimestreSeleccionado.value) {
     router.push({ name: 'DocenteMisCursos' })
     return
   }
-  const dtng_id = cursoSeleccionado.value.dtng_id
-  fetchDetalle(dtng_id)
+  
+  // Si viene la información del API en el query, la usamos
+  if (route.query.detalle) {
+    const responseData = JSON.parse(decodeURIComponent(route.query.detalle))
+    if (responseData.status) {
+      alumnos.value = responseData.data
+      if (alumnos.value.length > 0) {
+        titulo.value = `Detalle de Notas - ${alumnos.value[0].aede_nombre || ''}`
+      }
+      parseDataForTable()
+    }
+  } else {
+    // Opcional: En caso de que no venga la información, se puede llamar al API como fallback
+    const dtng_id = cursoSeleccionado.value.dtng_id
+    fetchDetalle(dtng_id)
+  }
 })
+
 
 async function fetchDetalle(dtng_id) {
   try {
@@ -156,6 +273,7 @@ function getColorForEvaluation(nombre) {
     'TA': '#BBDEFB',  // Tareas
     'RC':  '#D1C4E9',  // Revisión
     'EM': '#FFE082',  // Examen
+    'EB': '#FFCDD2',  // Examen
   }
   return colorMapping[nombre.toUpperCase()] || '#EEEEEE'
 }
@@ -176,10 +294,13 @@ function parseDataForTable() {
   const evalMap = {}
   dataBimestre.forEach(alumnoItem => {
     alumnoItem.alumnos_cursos_promedios.forEach(evalData => {
-      const { eval_id, eval_abreviacion, alumnos_cursos_notas } = evalData
+      const { eval_id, eval_abreviacion, eval_nombre, alumnos_cursos_notas } = evalData
       const numNotas = alumnos_cursos_notas.length
+
+      const nombreParaMostrar = isDesktop.value ? eval_abreviacion : eval_nombre
+
       if (!evalMap[eval_id]) {
-        evalMap[eval_id] = { nombre: eval_abreviacion, maxNotas: numNotas }
+        evalMap[eval_id] = { nombre: nombreParaMostrar, maxNotas: numNotas, abre: eval_abreviacion }
       } else if (numNotas > evalMap[eval_id].maxNotas) {
         evalMap[eval_id].maxNotas = numNotas
       }
@@ -187,14 +308,17 @@ function parseDataForTable() {
   })
 
   const builtHeaders = []
-  builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' })
-  builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' })
+
+  if (isDesktop.value) {
+    builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' }) //
+    builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' }) //
+  }
 
   Object.keys(evalMap).forEach(evalId => {
     const evalInfo = evalMap[evalId]
     // Obtén el color para la evaluación
     
-    const bgColor = getColorForEvaluation(evalInfo.nombre)
+    const bgColor = getColorForEvaluation(evalInfo.abre)
     for (let i = 1; i <= evalInfo.maxNotas; i++) {
       builtHeaders.push({
         title: `${evalInfo.nombre} #${i}`,
@@ -211,7 +335,10 @@ function parseDataForTable() {
     })
   })
 
-  builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false })
+  if (isDesktop.value) {
+    builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false }) //
+  }
+  
 
   const builtItems = dataBimestre.map((alumnoItem, index) => {
     const row = {}
@@ -257,5 +384,17 @@ function goBack() {
   padding: 8px;
   /* Forzamos el background si fuese necesario */
   background-clip: padding-box;
+}
+.multiline2-ellipsis {
+  display: -webkit-box;         /* Flexbox antiguo para soportar -webkit-line-clamp */
+  -webkit-line-clamp: 2;        /* Limita a 2 líneas */
+  -webkit-box-orient: vertical; /* Define orientación vertical */
+  overflow: hidden;             /* Oculta el contenido extra */
+  text-overflow: ellipsis;      /* Muestra los "..." al truncar */
+  white-space: normal;          /* Permite que el texto ocupe varias líneas */
+}
+.prom-header-mobile {
+  font-weight: bold;
+  font-size: 16px; /* Ajusta el tamaño según lo requieras */
 }
 </style>
