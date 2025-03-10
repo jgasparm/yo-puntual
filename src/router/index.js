@@ -12,6 +12,7 @@ import RegistroAsistencia from '../components/Asistencia/PaginaAsistencia.vue';
 import AlumnoMisNotas from '../components/Estudios/PaginaAlumnoMisNotas.vue';
 import DashboardAlumno from '../components/Dashboard/PaginaDashboardAlumno.vue';
 import DocenteMisCursos from '../components/Estudios/PaginaDocenteMisCursos.vue';
+import MisCursos from '../components/Estudios/PaginaMisCursos.vue';
 import DocenteMisCursosRegistroNotas from '../components/Estudios/PaginaDocenteMisCursosRegistroNotas.vue';
 import DocenteMisCursosConsultaNotas from '../components/Estudios/PaginaDocenteMisCursosConsultaNotas.vue';
 
@@ -72,9 +73,14 @@ const routes = [
         component: DashboardAlumno
       },
       {
-        path: 'mis-cursos',
+        path: 'mis-cursos-docente',
         name: 'DocenteMisCursos',
         component: DocenteMisCursos
+      },
+      {
+        path: 'mis-cursos',
+        name: 'MisCursos',
+        component: MisCursos
       },
       {
         path: 'mis-cursos-registro-notas',

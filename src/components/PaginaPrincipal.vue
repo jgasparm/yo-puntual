@@ -297,7 +297,8 @@ export default {
         "Calendario escolar": "CalendarioEscolar",
         "Registro de asistencias": "RegistroAsistencia",
         "Mis notas": "MisNotas",
-        "Mis cursos": "DocenteMisCursos",
+        "Cursos del docente": "DocenteMisCursos",
+        "Mis cursos": "MisCursos",
         "Mis cursos detalle": "DocenteMisCursosDetalle",
         "Dashboard del alumno": "DashboardAlumno"
       };
