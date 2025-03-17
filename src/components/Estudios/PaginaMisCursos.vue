@@ -32,62 +32,64 @@
           <v-btn icon color="primary" class="action-btn" @click="verNotas(item)">
             <v-icon size="24">mdi-eye</v-icon>
           </v-btn>
-          <v-btn icon color="secondary" class="action-btn" @click="registrarNotas(item)">
+          <!-- <v-btn icon color="secondary" class="action-btn" @click="registrarNotas(item)">
             <v-icon size="24">mdi-pencil</v-icon>
-          </v-btn>
+          </v-btn> -->
         </div>
       </template>
       </v-data-table>
     </div>
 
     <!-- Vista Mobile: Tarjetas para cada curso -->
-    <div v-else>
-      <v-alert v-if="!filteredCursos.length" type="info">
-        No hay cursos disponibles
-      </v-alert>
-      <v-row v-else dense>
-        <v-col
-          v-for="(curso, index) in paginatedCursos"
-          :key="index"
-          cols="12"
-          class="mb-2"
+<div v-else>
+  <v-alert v-if="!filteredCursos.length" type="info">
+    No hay cursos disponibles
+  </v-alert>
+  <v-row v-else dense>
+    <v-col
+      v-for="(curso, index) in paginatedCursos"
+      :key="index"
+      cols="12"
+      class="mb-2"
+    >
+      <v-card outlined style="position: relative; text-align: left;">
+        <!-- Botón de "ver" en la esquina superior derecha -->
+        <v-btn
+          icon
+          color="primary"
+          @click="verNotas(curso)"
+          style="position: absolute; top: 8px; right: 8px;"
         >
-          <v-card outlined>
-            <v-card-title class="subtitle-2 font-weight-bold">
-              {{ curso.aede_nombre }}
-            </v-card-title>
-            <v-card-text>
-              <div><strong>Turno:</strong> {{ curso.turn_nombre }}</div>
-              <div><strong>Nivel:</strong> {{ curso.nive_nombre }}</div>
-              <div><strong>Grado:</strong> {{ curso.grad_nombre }}</div>
-              <div><strong>Sección:</strong> {{ curso.secc_nombre }}</div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn icon color="primary" @click="verNotas(curso)">
-                <v-icon>mdi-eye</v-icon>
-              </v-btn>
-              <v-btn icon color="secondary" @click="registrarNotas(curso)">
-                <v-icon>mdi-pencil</v-icon>
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
+          <v-icon>mdi-eye</v-icon>
+        </v-btn>
+        <!-- Información del curso con padding-top para evitar superposición -->
+        <v-card-text style="padding-top: 40px;">
+          <div><strong>Curso:</strong> {{ curso.aede_nombre }}</div>
+          <div><strong>Aula:</strong> {{ curso.aula }}</div>
+          <div><strong>Turno:</strong> {{ curso.turn_nombre }}</div>
+          <div><strong>Nivel:</strong> {{ curso.nive_nombre }}</div>
+          <div><strong>Grado:</strong> {{ curso.grad_nombre }}</div>
+          <div><strong>Sección:</strong> {{ curso.secc_nombre }}</div>
+        </v-card-text>
+      </v-card>
+    </v-col>
+  </v-row>
 
-      <!-- Paginación para mobile -->
-      <v-pagination
-        v-if="paginatedPages > 1"
-        v-model="currentPage"
-        :length="paginatedPages"
-        :total-visible="3"
-        show-first-last
-        first-icon="mdi-chevron-double-left"
-        last-icon="mdi-chevron-double-right"
-        prev-icon="mdi-chevron-left"
-        next-icon="mdi-chevron-right"
-        class="mt-2 custom-pagination"
-      />
-    </div>
+  <!-- Paginación para mobile -->
+  <v-pagination
+    v-if="paginatedPages > 1"
+    v-model="currentPage"
+    :length="paginatedPages"
+    :total-visible="3"
+    show-first-last
+    first-icon="mdi-chevron-double-left"
+    last-icon="mdi-chevron-double-right"
+    prev-icon="mdi-chevron-left"
+    next-icon="mdi-chevron-right"
+    class="mt-2 custom-pagination"
+  />
+</div>
+
     <!-- Modal de "No se encontraron resultados" -->
     <v-dialog v-model="dialogNoResults" max-width="400">
       <v-card>
@@ -124,6 +126,7 @@ const selectedBimestre = ref(null)
 const headers = [
   { title: 'Curso', key: 'aede_nombre' },
   { title: 'Docente', key: 'docente' },
+  { title: 'Aula', key: 'aula' },
   { title: 'Turno', key: 'turn_nombre' },
   { title: 'Nivel', key: 'nive_nombre' },
   { title: 'Grado', key: 'grad_nombre' },
@@ -242,7 +245,7 @@ async function verNotas(curso) {
       console.log(curso)
       // Se navega a la página MisCursosDetalle y se pasa la respuesta del API
       router.push({
-        name: 'DocenteMisCursosConsultaNotas',
+        name: 'MisCursosConsultaNotas',
         query: {
           curso: encodeURIComponent(JSON.stringify(curso)),
           bimestre: encodeURIComponent(JSON.stringify(bimestre)),
@@ -257,16 +260,16 @@ async function verNotas(curso) {
 
 
 // Función para registrar notas
-function registrarNotas(curso) {
-  const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
-  router.push({
-    name: 'DocenteMisCursosRegistroNotas',
-    query: {
-      curso: encodeURIComponent(JSON.stringify(curso)),
-      bimestre: encodeURIComponent(JSON.stringify(bimestre))
-    }
-  })
-}
+// function registrarNotas(curso) {
+//   const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
+//   router.push({
+//     name: 'DocenteMisCursosRegistroNotas',
+//     query: {
+//       curso: encodeURIComponent(JSON.stringify(curso)),
+//       bimestre: encodeURIComponent(JSON.stringify(bimestre))
+//     }
+//   })
+// }
 </script>
 
 <style scoped>

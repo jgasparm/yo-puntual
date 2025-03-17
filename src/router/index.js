@@ -15,6 +15,9 @@ import DocenteMisCursos from '../components/Estudios/PaginaDocenteMisCursos.vue'
 import MisCursos from '../components/Estudios/PaginaMisCursos.vue';
 import DocenteMisCursosRegistroNotas from '../components/Estudios/PaginaDocenteMisCursosRegistroNotas.vue';
 import DocenteMisCursosConsultaNotas from '../components/Estudios/PaginaDocenteMisCursosConsultaNotas.vue';
+import MisCursosConsultaNotas from '../components/Estudios/PaginaMisCursosConsultaNotas.vue';
+import DocentesAnioEscolar from '../components/Mantenimiento/PaginaDocentesAnioEscolar.vue';
+import MisAulas from '../components/Mantenimiento/PaginaMisAulas.vue';
 
 const routes = [
   {
@@ -88,9 +91,24 @@ const routes = [
         component: DocenteMisCursosRegistroNotas
       },
       {
-        path: 'mis-cursos-consulta-notas',
+        path: 'docente-mis-cursos-consulta-notas',
         name: 'DocenteMisCursosConsultaNotas',
         component: DocenteMisCursosConsultaNotas
+      },
+      {
+        path: 'mis-cursos-consulta-notas',
+        name: 'MisCursosConsultaNotas',
+        component: MisCursosConsultaNotas
+      },
+      {
+        path: 'docentes-anio-escolar',
+        name: 'DocentesAnioEscolar',
+        component: DocentesAnioEscolar
+      },
+      {
+        path: 'mis-aulas',
+        name: 'MisAulas',
+        component: MisAulas
       }
     ]
   }

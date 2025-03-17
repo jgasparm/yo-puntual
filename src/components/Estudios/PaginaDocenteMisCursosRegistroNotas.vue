@@ -1,7 +1,7 @@
 <template>
   <v-container class="py-4">
     <!-- Botón para regresar -->
-    <v-btn color="primary" @click="goBack" class="mb-4">Regresaar</v-btn>
+    <v-btn color="primary" @click="goBack" class="mb-4">Regresar</v-btn>
 
     <!-- Información de Curso y Bimestre -->
     <v-row class="mb-2">

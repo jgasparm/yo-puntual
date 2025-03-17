@@ -41,53 +41,64 @@
     </div>
 
     <!-- Vista Mobile: Tarjetas para cada curso -->
-    <div v-else>
-      <v-alert v-if="!filteredCursos.length" type="info">
-        No hay cursos disponibles
-      </v-alert>
-      <v-row v-else dense>
-        <v-col
-          v-for="(curso, index) in paginatedCursos"
-          :key="index"
-          cols="12"
-          class="mb-2"
+<div v-else>
+  <v-alert v-if="!filteredCursos.length" type="info">
+    No hay cursos disponibles
+  </v-alert>
+  <v-row v-else dense>
+    <v-col
+      v-for="(curso, index) in paginatedCursos"
+      :key="index"
+      cols="12"
+      class="mb-2"
+    >
+      <!-- Se agrega position: relative para poder posicionar los botones de forma absoluta -->
+      <v-card outlined style="position: relative; text-align: left;">
+        <!-- Botón editar: se posiciona en la esquina superior derecha -->
+        <v-btn
+          icon
+          color="secondary"
+          @click="registrarNotas(curso)"
+          style="position: absolute; top: 8px; right: 8px;"
         >
-          <v-card outlined>
-            <v-card-title class="subtitle-2 font-weight-bold">
-              {{ curso.aede_nombre }}
-            </v-card-title>
-            <v-card-text>
-              <div><strong>Turno:</strong> {{ curso.turn_nombre }}</div>
-              <div><strong>Nivel:</strong> {{ curso.nive_nombre }}</div>
-              <div><strong>Grado:</strong> {{ curso.grad_nombre }}</div>
-              <div><strong>Sección:</strong> {{ curso.secc_nombre }}</div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn icon color="primary" @click="verNotas(curso)">
-                <v-icon>mdi-eye</v-icon>
-              </v-btn>
-              <v-btn icon color="secondary" @click="registrarNotas(curso)">
-                <v-icon>mdi-pencil</v-icon>
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <!-- Botón ver (opcional, si se requiere que también aparezca) -->
+        <v-btn
+          icon
+          color="primary"
+          @click="verNotas(curso)"
+          style="position: absolute; top: 8px; right: 48px;"
+        >
+          <v-icon>mdi-eye</v-icon>
+        </v-btn>
+        <!-- Contenido del curso con padding-top para dejar espacio a los botones -->
+        <v-card-text style="padding-top: 60px;">
+          <div><strong>Curso:</strong> {{ curso.aede_nombre }}</div>
+          <div><strong>Aula:</strong> {{ curso.aula }}</div>
+          <div><strong>Turno:</strong> {{ curso.turn_nombre }}</div>
+          <div><strong>Nivel:</strong> {{ curso.nive_nombre }}</div>
+          <div><strong>Grado:</strong> {{ curso.grad_nombre }}</div>
+          <div><strong>Sección:</strong> {{ curso.secc_nombre }}</div>
+        </v-card-text>
+      </v-card>
+    </v-col>
+  </v-row>
+  <!-- Paginación para mobile -->
+  <v-pagination
+    v-if="paginatedPages > 1"
+    v-model="currentPage"
+    :length="paginatedPages"
+    :total-visible="3"
+    show-first-last
+    first-icon="mdi-chevron-double-left"
+    last-icon="mdi-chevron-double-right"
+    prev-icon="mdi-chevron-left"
+    next-icon="mdi-chevron-right"
+    class="mt-2 custom-pagination"
+  />
+</div>
 
-      <!-- Paginación para mobile -->
-      <v-pagination
-        v-if="paginatedPages > 1"
-        v-model="currentPage"
-        :length="paginatedPages"
-        :total-visible="3"
-        show-first-last
-        first-icon="mdi-chevron-double-left"
-        last-icon="mdi-chevron-double-right"
-        prev-icon="mdi-chevron-left"
-        next-icon="mdi-chevron-right"
-        class="mt-2 custom-pagination"
-      />
-    </div>
     <!-- Modal de "No se encontraron resultados" -->
     <v-dialog v-model="dialogNoResults" max-width="400">
       <v-card>
@@ -123,6 +134,7 @@ const selectedBimestre = ref(null)
 // Columnas de la tabla (solo se usan en vista Desktop)
 const headers = [
   { title: 'Curso', key: 'aede_nombre' },
+  { title: 'Aula', key: 'aula' },
   { title: 'Turno', key: 'turn_nombre' },
   { title: 'Nivel', key: 'nive_nombre' },
   { title: 'Grado', key: 'grad_nombre' },

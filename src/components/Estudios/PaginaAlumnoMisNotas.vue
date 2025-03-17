@@ -269,6 +269,7 @@ onMounted(async () => {
   }
 }
 @media (min-width: 1265px) {
+
   .docente,
   .curso,
   .bimestre {

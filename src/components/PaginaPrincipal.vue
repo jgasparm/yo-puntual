@@ -3,7 +3,7 @@
     <!-- CABECERA -->
     <header class="header">
       <div class="logo">
-        <img src="/logo.png" alt="Logo">       
+        <img :src="logoSrc" alt="Logo">       
       </div>
       <div class="NombreCentroEducativo">
         <h1>{{ centroEducativo }}</h1>
@@ -32,7 +32,7 @@
       <v-list>
         <v-list-item>
           <div class="menu-header">
-            <img src="/logo.png" alt="Logo" class="menu-logo-mobile">
+            <img :src="logoSrc" alt="Logo" class="menu-logo-mobile">
             <h4 class="menu-title">{{ centroEducativo }}</h4>
           </div>
         </v-list-item>
@@ -203,6 +203,11 @@ export default {
     }
   },
   computed: {
+    // Construye la ruta de la imagen usando el valor del localStorage "profile"
+    logoSrc() {
+      const profile = localStorage.getItem("profile") || "default";
+      return `/logo_${profile}.png`;
+    },
     // Formatea el nombre para que cada palabra inicie con mayúscula
     formattedUserName() {
       if (!this.usuarioNombre) return "";
@@ -296,11 +301,14 @@ export default {
         "Consulta de asistencia de empleado": "ConsultaAsistenciaEmpleado",
         "Calendario escolar": "CalendarioEscolar",
         "Registro de asistencias": "RegistroAsistencia",
-        "Mis notas": "MisNotas",
+        "Mis notas": "AlumnoMisNotas",
         "Cursos del docente": "DocenteMisCursos",
         "Mis cursos": "MisCursos",
-        "Mis cursos detalle": "DocenteMisCursosDetalle",
-        "Dashboard del alumno": "DashboardAlumno"
+        "Cursos del docente detalle": "DocenteMisCursosDetalle",
+        "Mis cursos detalle": "MisCursosDetalle",
+        "Dashboard del alumno": "DashboardAlumno",
+        "Docentes del año escolar": "DocentesAnioEscolar",
+        "Mis aulas": "MisAulas"
       };
 
       // Verificar si la vista seleccionada existe en la lista
