@@ -5,7 +5,7 @@ import Principal from '../components/PaginaPrincipal.vue';
 import Inicio from '../components/PaginaInicio.vue';
 import ConsultaAsistenciaAlumnos from '../components/Asistencia/PaginaConsultaAsistenciaAlumnos.vue';
 import ConsultaAsistenciaEmpleados from '../components/Asistencia/PaginaConsultaAsistenciaEmpleados.vue';
-import ConsultaAsistenciaAlumno from '../components/Asistencia/PaginaConsultaAsistenciaAlumno.vue';
+import MiAsistencia from '../components/Asistencia/PaginaConsultaAsistenciaAlumno.vue';
 import ConsultaAsistenciaEmpleado from '../components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue';
 import CalendarioEscolar from '../components/Estudios/PaginaCalendarioEscolar.vue';
 import RegistroAsistencia from '../components/Asistencia/PaginaAsistencia.vue';
@@ -18,6 +18,7 @@ import DocenteMisCursosConsultaNotas from '../components/Estudios/PaginaDocenteM
 import MisCursosConsultaNotas from '../components/Estudios/PaginaMisCursosConsultaNotas.vue';
 import DocentesAnioEscolar from '../components/Mantenimiento/PaginaDocentesAnioEscolar.vue';
 import MisAulas from '../components/Mantenimiento/PaginaMisAulas.vue';
+import AlumnoHorarioEscolar from '../components/Estudios/PaginaAlumnoHorarioEscolar.vue';
 
 const routes = [
   {
@@ -47,8 +48,8 @@ const routes = [
       },
       {
         path: 'consulta-asistencia-alumno',
-        name: 'ConsultaAsistenciaAlumno',
-        component: ConsultaAsistenciaAlumno
+        name: 'MiAsistencia',
+        component: MiAsistencia
       },
       {
         path: 'consulta-asistencia-empleado',
@@ -109,6 +110,11 @@ const routes = [
         path: 'mis-aulas',
         name: 'MisAulas',
         component: MisAulas
+      },
+      {
+        path: 'mi-horario-escolar',
+        name: 'AlumnoHorarioEscolar',
+        component: AlumnoHorarioEscolar
       }
     ]
   }

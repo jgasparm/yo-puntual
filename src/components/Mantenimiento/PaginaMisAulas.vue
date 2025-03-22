@@ -73,21 +73,24 @@
                     class="elevation-1"
                     dense
                   >
+                    <template #item.aude_estado="{ item }">
+                      <v-chip v-if="item.aude_estado === 'A'" color="green">Activo</v-chip>
+                      <v-chip v-else color="red">Inactivo</v-chip>
+                    </template>
                     <template #item.accion="{ item }">
                       <div class="table-action">
                         <v-btn icon variant="text" @click="editarDetalle(item)">
                           <v-icon>mdi-pencil</v-icon>
                         </v-btn>
+                        <!-- Botón para abrir la gestión del horario -->
                         <v-btn
                           icon
                           variant="text"
-                          :color="item.indicador_horario_escolar === 'Si' ? 'warning' : 'success'"
-                          :title="item.indicador_horario_escolar === 'Si' ? 'Actualizar horario escolar' : 'Agregar horario escolar'"
-                          @click="item.indicador_horario_escolar === 'Si' ? actualizarHorario(item) : agregarHorario(item)"
+                          color="primary"
+                          title="Gestionar Horario Escolar"
+                          @click="abrirDialogHorario(item)"
                         >
-                          <v-icon>
-                            {{ item.indicador_horario_escolar === 'Si' ? 'mdi-update' : 'mdi-plus' }}
-                          </v-icon>
+                          <v-icon>mdi-calendar-clock</v-icon>
                         </v-btn>
                       </div>
                     </template>
@@ -127,7 +130,7 @@
           class="mb-4"
         >
           <v-card :class="{ 'expanded-card': isExpanded(aula.aula_id) }" style="position: relative; text-align: left;">
-            <!-- Botones: Editar y Expandir (ubicados en la esquina superior derecha) -->
+            <!-- Botones: Editar y Expandir -->
             <v-btn icon variant="text" @click.stop="abrirDialogEditar(aula)" style="position: absolute; top: 8px; right: 48px;">
               <v-icon>mdi-pencil</v-icon>
             </v-btn>
@@ -170,18 +173,16 @@
                     <v-btn icon variant="text" @click.stop="editarDetalle(detalle)" style="position: absolute; top: 8px; right: 48px;">
                       <v-icon>mdi-pencil</v-icon>
                     </v-btn>
-                    <!-- Botón para agregar/actualizar horario escolar -->
+                    <!-- Botón para gestionar horario -->
                     <v-btn
                       icon
                       variant="text"
+                      color="primary"
+                      title="Gestionar Horario Escolar"
                       style="position: absolute; top: 8px; right: 8px;"
-                      :color="detalle.indicador_horario_escolar === 'Si' ? 'warning' : 'success'"
-                      :title="detalle.indicador_horario_escolar === 'Si' ? 'Actualizar horario escolar' : 'Agregar horario escolar'"
-                      @click="detalle.indicador_horario_escolar === 'Si' ? actualizarHorario(detalle) : agregarHorario(detalle)"
+                      @click="abrirDialogHorario(detalle)"
                     >
-                      <v-icon>
-                        {{ detalle.indicador_horario_escolar === 'Si' ? 'mdi-update' : 'mdi-plus' }}
-                      </v-icon>
+                      <v-icon>mdi-calendar-clock</v-icon>
                     </v-btn>
                     <v-card-text style="padding-top: 40px;">
                       <div><strong>Detalle N°:</strong> {{ ((detailPages[aula.aula_id] - 1) * itemsPerDetailPage) + dIndex + 1 }}</div>
@@ -189,6 +190,11 @@
                       <div><strong>Nivel:</strong> {{ detalle.nive_nombre }}</div>
                       <div><strong>Grado:</strong> {{ detalle.grad_nombre }}</div>
                       <div><strong>Sección:</strong> {{ detalle.secc_nombre }}</div>
+                      <div>
+                        <strong>Estado:</strong>
+                        <v-chip v-if="detalle.aude_estado === 'A'" color="green">Activo</v-chip>
+                        <v-chip v-else color="red">Inactivo</v-chip>
+                      </div>
                       <div><strong>Tutor:</strong> {{ detalle.tutor }}</div>
                     </v-card-text>
                   </v-card>
@@ -216,6 +222,7 @@
         class="mt-2"
       />
     </div>
+
     <!-- Diálogo para Agregar Aula -->
     <v-dialog v-model="dialogAgregarAula" max-width="500">
       <v-card>
@@ -238,7 +245,7 @@
           </v-form>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn text @click="dialogAgregarAula = false">Cancelar</v-btn>
           <v-btn color="primary" @click="guardarAula">Guardar</v-btn>
         </v-card-actions>
@@ -264,7 +271,6 @@
               type="number"
               required
             />
-            <!-- v-select para mostrar "Activo" e "Inactivo", pero enviar "A" e "I" -->
             <v-select
               v-model="aulaSeleccionada.aula_estado"
               :items="estadoOptions"
@@ -276,9 +282,287 @@
           </v-form>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn text @click="dialogEditarAula = false">Cancelar</v-btn>
           <v-btn color="primary" @click="actualizarAula">Guardar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Diálogo para Agregar / Editar Aula Detalle -->
+    <v-dialog v-model="dialogDetalle" max-width="600">
+      <v-card>
+        <v-card-title>
+          <span class="text-h6">
+            {{ isEditingDetalle ? 'Editar Detalle del Aula' : 'Agregar Detalle del Aula' }}
+          </span>
+        </v-card-title>
+        <v-card-text>
+          <v-form ref="formDetalle">
+            <v-select
+              v-model="detalle.ai_empl_id"
+              :items="docentes"
+              item-title="docente_descripcion"
+              item-value="empl_id"
+              label="Tutor (opcional)"
+            />
+            <v-select
+              v-model="detalle.ai_turn_id"
+              :items="filtros.turnos"
+              item-title="turn_nombre"
+              item-value="turn_id"
+              label="Turno"
+              :rules="[requiredRule]"
+              required
+            />
+            <v-select
+              v-model="detalle.ac_nive_id"
+              :items="filtros.niveles"
+              item-title="nive_nombre"
+              item-value="nive_id"
+              label="Nivel"
+              :rules="[requiredRule]"
+              required
+            />
+            <v-select
+              v-model="detalle.ai_grad_id"
+              :items="gradosFiltrados"
+              item-title="grad_nombre"
+              item-value="grad_id"
+              label="Grado"
+              :rules="[requiredRule]"
+              required
+            />
+            <v-select
+              v-model="detalle.ai_secc_id"
+              :items="seccionesFiltradas"
+              item-title="secc_nombre"
+              item-value="secc_id"
+              label="Sección"
+              :rules="[requiredRule]"
+              required
+            />
+            <v-switch
+              v-if="isEditingDetalle"
+              v-model="detalle.ac_aude_estado"
+              label="Estado"
+              true-value="A"
+              false-value="I"
+            />
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn text @click="cerrarDialogDetalle">Cancelar</v-btn>
+          <v-btn color="primary" @click="guardarDetalle">
+            {{ isEditingDetalle ? 'Actualizar' : 'Guardar' }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Diálogo para GESTIONAR HORARIO (Rangos y Días/Cursos) -->
+    <v-dialog v-model="dialogHorario" max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h6">Horario Escolar</span>
+        </v-card-title>
+
+        <v-card-text>
+          <!-- Botón global para crear Rango -->
+          <v-btn color="primary" class="mb-3" @click="abrirDialogNuevoRango">
+            + Nuevo Rango
+          </v-btn>
+
+          <!-- VERSIÓN DESKTOP: Tabla -->
+          <template v-if="isDesktop">
+            <v-data-table
+              :items="horarios"
+              :headers="headersHorario"
+              item-key="hesh_id"
+              class="elevation-1"
+            >
+            <template #item.dias="{ item }">
+              <div v-for="(dc, index) in item.dias" :key="index" class="py-2">
+                <div><strong>{{ dc.dia }}</strong></div>
+                <div>{{ dc.area_educativa }}</div>
+                <div class="caption grey--text">{{ dc.docente }}</div>
+                <v-btn icon small @click="abrirDialogEditDiaCurso(dc, item)">
+                  <v-icon>mdi-pencil</v-icon>
+                </v-btn>
+              </div>
+              <v-btn small color="success" variant="text" class="mt-2" @click="abrirDialogNuevoDiaCurso(item)">
+                + Agregar Día/Curso
+              </v-btn>
+            </template>
+
+
+              <template #item.acciones="{ item }">
+                <v-btn icon @click="abrirDialogEditRango(item)">
+                  <v-icon>mdi-pencil</v-icon>
+                </v-btn>
+              </template>
+            </v-data-table>
+          </template>
+
+          <!-- VERSIÓN MOBILE: Tarjetas -->
+          <template v-else>
+            <v-row dense>
+              <v-col
+                v-for="(rango) in horarios"
+                :key="rango.hesh_id"
+                cols="12"
+                class="mb-2"
+              >
+                <v-card outlined style="position: relative; text-align: left;">
+                  <!-- Botón para editar el Rango -->
+                  <v-btn
+                    icon
+                    variant="text"
+                    color="primary"
+                    style="position: absolute; top: 8px; right: 8px;"
+                    @click="abrirDialogEditRango(rango)"
+                  >
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-btn>
+
+                  <v-card-text style="padding-top: 40px;">
+                    <div><strong>Hora Inicio:</strong> {{ rango.hesh_hora_inicio }}</div>
+                    <div><strong>Hora Fin:</strong> {{ rango.hesh_hora_fin }}</div>
+                    <div>
+                      <strong>Recreo:</strong>
+                      {{ rango.hesh_indicador_recreo === 'S' ? 'Sí' : 'No' }}
+                    </div>
+                    <div class="mt-2">
+                      <strong>Días/Curso(s):</strong>
+                      <div v-for="(dc, idx) in rango.dias" :key="idx" style="margin-left: 12px;">
+                        • <strong>{{ dc.dia }}</strong><br>
+                          {{ dc.area_educativa }}<br>
+                          <span class="caption grey--text">{{ dc.docente }}</span>
+                        <v-btn icon small @click="abrirDialogEditDiaCurso(dc, rango)">
+                          <v-icon>mdi-pencil</v-icon>
+                        </v-btn>
+                      </div>
+
+                      <!-- Botón para agregar Día/Curso -->
+                      <v-btn
+                        small
+                        color="success"
+                        variant="text"
+                        class="mt-2"
+                        @click="abrirDialogNuevoDiaCurso(rango)"
+                      >
+                        + Agregar Día/Curso
+                      </v-btn>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </template>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn text @click="dialogHorario = false">Cerrar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+
+    <!-- Diálogo para CREAR/EDITAR RANGO DE HORAS -->
+    <v-dialog v-model="dialogEditRango" max-width="400px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h6">
+            {{ datosRango.hesh_id ? 'Editar Rango' : 'Nuevo Rango' }}
+          </span>
+        </v-card-title>
+        <v-card-text>
+          <v-form ref="formRango">
+            <v-text-field
+              v-model="datosRango.hesh_hora_inicio"
+              label="Hora Inicio (HH:MM)"
+              :rules="[timeRule]"
+              maxlength="5"
+              required
+            ></v-text-field>
+            <v-text-field
+              v-model="datosRango.hesh_hora_fin"
+              label="Hora Fin (HH:MM)"
+              :rules="[timeRule, endTimeRule]"
+              maxlength="5"
+              required
+            ></v-text-field>
+            <v-select
+              v-model="datosRango.hesh_indicador_recreo"
+              :items="indicadorRecreoItems"
+              item-title="title"
+              item-value="key"
+              label="¿Es Recreo?"
+            ></v-select>
+            <v-select
+              v-if="datosRango.hesh_id"
+              v-model="datosRango.hesh_estado"
+              item-title="title"
+              item-value="key"
+              :items="estadoRangoOptions"
+              label="Estado"
+            ></v-select>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn text @click="dialogEditRango = false">Cancelar</v-btn>
+          <v-btn color="primary" @click="guardarRango">
+            {{ datosRango.hesh_id ? 'Actualizar' : 'Guardar' }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Diálogo para CREAR/EDITAR DÍA/CURSO -->
+    <v-dialog v-model="dialogDiaCurso" max-width="400px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h6">
+            {{ datosDiaCurso.hesc_id ? 'Editar Día/Curso' : 'Nuevo Día/Curso' }}
+          </span>
+        </v-card-title>
+        <v-card-text>
+          <v-form ref="formDiaCurso">
+            <v-select
+              v-model="datosDiaCurso.dia_id"
+              :items="listaDias"
+              item-title="dia_descripcion"
+              item-value="dia_id"
+              label="Día"
+              required
+            ></v-select>
+            <v-select
+              v-model="datosDiaCurso.daed_id"
+              :items="listaCursos"
+              item-title="label"
+              item-value="daed_id"
+              label="Área Educativa y Docente"
+              required
+            ></v-select>
+            <v-select
+              v-if="datosDiaCurso.hesc_id"
+              v-model="datosDiaCurso.hesc_estado"
+              item-title="title"
+              item-value="key"
+              :items="estadoRangoOptions"
+              label="Estado"
+            ></v-select>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn text @click="dialogDiaCurso = false">Cancelar</v-btn>
+          <v-btn color="primary" @click="guardarDiaCurso">
+            {{ datosDiaCurso.hesc_id ? 'Actualizar' : 'Guardar' }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -286,21 +570,31 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted, watch, nextTick } from 'vue'
 import { useDisplay } from 'vuetify'
-import { useRouter } from 'vue-router'
+//import { useRouter } from 'vue-router'
 import axios from 'axios'
 
-/** Diálogos */
+// === VALIDACIONES ===
+const requiredRule = value => !!value || 'Este campo es obligatorio'
+
+// Validar formato HH:MM en 24 horas
+const timeRule = value => {
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value) || 'Formato inválido (HH:MM)'
+}
+
+const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
+
+// === DIALOGOS DE AULA (ORIGINALES) ===
 const dialogAgregarAula = ref(false)
 const dialogEditarAula = ref(false)
+const dialogDetalle = ref(false)
 
-/** Modelos para formularios */
+// === MODELOS PARA AULA ===
 const nuevaAula = ref({
   aula_nombre: '',
   aula_capacidad: null
 })
-
 const aulaSeleccionada = ref({
   aula_id: null,
   aula_nombre: '',
@@ -308,24 +602,61 @@ const aulaSeleccionada = ref({
   aula_estado: ''
 })
 
-/** Opciones para estado: se muestran "Activo"/"Inactivo" y se envían "A"/"I" */
+// === MODELOS PARA AULA DETALLE ===
+const detalle = reactive({
+  ai_aude_id: null,
+  ai_aula_id: null,
+  ai_empl_id: null,
+  ai_turn_id: null,
+  ac_nive_id: null,
+  ai_grad_id: null,
+  ai_secc_id: null,
+  ac_anio_escolar: ac_anio_escolar,
+  ac_aude_estado: 'A'
+})
+const isEditingDetalle = ref(false)
+const isCargandoDetalle = ref(false);
+
+// === OPCIONES PARA ESTADO (AULA) ===
 const estadoOptions = [
   { text: 'Activo', value: 'A' },
   { text: 'Inactivo', value: 'I' }
 ]
 
-/** RESPONSIVIDAD **/
-const { mdAndUp } = useDisplay()
-const isDesktop = mdAndUp
+// === DATOS GLOBALES DE AULAS Y DETALLES ===
+const allAulas = ref([])       // Obtenidos de wsListaAula
+const allDetalles = ref([])    // Obtenidos de wsListaAulaDetalleAnioEscolar
 
-/** ROUTER **/
-const router = useRouter()
+// === DATOS PARA SELECTS DE DETALLE (DOCENTES, TURNOS, NIVELES, GRADOS, SECCIONES) ===
+const docentes = ref([])
+const filtros = reactive({
+  turnos: [],
+  niveles: [],
+  grados: [],
+  secciones: []
+})
+const gradosFiltrados = computed(() => {
+  if (!detalle.ac_nive_id) return []
+  return filtros.grados.filter(grad => grad.nive_id === detalle.ac_nive_id)
+})
+const seccionesFiltradas = computed(() => {
+  if (!detalle.ai_grad_id) return []
+  return filtros.secciones.filter(secc => secc.grad_id === detalle.ai_grad_id)
+})
 
-/** DATOS DE AULAS Y DETALLES **/
-const allAulas = ref([])       // Datos obtenidos de wsListaAula
-const allDetalles = ref([])    // Datos obtenidos de wsListaAulaDetalleAnioEscolar
+watch(() => detalle.ac_nive_id, () => {
+  if (!isCargandoDetalle.value) {
+    detalle.ai_grad_id = null
+    detalle.ai_secc_id = null
+  }
+})
+watch(() => detalle.ai_grad_id, () => {
+  if (!isCargandoDetalle.value) {
+    detalle.ai_secc_id = null
+  }
+})
 
-/** PAGINACIÓN PARA AULAS **/
+// === PAGINACIÓN PARA AULAS ===
 const currentAulaPage = ref(1)
 const itemsPerAulaPage = ref(5)
 const totalAulaPages = computed(() =>
@@ -336,7 +667,7 @@ const paginatedAulas = computed(() => {
   return allAulas.value.slice(start, start + itemsPerAulaPage.value)
 })
 
-/** EXPAND / COLAPSAR: Solo una aula expandida a la vez **/
+// === EXPAND/COLLAPSE AULA ===
 const expandedAulaId = ref(null)
 function isExpanded(aulaId) {
   return expandedAulaId.value === aulaId
@@ -345,23 +676,22 @@ function toggleExpand(aulaId) {
   expandedAulaId.value = expandedAulaId.value === aulaId ? null : aulaId
 }
 
-/** ENCABEZADOS PARA LA TABLA DE DETALLES (versión desktop) **/
+// === HEADERS PARA LA TABLA DE DETALLES (DENTRO DEL AULA) ===
 const detalleHeaders = [
   { title: 'Turno', key: 'turn_nombre' },
   { title: 'Nivel', key: 'nive_nombre' },
   { title: 'Grado', key: 'grad_nombre' },
   { title: 'Sección', key: 'secc_nombre' },
   { title: 'Tutor', key: 'tutor' },
+  { title: 'Estado', key: 'aude_estado' },
   { title: 'Acción', key: 'accion', sortable: false }
 ]
 
-/** PAGINACIÓN PARA DETALLES (por aula) **/
+// === PAGINACIÓN PARA DETALLES (POR AULA) ===
 const itemsPerDetailPage = ref(3)
-const detailPages = reactive({}) // Ejemplo: { 1: 1, 2: 1, ... }
+const detailPages = reactive({})
 function getDetalles(aulaId) {
-  return allDetalles.value.filter(
-    detalle => Number(detalle.aula_id) === Number(aulaId)
-  )
+  return allDetalles.value.filter(d => Number(d.aula_id) === Number(aulaId))
 }
 function getPaginatedDetalles(aulaId) {
   const detalles = getDetalles(aulaId)
@@ -377,15 +707,14 @@ function getPaginatedDetallesTotal(aulaId) {
   return Math.ceil(detalles.length / itemsPerDetailPage.value)
 }
 
-/** Función para abrir el diálogo de agregar aula */
+// === BOTONES / MÉTODOS PARA AULA ===
 function abrirDialogAgregar() {
   nuevaAula.value.aula_nombre = ''
   nuevaAula.value.aula_capacidad = null
   dialogAgregarAula.value = true
 }
-
-/** Función para guardar el aula nueva usando el API wsRegistraAula.php con token bearer (POST) */
 function guardarAula() {
+  if (!nuevaAula.value.aula_nombre) return
   const token = localStorage.getItem("token")
   const profile = localStorage.getItem("profile")
   const baseUrl = 'https://amsoftsolution.com/amss/ws/wsRegistraAula.php'
@@ -400,25 +729,20 @@ function guardarAula() {
       'Content-Type': 'application/json'
     }
   }
-  axios
-    .post(baseUrl, data, config)
+  axios.post(baseUrl, data, config)
     .then(response => {
       console.log('Aula agregada:', response.data)
       dialogAgregarAula.value = false
-      fetchAulas()  // Refrescar la lista de aulas
+      fetchAulas()
     })
     .catch(error => {
       console.error('Error al agregar aula:', error)
     })
 }
-
-/** Función para abrir el diálogo de editar aula */
 function abrirDialogEditar(aula) {
   aulaSeleccionada.value = { ...aula }
   dialogEditarAula.value = true
 }
-
-/** Función para actualizar el aula usando el API wsActualizaAula.php con token bearer (POST) */
 function actualizarAula() {
   const token = localStorage.getItem("token")
   const profile = localStorage.getItem("profile")
@@ -436,32 +760,391 @@ function actualizarAula() {
       'Content-Type': 'application/json'
     }
   }
-  axios
-    .post(baseUrl, data, config)
+  axios.post(baseUrl, data, config)
     .then(response => {
       console.log('Aula actualizada:', response.data)
       dialogEditarAula.value = false
-      fetchAulas()  // Refrescar la lista de aulas
+      fetchAulas()
     })
     .catch(error => {
       console.error('Error al actualizar aula:', error)
     })
 }
 
+// === BOTONES / MÉTODOS PARA DETALLE AULA ===
 function agregarDetalle(aula) {
-  router.push({ name: 'AgregarDetalle', query: { aula: encodeURIComponent(JSON.stringify(aula)) } })
+  abrirDialogDetalle(null, aula.aula_id)
 }
-function editarDetalle(detalle) {
-  router.push({ name: 'EditarDetalle', query: { detalle: encodeURIComponent(JSON.stringify(detalle)) } })
+function editarDetalle(detalleData) {
+  abrirDialogDetalle(detalleData)
 }
-function actualizarHorario(detalle) {
-  router.push({ name: 'ActualizarHorario', query: { detalle: encodeURIComponent(JSON.stringify(detalle)) } })
+function abrirDialogDetalle(detalleData = null, aula_id = null) {
+  if (detalleData) {
+    isEditingDetalle.value = true
+    isCargandoDetalle.value = true
+    detalle.ai_aude_id     = detalleData.aude_id
+    detalle.ai_aula_id     = detalleData.aula_id
+    detalle.ai_empl_id     = detalleData.empl_id || detalleData.ai_empl_id
+    detalle.ai_turn_id     = detalleData.turn_id
+    detalle.ac_nive_id     = detalleData.nive_id
+    detalle.ai_grad_id     = detalleData.grad_id
+    detalle.ai_secc_id     = detalleData.secc_id
+    detalle.ac_anio_escolar= detalleData.ac_anio_escolar
+    detalle.ac_aude_estado = detalleData.aude_estado
+    nextTick(() => {
+      isCargandoDetalle.value = false
+    })
+  } else {
+    isEditingDetalle.value = false
+    Object.assign(detalle, {
+      ai_aude_id: null,
+      ai_aula_id: aula_id,
+      ai_empl_id: null,
+      ai_turn_id: null,
+      ac_nive_id: null,
+      ai_grad_id: null,
+      ai_secc_id: null,
+      ac_anio_escolar: ac_anio_escolar,
+      ac_aude_estado: 'A'
+    })
+  }
+  dialogDetalle.value = true
 }
-function agregarHorario(detalle) {
-  router.push({ name: 'AgregarHorario', query: { detalle: encodeURIComponent(JSON.stringify(detalle)) } })
+function cerrarDialogDetalle() {
+  dialogDetalle.value = false
+}
+function guardarDetalle() {
+  if (!formDetalle.value.validate()) return
+
+  const token = localStorage.getItem("token")
+  const profile = localStorage.getItem("profile")
+  const config = {
+    headers: { 
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  }
+  if (isEditingDetalle.value) {
+    // Actualizar detalle
+    const baseUrl = 'https://amsoftsolution.com/amss/ws/wsActualizaAulaDetalle.php'
+    const data = {
+      ai_aude_id: detalle.ai_aude_id,
+      ai_aula_id: detalle.ai_aula_id,
+      ai_empl_id: detalle.ai_empl_id,
+      ai_turn_id: detalle.ai_turn_id,
+      ac_nive_id: detalle.ac_nive_id,
+      ai_grad_id: detalle.ai_grad_id,
+      ai_secc_id: detalle.ai_secc_id,
+      ac_aude_estado: detalle.ac_aude_estado,
+      av_profile: profile
+    }
+    axios.post(baseUrl, data, config)
+      .then(response => {
+        console.log('Aula detalle actualizada:', response.data)
+        cerrarDialogDetalle()
+        fetchDetalles()
+      })
+      .catch(error => {
+        console.error('Error al actualizar detalle:', error)
+      })
+  } else {
+    // Registrar detalle
+    const baseUrl = 'https://amsoftsolution.com/amss/ws/wsRegistraAulaDetalle.php'
+    const data = {
+      ai_aula_id: detalle.ai_aula_id,
+      ai_empl_id: detalle.ai_empl_id || null,
+      ai_turn_id: detalle.ai_turn_id,
+      ac_nive_id: detalle.ac_nive_id,
+      ai_grad_id: detalle.ai_grad_id,
+      ai_secc_id: detalle.ai_secc_id,
+      ac_anio_escolar: detalle.ac_anio_escolar,
+      av_profile: profile
+    }
+    axios.post(baseUrl, data, config)
+      .then(response => {
+        console.log('Aula detalle registrada:', response.data)
+        cerrarDialogDetalle()
+        fetchDetalles()
+      })
+      .catch(error => {
+        console.error('Error al registrar detalle:', error)
+      })
+  }
 }
 
-/** CONSULTA A LAS API **/
+// === AGREGAMOS TODO LO RELACIONADO AL HORARIO ESCOLAR ===
+
+// 1) Estados/refs para Horario
+const dialogHorario = ref(false)    // Para abrir/cerrar el diálogo principal de horario
+const horarios = ref([])           // Lista de rangos + días/cursos devueltos por la API
+let currentAulaDetalleId = null    // Guardar el 'ai_aude_id' del detalle que estamos gestionando
+
+// 2) Estado para RANGOS
+const dialogEditRango = ref(false)
+const datosRango = reactive({
+  hesh_id: null,
+  ai_aude_id: null,
+  hesh_hora_inicio: '',
+  hesh_hora_fin: '',
+  hesh_indicador_recreo: 'N',
+  hesh_estado: 'A'
+})
+
+// 3) Estado para DÍA/CURSO
+const dialogDiaCurso = ref(false)
+const datosDiaCurso = reactive({
+  hesc_id: null,
+  hesh_id: null,
+  dia_id: null,
+  daed_id: null,
+  hesc_estado: 'A'
+})
+
+// 4) Listas auxiliares: días y cursos
+const listaDias = ref([])
+const listaCursos = ref([])
+
+// 5) Items para selects
+const indicadorRecreoItems = [
+  { title: 'No (Clase)', key: 'N' },
+  { title: 'Sí (Recreo)', key: 'S' }
+]
+const estadoRangoOptions = [
+  { title: 'Activo', key: 'A' },
+  { title: 'Inactivo', key: 'I' }
+]
+
+// 6) Columnas para la tabla de horarios
+const headersHorario = [
+  { title: 'Inicio', key: 'hesh_hora_inicio' },
+  { title: 'Fin', key: 'hesh_hora_fin' },
+  { title: 'Recreo', key: 'hesh_indicador_recreo' },
+  { title: 'Días/Curso(s)', key: 'dias', sortable: false },
+  { title: 'Acciones', key: 'acciones', sortable: false }
+]
+
+// 7) Métodos para abrir el diálogo de Horario y cargar la data
+function abrirDialogHorario(detalleData) {
+  currentAulaDetalleId = detalleData.aude_id
+  fetchHorarioEscolar(currentAulaDetalleId)
+  dialogHorario.value = true
+}
+
+// 8) Consumir la API para obtener los rangos y días/cursos
+async function fetchHorarioEscolar(audeId) {
+  const token = localStorage.getItem("token")
+  const profile = localStorage.getItem("profile") || "demo"
+
+  try {
+    const { data } = await axios.get('https://amsoftsolution.com/amss/ws/wsConsultaHorarioEscolar.php', {
+      params: { ai_aude_id: audeId, av_profile: profile },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    if (data.status) {
+      horarios.value = data.data.map(rango => ({
+        ...rango,
+        dias: rango.dias.map(dc => {
+          const match = listaCursos.value.find(c =>
+              c.area_educativa.trim() === dc.curso.trim() &&
+              c.docente.trim() === dc.docente.trim()
+            )
+          return {
+            dia: dc.dia,
+            area_educativa: match?.area_educativa || dc.curso,
+            docente: match?.docente || 'Sin asignar',
+            daed_id: match?.daed_id || null,    // <–– aquí
+            hesc_id: dc.hesc_id   // <— preservamos el ID
+          }
+        })
+      }))
+    } else {
+      horarios.value = []
+    }
+  } catch (e) {
+    console.error(e)
+    horarios.value = []
+  }
+}
+
+
+// 9) Registrar/Actualizar RANGO
+function abrirDialogNuevoRango() {
+  Object.assign(datosRango, {
+    hesh_id: null,
+    ai_aude_id: currentAulaDetalleId,
+    hesh_hora_inicio: '',
+    hesh_hora_fin: '',
+    hesh_indicador_recreo: 'N',
+    hesh_estado: 'A'
+  })
+  dialogEditRango.value = true
+}
+function abrirDialogEditRango(rango) {
+  Object.assign(datosRango, {
+    hesh_id: rango.hesh_id,
+    ai_aude_id: currentAulaDetalleId,
+    hesh_hora_inicio: rango.hesh_hora_inicio,
+    hesh_hora_fin: rango.hesh_hora_fin,
+    hesh_indicador_recreo: rango.hesh_indicador_recreo,
+    hesh_estado: rango.hesh_estado
+  })
+  dialogEditRango.value = true
+}
+async function guardarRango() {
+  // Validar formato HH:MM
+  if (!formRango.value.validate()) return
+
+  const token = localStorage.getItem("token")
+  const profile = localStorage.getItem("profile") || "demo"
+  const config = {
+    headers: { 
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  }
+
+  // Registrar
+  if (!datosRango.hesh_id) {
+    const baseUrl = 'https://amsoftsolution.com/amss/ws/wsRegistraHorarioEscolarRango.php'
+    const data = {
+      ai_aude_id: datosRango.ai_aude_id,
+      ac_hesh_hora_inicio: datosRango.hesh_hora_inicio,
+      ac_hesh_hora_fin: datosRango.hesh_hora_fin,
+      ac_hesh_indicador_recreo: datosRango.hesh_indicador_recreo,
+      av_profile: profile
+    }
+    axios.post(baseUrl, data, config)
+      .then(response => {
+        console.log('Rango Horario escolar  registrado:', response.data)
+        dialogEditRango.value = false
+        fetchHorarioEscolar(datosRango.ai_aude_id)
+      })
+      .catch(error => {
+        console.error('Error al registrar rango horario escolar:', error)
+      })
+  }
+  // Actualizar
+  else {
+    const baseUrl = 'https://amsoftsolution.com/amss/ws/wsActualizaHorarioEscolarRango.php'
+    const data = {
+      ai_hesh_id: datosRango.hesh_id,
+      ac_hesh_hora_inicio: datosRango.hesh_hora_inicio,
+      ac_hesh_hora_fin: datosRango.hesh_hora_fin,
+      ac_hesh_indicador_recreo: datosRango.hesh_indicador_recreo,
+      ac_hesh_estado: datosRango.hesh_estado,
+      av_profile: profile
+    }
+    axios.post(baseUrl, data, config)
+      .then(response => {
+        console.log('Rango Horario escolar actualizado:', response.data)
+        dialogEditRango.value = false
+        fetchHorarioEscolar(datosRango.ai_aude_id)
+      })
+      .catch(error => {
+        console.error('Error al actualizar rango horario escolar:', error)
+      })
+
+  }
+}
+
+// 10) Registrar/Actualizar Día-Curso
+function abrirDialogNuevoDiaCurso(rango) {
+  Object.assign(datosDiaCurso, {
+    hesc_id: null,
+    aude_id: rango.aude_id,
+    hesh_id: rango.hesh_id,
+    dia_id: null,
+    daed_id: null,
+    hesc_estado: 'A'
+  })
+  dialogDiaCurso.value = true
+}
+function abrirDialogEditDiaCurso(dc, rango) {
+  // No viene un ID de día/curso en la respuesta, a menos que lo incluyas en tu API
+  // Podrías guardar hesc_id en "dc" para editar. 
+  // Este ejemplo asume que sí existe "hesc_id" en la respuesta. Ajusta si es distinto.
+  Object.assign(datosDiaCurso, {
+    hesc_id: dc.hesc_id || null, // si tu API lo devuelve
+    aude_id: rango.aude_id,
+    hesh_id: rango.hesh_id,
+    dia_id: buscarDiaIdPorNombre(dc.dia), // Buscar en listaDias
+    daed_id: dc.daed_id,
+    //daed_id: buscarCursoIdPorNombre(dc.curso),
+    hesc_estado: 'A'
+  })
+  dialogDiaCurso.value = true
+}
+
+// Helpers para obtener IDs (si tu API no devuelve día_id y daed_id directos)
+function buscarDiaIdPorNombre(nombreDia) {
+  // Por ejemplo, LUNES => "2"
+  const diaObj = listaDias.value.find(d => d.dia_descripcion === nombreDia)
+  return diaObj ? diaObj.dia_id : null
+}
+// function buscarCursoIdPorNombre(nombreCurso) {
+//   const cursoObj = listaCursos.value.find(c => c.area_educativa === nombreCurso)
+//   return cursoObj ? cursoObj.daed_id : null
+// }
+
+async function guardarDiaCurso() {
+  if (!formDiaCurso.value.validate()) return
+  const token = localStorage.getItem("token")
+  const profile = localStorage.getItem("profile") || "demo"
+  const config = {
+    headers: { 
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  }
+
+  // Registrar
+  if (!datosDiaCurso.hesc_id) {
+    const baseUrl = 'https://amsoftsolution.com/amss/ws/wsRegistraHorarioEscolar.php'
+    const data = {
+          ai_hesh_id: datosDiaCurso.hesh_id,
+          ai_aude_id: datosDiaCurso.aude_id,
+          ac_dia_id: datosDiaCurso.dia_id,
+          ai_daed_id: datosDiaCurso.daed_id,
+          av_profile: profile
+    }
+    axios.post(baseUrl, data, config)
+      .then(response => {
+        console.log('Horario escolar registrado:', response.data)
+        dialogDiaCurso.value = false
+        fetchHorarioEscolar(datosDiaCurso.aude_id)
+      })
+      .catch(error => {
+        console.error('Error al registrar horario escolar:', error)
+      })
+  }
+  // Actualizar
+  else {
+    const baseUrl = 'https://amsoftsolution.com/amss/ws/wsActualizaHorarioEscolar.php'
+    const data = {
+      ai_hesc_id: datosDiaCurso.hesc_id,
+      ac_dia_id: datosDiaCurso.dia_id,
+      ai_daed_id: datosDiaCurso.daed_id,
+      ac_hesc_estado: datosDiaCurso.hesc_estado,
+      av_profile: profile
+    }
+    axios.post(baseUrl, data, config)
+      .then(response => {
+        console.log('Horario escolar actualizado:', response.data)
+        dialogDiaCurso.value = false
+        fetchHorarioEscolar(datosDiaCurso.aude_id)
+      })
+      .catch(error => {
+        console.error('Error al actualizar horario escolar:', error)
+      })
+    }
+}
+
+// === FORM REFS PARA VALIDAR RANGOS Y DIA/CURSO ===
+const formRango = ref(null)
+const formDiaCurso = ref(null)
+
+// === CONSUMO DE APIS (ORIGINALES) ===
 async function fetchAulas() {
   try {
     const token = localStorage.getItem("token")
@@ -484,18 +1167,19 @@ async function fetchAulas() {
     console.error("Error fetching aulas:", error)
   }
 }
-
 async function fetchDetalles() {
   try {
     const token = localStorage.getItem("token")
     const profile = localStorage.getItem("profile") || "demo"
-    const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
     if (!token || !profile) {
       console.warn("Falta token o profile en localStorage.")
       return
     }
     const baseUrl = "https://amsoftsolution.com/amss/ws/wsListaAulaDetalleAnioEscolar.php"
-    const params = { ac_anio_escolar, av_profile: profile }
+    const params = {
+      ac_anio_escolar,
+      av_profile: profile
+    }
     const config = {
       params,
       headers: { Authorization: `Bearer ${token}` }
@@ -508,10 +1192,124 @@ async function fetchDetalles() {
     console.error("Error fetching detalles:", error)
   }
 }
+async function fetchDocentes() {
+  try {
+    const token = localStorage.getItem("token")    
+    const profile = localStorage.getItem("profile") || "demo"
+    const response = await axios.get('https://amsoftsolution.com/amss/ws/wsListaDocentes.php', {
+      params: {
+        ac_indicador_todos: 'N',
+        av_profile: profile
+      },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (response.data.status) {
+      docentes.value = response.data.data
+    }
+  } catch(error) {
+    console.error('Error fetching docentes', error)
+  }
+}
+async function fetchFiltros() {
+  try {
+    const token = localStorage.getItem("token")
+    const response = await axios.get('https://amsoftsolution.com/amss/ws/wsConsultaFiltrosAlumno.php', {
+      params: { av_profile: 'demo' },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if(response.data.status) {
+      Object.assign(filtros, response.data.data)
+    }
+  } catch(error) {
+    console.error('Error fetching filtros', error)
+  }
+}
+
+// === CONSUMO DE APIS PARA DÍAS Y CURSOS (NUEVO) ===
+async function fetchDias() {
+  const token = localStorage.getItem("token")
+  const profile = localStorage.getItem("profile") || "demo"
+  try {
+    const { data } = await axios.get('https://amsoftsolution.com/amss/ws/wsListaDiasHabiles.php', {
+      params: {
+        ac_dia_habil: 'S',
+        ac_indicador_todos: 'N',
+        av_profile: profile
+      },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (data.status) {
+      listaDias.value = data.data
+    }
+  } catch(e) {
+    console.error(e)
+  }
+}
+async function fetchCursos() {
+  const token = localStorage.getItem("token")
+  const profile = localStorage.getItem("profile")
+  const anio_escolar = localStorage.getItem("anio_escolar")
+  try {
+    const { data } = await axios.get('https://amsoftsolution.com/amss/ws/wsListaDocenteAreaEducativaDetalle.php', {
+      params: {
+        ac_anio_escolar: anio_escolar,
+        av_profile: profile
+      },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (data.status) {
+      listaCursos.value = data.data.map(c => ({
+      ...c,
+      label: `${c.area_educativa} — ${c.docente}`
+    }))
+    }
+  } catch(e) {
+    console.error(e)
+  }
+}
+
+function parseTimeToMinutes(timeStr) {
+  // timeStr es 'HH:MM'
+  const [hh, mm] = timeStr.split(':').map(Number)
+  return hh * 60 + mm
+}
+
+// Regla de validación para la hora fin
+function endTimeRule(value) {
+  // Primero, revisamos si pasó la regla de formato HH:MM (ya la cubre timeRule),
+  // pero igual conviene asegurarnos de que 'value' no sea null o vacío
+  if (!value) return true // ya otra regla se encargará de avisar si está vacío
+  if (!datosRango.hesh_hora_inicio) return true // si no hay hora de inicio, no podemos comparar
+  
+  const start = parseTimeToMinutes(datosRango.hesh_hora_inicio)
+  const end   = parseTimeToMinutes(value)
+  
+  // Validamos que end > start
+  if (end <= start) {
+    return 'La hora de fin no puede ser menor o igual que la hora de inicio'
+  }
+  return true
+}
+
+
+// === REFERENCIAS A FORMULARIOS DE V-FORM ===
+const formDetalle = ref(null)
+
+// === RESPONSIVIDAD ===
+const { mdAndUp } = useDisplay()
+const isDesktop = mdAndUp
+
+// === ROUTER (SI DESEAS NAVEGAR A OTRA RUTA, SEGUIMOS USANDO useRouter) ===
+//const router = useRouter()
 
 onMounted(() => {
   fetchAulas()
   fetchDetalles()
+  fetchDocentes()
+  fetchFiltros()
+  fetchDias()
+  fetchCursos()
+  fetchHorarioEscolar()
 })
 </script>
 

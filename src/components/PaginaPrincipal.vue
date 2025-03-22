@@ -99,29 +99,7 @@
 
       <!-- Columna Derecha: Banner y Anuncios/Noticias -->
       <aside class="rightbar">
-        <!-- Banner Superior (se muestra en la parte superior de la columna derecha) -->
-        <v-sheet color="blue lighten-4" class="pa-6 text-center" height="50%">
-          <h2 class="text-h5 font-weight-bold">
-            ¡Visita nuestra web y conoce más de nosotros! 
-            <v-icon color="red">mdi-hand-pointing-right</v-icon>
-          </h2>
-          <v-carousel
-            class="banner-carousel"
-            hide-delimiters
-            cycle
-            interval="5000"
-          >
-            <v-carousel-item v-for="(item, i) in bannerItems" :key="i">
-              <v-img :src="item.src" contain height="auto" width="100%" class="banner-img"></v-img>
-            </v-carousel-item>
-          </v-carousel>
-        </v-sheet>
-
-        <!-- Sección de Anuncios/Noticias -->
-        <h3>Anuncios</h3>
-        <ul>
-          <li v-for="(anuncio, index) in anuncios" :key="index">{{ anuncio }}</li>
-        </ul>
+        <AnunciosPublicados/>
       </aside>
     </div>
     <!-- Modal para sesión expirada -->
@@ -160,9 +138,11 @@
 
 // Para validar si venció el token
 //import jwtDecode from 'jwt-decode';
-
+import AnunciosPublicados from '@/components/PaginaAnunciosPublicados.vue'
 export default {
   name: "MainLayoutDesign1",
+  components: { AnunciosPublicados },
+
   data() {
     return {
       centroEducativo: "Centro Educativo Demo",
@@ -280,7 +260,7 @@ export default {
       this.mobileMenuOpen = !this.mobileMenuOpen;
     },
     verPerfil() {
-      alert("Ver perfil");
+      //alert("Ver perfil");
     },
     cerrarSesion() {
       localStorage.removeItem("auth");
@@ -295,20 +275,21 @@ export default {
       console.log(`Vista: ${vista}`);
       const vistasDisponibles = {
         Inicio: "Inicio",
-        "Consulta de asistencia de alumnos": "ConsultaAsistenciaAlumnos",
-        "Consulta de asistencia de empleados": "ConsultaAsistenciaEmpleados",
-        "Consulta de asistencia del alumno": "ConsultaAsistenciaAlumno",
-        "Consulta de asistencia de empleado": "ConsultaAsistenciaEmpleado",
+        "Asistencia de alumnos": "ConsultaAsistenciaAlumnos",
+        "Asistencia de empleados": "ConsultaAsistenciaEmpleados",
+        "Mi asistencia": "MiAsistencia",
+        "Mi asistencia ": "ConsultaAsistenciaEmpleado",
         "Calendario escolar": "CalendarioEscolar",
         "Registro de asistencias": "RegistroAsistencia",
         "Mis notas": "AlumnoMisNotas",
         "Cursos del docente": "DocenteMisCursos",
-        "Mis cursos": "MisCursos",
+        "Cursos": "MisCursos",
         "Cursos del docente detalle": "DocenteMisCursosDetalle",
         "Mis cursos detalle": "MisCursosDetalle",
         "Dashboard del alumno": "DashboardAlumno",
         "Docentes del año escolar": "DocentesAnioEscolar",
-        "Mis aulas": "MisAulas"
+        "Aulas": "MisAulas",
+        "Mi horario escolar":"AlumnoHorarioEscolar"
       };
 
       // Verificar si la vista seleccionada existe en la lista
@@ -512,6 +493,7 @@ export default {
   width: 250px;
   background: #f0f0f0;
   padding: 10px;
+  flex: none;
 }
 
 .menu {
@@ -575,7 +557,8 @@ export default {
 }
 
 .rightbar {
-  width: 400px;
+  flex: none;
+  max-width: 400px;
   background: #e8e8e8;
   padding: 10px;
   display: flex;

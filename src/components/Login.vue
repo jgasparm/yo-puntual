@@ -9,6 +9,19 @@
 
           <!-- Formulario de Login -->
           <v-form>
+            <!-- NUEVO: Select para tipo de documento -->
+            <v-select
+              v-model="document_type"
+              :items="tipoDocumentoItems"
+              item-text="title"
+              item-value="key"
+              label="Tipo de Documento"
+              required
+              outlined
+              prepend-icon="mdi-card-account-details"
+            >
+            </v-select>
+
             <!-- Campo de Usuario -->
             <v-text-field
               v-model="document_number"
@@ -49,6 +62,7 @@
             </div>
           </v-form>
         </v-card>
+
         <!-- Modal de "Credenciales incorrectas" -->
         <v-dialog v-model="ModalNoCredenciales" max-width="400">
           <v-card>
@@ -77,6 +91,14 @@ export default {
   },
   data() {
     return {
+      // NUEVO: variable para el tipo de documento
+      document_type: '1', // Valor por defecto (1 = DNI)
+      // Opciones para el select del tipo de documento
+      tipoDocumentoItems: [
+        { title: 'DNI', key: '1' },
+        { title: 'Carnet de extranjería', key: '4' }
+      ],
+
       document_number: '10030796',
       password: '99999999',
       loading: false,
@@ -93,7 +115,8 @@ export default {
 
       this.loading = true; // Activa el estado de carga
 
-      const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWeb.php?ai_tipo_documento=1&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}`;
+      // Ajustamos la URL para incluir ai_tipo_documento = this.document_type
+      const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWeb.php?ai_tipo_documento=${this.document_type}&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}`;
 
       try {
         const response = await fetch(apiUrl);
@@ -108,18 +131,19 @@ export default {
           localStorage.setItem('profile', userData.profile);
           localStorage.setItem('anio_escolar', userData.anio_escolar);
           localStorage.setItem('usua_id', userData.usua_id);
-          localStorage.setItem('pers_id', userData.pers_id);              
+          localStorage.setItem('pers_id', userData.pers_id);
+          localStorage.setItem('perfil', userData.id_perfil);
           localStorage.setItem('user', JSON.stringify(userData));
 
           // Llamar al servicio wsConsultaUsuarioPermisos con ai_perf_id obtenido del usuario
           const submenuUrl = `https://amsoftsolution.com/amss/ws/wsConsultaUsuarioPermisos.php?ai_perf_id=${userData.id_perfil}`;
-          
+
           // Llamar al servicio con el Bearer Token en los encabezados
           const submenuResponse = await fetch(submenuUrl, {
-            method: "GET", // O el método requerido por el servicio
+            method: "GET",
             headers: {
-              "Authorization": `Bearer ${userData.token}`, // Incluir el Bearer Token
-              "Content-Type": "application/json", // Asegurar que el servidor reciba JSON
+              "Authorization": `Bearer ${userData.token}`,
+              "Content-Type": "application/json"
             }
           });
           const submenuResult = await submenuResponse.json();
