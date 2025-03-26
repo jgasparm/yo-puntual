@@ -378,15 +378,15 @@ async function submitNote() {
 async function fetchEvaluaciones() {
   try {
     const token = localStorage.getItem("token")
-    const profile = localStorage.getItem("profile") || "demo"
-    const ai_usua_id = localStorage.getItem("ai_usua_id") || 5
+    const profile = localStorage.getItem("profile")
+    const ai_usua_id = localStorage.getItem("usua_id")
     const ai_peed_id = bimestreSeleccionado.value
       ? bimestreSeleccionado.value.peed_id
       : 1
     const ai_doad_id = cursoSeleccionado.value
       ? cursoSeleccionado.value.doad_id
       : 19
-    const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
+    const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     const baseUrl =
       "https://amsoftsolution.com/amss/ws/wsListaEvaluacionesDocentePeriodo.php"
@@ -418,15 +418,15 @@ async function fetchNotas() {
   try {
     if (!selectedEvaluacion.value) return
     const token = localStorage.getItem("token")
-    const profile = localStorage.getItem("profile") || "demo"
-    const ai_usua_id = localStorage.getItem("ai_usua_id") || 5
+    const profile = localStorage.getItem("profile")
+    const ai_usua_id = localStorage.getItem("usua_id")
     const ai_peed_id = bimestreSeleccionado.value
       ? bimestreSeleccionado.value.peed_id
       : 1
     const ai_doad_id = cursoSeleccionado.value
       ? cursoSeleccionado.value.doad_id
       : 19
-    const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
+    const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     const baseUrl =
       "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarEvaluacionPeriodo.php"

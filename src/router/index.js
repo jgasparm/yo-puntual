@@ -19,6 +19,8 @@ import MisCursosConsultaNotas from '../components/Estudios/PaginaMisCursosConsul
 import DocentesAnioEscolar from '../components/Mantenimiento/PaginaDocentesAnioEscolar.vue';
 import MisAulas from '../components/Mantenimiento/PaginaMisAulas.vue';
 import AlumnoHorarioEscolar from '../components/Estudios/PaginaAlumnoHorarioEscolar.vue';
+import PlanEstudios from '../components/Mantenimiento/PaginaPlanEstudios.vue';
+
 
 const routes = [
   {
@@ -115,6 +117,11 @@ const routes = [
         path: 'mi-horario-escolar',
         name: 'AlumnoHorarioEscolar',
         component: AlumnoHorarioEscolar
+      },
+      {
+        path: 'plan-estudios',
+        name: 'PlanEstudios',
+        component: PlanEstudios
       }
     ]
   }

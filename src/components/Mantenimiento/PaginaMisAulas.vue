@@ -1123,6 +1123,7 @@ async function guardarDiaCurso() {
     const baseUrl = 'https://amsoftsolution.com/amss/ws/wsActualizaHorarioEscolar.php'
     const data = {
       ai_hesc_id: datosDiaCurso.hesc_id,
+      ai_aude_id: datosDiaCurso.aude_id,
       ac_dia_id: datosDiaCurso.dia_id,
       ai_daed_id: datosDiaCurso.daed_id,
       ac_hesc_estado: datosDiaCurso.hesc_estado,
@@ -1309,7 +1310,7 @@ onMounted(() => {
   fetchFiltros()
   fetchDias()
   fetchCursos()
-  fetchHorarioEscolar()
+  //fetchHorarioEscolar()
 })
 </script>
 

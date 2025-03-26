@@ -524,6 +524,7 @@ async function asignarCursosDocente() {
       await axiosInstance.post('wsRegistraDocenteAreaEducativaDetalle.php', {
         ai_aedo_id: doc.aedo_id,
         ai_aede_id: cursoId,
+        av_profile: profile,
       })
     }
     cerrarDialogoAgregarCurso()

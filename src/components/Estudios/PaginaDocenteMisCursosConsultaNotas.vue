@@ -228,9 +228,9 @@ onMounted(() => {
 async function fetchDetalle(doad_id) {
   try {
     const token = localStorage.getItem("token")
-    const profile = localStorage.getItem("profile") || "demo"
-    const ai_usua_id = localStorage.getItem("ai_usua_id") || 5
-    const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
+    const profile = localStorage.getItem("profile")
+    const ai_usua_id = localStorage.getItem("usua_id")
+    const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     if (!token || !profile) {
       console.warn("Falta token o profile en localStorage.")

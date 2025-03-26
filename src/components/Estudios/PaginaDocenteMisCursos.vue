@@ -172,9 +172,9 @@ watch(selectedBimestre, () => {
 async function fetchAllData() {
   try {
     const token = localStorage.getItem("token")
-    const profile = localStorage.getItem("profile") || "demo"
-    const ai_usua_id = localStorage.getItem("ai_usua_id") || 5
-    const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
+    const profile = localStorage.getItem("profile")
+    const ai_usua_id = localStorage.getItem("usua_id")
+    const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     if (!token || !profile) {
       console.warn("Falta token o profile en localStorage.")
@@ -227,9 +227,9 @@ async function verNotas(curso) {
   const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
   // Datos necesarios para el API
   const token = localStorage.getItem("token")
-  const profile = localStorage.getItem("profile") || "demo"
-  const ai_usua_id = localStorage.getItem("ai_usua_id") || 5
-  const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
+  const profile = localStorage.getItem("profile")
+  const ai_usua_id = localStorage.getItem("usua_id")
+  const ac_anio_escolar = localStorage.getItem("anio_escolar")
   const doad_id = curso.doad_id
 
   const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"

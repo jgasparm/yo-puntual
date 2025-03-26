@@ -289,7 +289,8 @@ export default {
         "Dashboard del alumno": "DashboardAlumno",
         "Docentes del año escolar": "DocentesAnioEscolar",
         "Aulas": "MisAulas",
-        "Mi horario escolar":"AlumnoHorarioEscolar"
+        "Mi horario escolar":"AlumnoHorarioEscolar",
+        "Plan de estudios":"PlanEstudios"
       };
 
       // Verificar si la vista seleccionada existe en la lista
