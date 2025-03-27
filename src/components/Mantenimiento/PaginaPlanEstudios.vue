@@ -158,10 +158,81 @@
       <v-pagination v-if="totalPages > 1" v-model="currentPage" :length="totalPages" class="mt-4" />
     </div>
 
-    <!-- VERSIÓN MOBILE (se mantiene igual que antes) -->
-    <div v-else>
-      <!-- Estructura para mobile omitida por brevedad (utiliza v-card como en tu código actual) -->
-    </div>
+    <!-- VERSIÓN MOBILE -->
+      <div v-else>
+        <v-row>
+          <v-col cols="12" v-for="plan in paginatedMobilePlanes" :key="plan.ples_id">
+            <v-card class="mb-4">
+              <!-- Reemplaza solo el header de tu v-card en mobile -->
+<v-card-title class="d-flex justify-space-between align-center">
+  <div>
+    <div class="font-weight-medium">{{ plan.ared_nombre }}</div>
+    <div class="text-subtitle-2">{{ plan.nive_nombre }} — {{ plan.grad_nombre }}</div>
+  </div>
+  <div>
+    <v-btn icon @click.stop="abrirDialogoActualizarPlan(plan)">
+      <v-icon>mdi-pencil</v-icon>
+    </v-btn>
+    <v-btn icon @click.stop="toggleExpand(plan.ples_id)">
+      <v-icon>{{ isExpanded(plan.ples_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+    </v-btn>
+  </div>
+</v-card-title>
+
+
+
+              <v-card-subtitle class="px-4 pb-0">
+                Horas: {{ plan.ples_horas }} |
+                <v-chip x-small :color="plan.ples_estado === 'A' ? 'green' : 'red'">
+                  {{ plan.ples_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                </v-chip>
+              </v-card-subtitle>
+
+              <v-expand-transition>
+                <v-card-text v-if="isExpanded(plan.ples_id)">
+                  <v-list dense>
+                    <v-list-item
+                      v-for="item in planCurriculares[plan.ples_id] || []"
+                      :key="item.pacu_id"
+                      class="d-flex align-center justify-space-between"
+                    >
+                      <div>
+                        {{ item.peed_nombre }} — {{ item.aede_nombre }}
+                        <div class="text-caption">
+                          Docente: {{ item.docente }} | Horas: {{ item.pacu_horas }}
+                          <v-chip x-small :color="item.pacu_estado === 'A' ? 'green' : 'red'">
+                            {{ item.pacu_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                          </v-chip>
+                        </div>
+                      </div>
+                      <v-btn icon @click.stop="abrirDialogoActualizarCurricular(item, plan.ples_id)">
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                    </v-list-item>
+
+                    <v-list-item v-if="!(planCurriculares[plan.ples_id]?.length)">
+                      No hay planes curriculares
+                    </v-list-item>
+                  </v-list>
+
+                  <v-btn small color="primary" class="mt-2" @click="abrirDialogoAgregarCurricular(plan)">
+                    + Agregar Curricular
+                  </v-btn>
+                </v-card-text>
+              </v-expand-transition>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <v-pagination
+          v-model="mobilePage"
+          :length="mobileTotalPages"
+          :total-visible="5"
+          class="mt-4"
+          dense
+        />
+      </div>
+
 
     <!-- DIÁLOGO: Editar Plan de Estudio -->
     <v-dialog v-model="mostrarDialogoActualizarPlan" max-width="400">
@@ -203,7 +274,6 @@
           <v-select label="Periodo" :items="periodosOptions" item-text="title" item-value="key" v-model="newCurricular.periodo_id" />
           <v-select label="Docente / Curso" :items="docentesOptions" item-text="title" item-value="key" v-model="newCurricular.daed_id" />
           <v-text-field label="Horas" type="number" v-model="newCurricular.pacu_horas" />
-          <v-select label="Estado" :items="['Activo','Inactivo']" v-model="newCurricular.estado" />
         </v-card-text>
         <v-card-actions>
           <v-btn text @click="mostrarDialogoAgregarCurricular = false">Cancelar</v-btn>
@@ -242,6 +312,53 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="mostrarDialogoAgregarPlanEstudio" max-width="400">
+      <v-card>
+        <v-card-title>Agregar Plan de Estudio</v-card-title>
+        <v-card-text>
+          <v-select
+            label="Área Educativa"
+            :items="areasOptions.slice(1)"
+            item-text="title"
+            item-value="key"
+            v-model="newPlanEstudio.ared_id"
+            dense
+            outlined
+          />
+          <v-select
+            label="Nivel"
+            :items="nivelOptions.slice(1)"
+            item-text="title"
+            item-value="key"
+            v-model="newPlanEstudio.nive_id"
+            dense
+            outlined
+          />
+          <v-select
+            label="Grado"
+            :items="newGradoOptions"
+            item-text="title"
+            item-value="key"
+            v-model="newPlanEstudio.grad_id"
+            dense
+            outlined
+          />
+          <v-text-field
+            label="Horas"
+            type="number"
+            v-model="newPlanEstudio.ples_horas"
+            dense
+            outlined
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-btn text @click="mostrarDialogoAgregarPlanEstudio = false">Cancelar</v-btn>
+          <v-btn color="primary" @click="guardarNuevoPlanEstudio">Guardar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </v-container>
 </template>
 
@@ -322,18 +439,27 @@ const nivelDelPlan = computed(() => {
 
 // Opciones para el filtro "Grado"
 const gradoOptions = computed(() => {
+  // Siempre mostrar “TODOS” primero
   const base = [{ title: 'TODOS', key: 'TODOS' }]
-  const filtered =
-    selectedNivel.value === 'TODOS'
-      ? gradosList.value
-      : gradosList.value.filter(g => g.nive_id === selectedNivel.value)
-  return base.concat(filtered.map(g => ({ title: g.grad_nombre, text: g.grad_nombre })))
+
+  // Si el nivel seleccionado es “TODOS”, no agregar nada más
+  if (selectedNivel.value === 'TODOS') {
+    return base
+  }
+
+  // Si hay un nivel específico, filtrar los grados correspondientes
+  const filtered = gradosList.value.filter(g => g.nive_id === selectedNivel.value)
+
+  return base.concat(
+    filtered.map(g => ({ title: g.grad_nombre, key: g.grad_nombre }))
+  )
 })
+
 
 // Filtrado de planes
 const filteredPlanes = computed(() =>
   planesEstudio.value.filter(plan => {
-    const okArea = selectedArea.value === 'TODOS' || plan.ared_nombre === selectedArea.value
+    const okArea = selectedArea.value === 'TODOS' || plan.ared_id === selectedArea.value
     const okNivel =
       selectedNivel.value === 'TODOS' ||
       gradosList.value.find(g => g.grad_nombre === plan.grad_nombre)?.nive_id === selectedNivel.value
@@ -511,7 +637,7 @@ async function obtenerAreasEducativas() {
   const { data } = await axiosInstance.get(`wsListaAreaEducativa.php?ac_indicador_todos=N&av_profile=${profile}`)
   if (data.status) {
     areasOptions.value = [{ title: 'TODOS', key: 'TODOS' }].concat(
-      data.data.map(a => ({ title: a.aede_nombre, key: a.aede_nombre }))
+      data.data.map(a => ({ title: a.ared_nombre, key: a.ared_id }))
     )
   }
 }
@@ -526,6 +652,60 @@ async function obtenerNivelesGrados() {
   }
 }
 
+// — Mostrar/Ocultar diálogo —
+const mostrarDialogoAgregarPlanEstudio = ref(false)
+
+// — Modelo reactivo para el nuevo plan —
+const newPlanEstudio = reactive({
+  ared_id: null,
+  nive_id: null,
+  grad_id: null,
+  ples_horas: null,
+  estado: 'Activo'
+})
+
+// — Opciones filtradas para Grado (sin “TODOS”) —
+const newGradoOptions = computed(() =>
+  newPlanEstudio.nive_id
+    ? gradosList.value
+        .filter(g => g.nive_id === newPlanEstudio.nive_id)
+        .map(g => ({ title: g.grad_nombre, key: g.grad_id }))
+    : []
+)
+
+const mobilePage = ref(1)
+const mobileItemsPerPage = 5
+
+const paginatedMobilePlanes = computed(() => {
+  const start = (mobilePage.value - 1) * mobileItemsPerPage
+  return filteredPlanes.value.slice(start, start + mobileItemsPerPage)
+})
+
+const mobileTotalPages = computed(() =>
+  Math.ceil(filteredPlanes.value.length / mobileItemsPerPage)
+)
+
+
+// — Guardar nuevo Plan de Estudio —
+async function guardarNuevoPlanEstudio() {
+  try {
+    await axiosInstance.post('wsRegistraPlanEstudios.php', {
+      ai_grad_id: newPlanEstudio.grad_id,
+      ai_ared_id: newPlanEstudio.ared_id,
+      ai_ples_horas: newPlanEstudio.ples_horas,
+      ac_anio_escolar: anioEscolar,
+      av_profile: profile
+    })
+    mostrarDialogoAgregarPlanEstudio.value = false
+    // Reset modelo
+    Object.assign(newPlanEstudio, { ared_id: null, nive_id: null, grad_id: null, ples_horas: null, estado: 'Activo' })
+    await obtenerPlanesEstudio()
+  } catch (error) {
+    console.error('Error registrando plan de estudio:', error)
+  }
+}
+
+
 onMounted(() => {
   obtenerPlanesEstudio()
   obtenerAreasEducativas()
@@ -534,6 +714,7 @@ onMounted(() => {
 
 watch([selectedArea, selectedNivel, selectedGrado], () => {
   currentPage.value = 1
+  mobilePage.value = 1
 })
 </script>
 

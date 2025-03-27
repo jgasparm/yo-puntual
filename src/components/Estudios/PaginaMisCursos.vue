@@ -221,11 +221,12 @@ async function verNotas(curso) {
   const ai_usua_id = curso.usua_id
   const ac_anio_escolar = localStorage.getItem("anio_escolar")
   const doad_id = curso.doad_id
-
+  const aude_id = curso.aude_id
   const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"
   const params = {
     ai_usua_id,
     ai_doad_id: doad_id,
+    ai_aude_id: aude_id,
     ac_anio_escolar,
     av_profile: profile
   }

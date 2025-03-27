@@ -290,7 +290,8 @@ export default {
         "Docentes del año escolar": "DocentesAnioEscolar",
         "Aulas": "MisAulas",
         "Mi horario escolar":"AlumnoHorarioEscolar",
-        "Plan de estudios":"PlanEstudios"
+        "Plan de estudios":"PlanEstudios",
+        "Evaluaciones":"Evaluaciones"
       };
 
       // Verificar si la vista seleccionada existe en la lista

@@ -386,6 +386,9 @@ async function fetchEvaluaciones() {
     const ai_doad_id = cursoSeleccionado.value
       ? cursoSeleccionado.value.doad_id
       : 19
+    const ai_aude_id = cursoSeleccionado.value
+      ? cursoSeleccionado.value.aude_id
+      : 1
     const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     const baseUrl =
@@ -394,6 +397,7 @@ async function fetchEvaluaciones() {
       ai_usua_id,
       ai_peed_id,
       ai_doad_id,
+      ai_aude_id,
       ac_anio_escolar,
       av_profile: profile
     }
@@ -426,6 +430,9 @@ async function fetchNotas() {
     const ai_doad_id = cursoSeleccionado.value
       ? cursoSeleccionado.value.doad_id
       : 19
+    const ai_aude_id = cursoSeleccionado.value
+      ? cursoSeleccionado.value.aude_id
+      : 1
     const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     const baseUrl =
@@ -435,6 +442,7 @@ async function fetchNotas() {
       ai_eval_id: selectedEvaluacion.value,
       ai_usua_id,
       ai_doad_id,
+      ai_aude_id,
       ac_anio_escolar,
       av_profile: profile
     }
