@@ -291,7 +291,8 @@ export default {
         "Aulas": "MisAulas",
         "Mi horario escolar":"AlumnoHorarioEscolar",
         "Plan de estudios":"PlanEstudios",
-        "Evaluaciones":"Evaluaciones"
+        "Evaluaciones":"Evaluaciones",
+        "Mi plan de estudios":"DocentePlanEstudios"        
       };
 
       // Verificar si la vista seleccionada existe en la lista

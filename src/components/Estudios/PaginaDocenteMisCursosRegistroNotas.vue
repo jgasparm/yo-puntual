@@ -1,21 +1,30 @@
 <template>
-  <v-container class="py-4">
-    <!-- Botón para regresar -->
-    <v-btn color="primary" @click="goBack" class="mb-4">Regresar</v-btn>
-
-    <!-- Información de Curso y Bimestre -->
+  <v-container class="py-4">    
     <v-row class="mb-2">
-      <v-col cols="12" sm="6" class="mb-2">
-        <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
-      </v-col>
-      <v-col cols="12" sm="6" class="mb-2">
-        <strong>Bimestre:</strong> {{ bimestreSeleccionado?.peed_nombre }}
+      <v-col cols="12" class="d-flex justify-space-between align-center">
+        <h1 class="mb-2">
+          <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+        </h1>
+        <v-btn color="primary" @click="goBack" class="mb-4">
+          Regresar
+        </v-btn>
       </v-col>
     </v-row>
 
-    <!-- Filtro de Evaluación -->
     <v-row class="mb-4">
-      <v-col cols="12" sm="6" md="6">
+      <v-col cols="12" sm="6" md="4">
+        <v-select
+          v-model="selectedBimestre"
+          :items="bimestres"
+          item-title="peed_nombre"
+          item-value="peed_id"
+          label="Bimestre"
+          dense
+          solo
+        />
+      </v-col>
+
+      <v-col cols="12" sm="6" md="4">
         <v-select
           v-model="selectedEvaluacion"
           :items="evaluaciones"
@@ -27,6 +36,7 @@
         />
       </v-col>
     </v-row>
+
 
     <!-- Filtro por Alumno -->
     <v-row class="mb-4">
@@ -216,10 +226,36 @@
 </template>
 
 <script setup>
+
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import axios from 'axios'
+
+const bimestres = ref([])
+const selectedBimestre = ref(null)
+//const rawNotas = ref([]) 
+
+// const filteredNotas = computed(() =>
+//   rawNotas.value.filter(n =>
+//     n.peed_id === selectedBimestre.value &&
+//     (!selectedEvaluacion.value || n.eval_id === selectedEvaluacion.value)
+//   )
+// )
+
+async function fetchBimestres() {
+  const profile = localStorage.getItem("profile")
+  const token = localStorage.getItem("token")
+  const { data } = await axios.get("https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativo.php", {
+    params: { av_profile: profile },
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  if (data.status) {
+    bimestres.value = data.data
+    selectedBimestre.value = data.data[0]?.peed_id
+  }
+}
+
 
 // dynamicHeaders, filteredDynamicHeaders, etc.
 const dynamicHeaders = ref([])
@@ -241,9 +277,7 @@ const isDesktop = mdAndUp
 const cursoSeleccionado = ref(
   route.query.curso ? JSON.parse(decodeURIComponent(route.query.curso)) : null
 )
-const bimestreSeleccionado = ref(
-  route.query.bimestre ? JSON.parse(decodeURIComponent(route.query.bimestre)) : null
-)
+
 
 const dialogNoResults = ref(false)
 
@@ -380,15 +414,14 @@ async function fetchEvaluaciones() {
     const token = localStorage.getItem("token")
     const profile = localStorage.getItem("profile")
     const ai_usua_id = localStorage.getItem("usua_id")
-    const ai_peed_id = bimestreSeleccionado.value
-      ? bimestreSeleccionado.value.peed_id
-      : 1
+    const ai_peed_id = selectedBimestre.value
+
     const ai_doad_id = cursoSeleccionado.value
       ? cursoSeleccionado.value.doad_id
-      : 19
+      : null
     const ai_aude_id = cursoSeleccionado.value
       ? cursoSeleccionado.value.aude_id
-      : 1
+      : null
     const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     const baseUrl =
@@ -424,15 +457,13 @@ async function fetchNotas() {
     const token = localStorage.getItem("token")
     const profile = localStorage.getItem("profile")
     const ai_usua_id = localStorage.getItem("usua_id")
-    const ai_peed_id = bimestreSeleccionado.value
-      ? bimestreSeleccionado.value.peed_id
-      : 1
-    const ai_doad_id = cursoSeleccionado.value
-      ? cursoSeleccionado.value.doad_id
-      : 19
+    const ai_peed_id = selectedBimestre.value
     const ai_aude_id = cursoSeleccionado.value
       ? cursoSeleccionado.value.aude_id
-      : 1
+      : null
+    const ai_doad_id = cursoSeleccionado.value
+      ? cursoSeleccionado.value.doad_id
+      : null
     const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     const baseUrl =
@@ -441,8 +472,8 @@ async function fetchNotas() {
       ai_peed_id,
       ai_eval_id: selectedEvaluacion.value,
       ai_usua_id,
-      ai_doad_id,
       ai_aude_id,
+      ai_doad_id,
       ac_anio_escolar,
       av_profile: profile
     }
@@ -452,8 +483,8 @@ async function fetchNotas() {
     }
     const response = await axios.get(baseUrl, configReq)
     if (response.data.status) {
-      const notasData = response.data.data
-      parseNotasForTable(notasData)
+      noteDialog.value = false
+      parseNotasForTable(response.data.data)
     } else {
       dynamicHeaders.value = []
       tableItems.value = []
@@ -465,11 +496,7 @@ async function fetchNotas() {
 
 // Parsear notas y construir dynamicHeaders + tableItems
 function parseNotasForTable(notasData) {
-
   console.log('notasData:', notasData) 
-
-
-
   let maxNotas = 0
   // Hallar el mayor número de notas
   notasData.forEach(student => {
@@ -567,20 +594,19 @@ function goBack() {
 }
 
 // Montaje
-onMounted(() => {
-  if (!cursoSeleccionado.value || !bimestreSeleccionado.value) {
-    router.push({ name: 'DocenteMisCursos' })
-    return
-  }
-  fetchEvaluaciones().then(() => {
-    fetchNotas()
-  })
+onMounted(async () => {
+  await fetchBimestres()
+  await fetchEvaluaciones()
+  
 })
 
 // Watch
-watch(selectedEvaluacion, () => {
-  fetchNotas()
+watch([selectedBimestre, selectedEvaluacion], () => {
+  if (selectedBimestre.value && selectedEvaluacion.value) {
+    fetchNotas()
+  }
 })
+
 </script>
 
 <style scoped>

@@ -219,18 +219,18 @@ onMounted(() => {
     }
   } else {
     // Opcional: En caso de que no venga la información, se puede llamar al API como fallback
-    const dtng_id = cursoSeleccionado.value.dtng_id
-    fetchDetalle(dtng_id)
+    const doad_id = cursoSeleccionado.value.doad_id
+    fetchDetalle(doad_id)
   }
 })
 
 
-async function fetchDetalle(dtng_id) {
+async function fetchDetalle(doad_id) {
   try {
     const token = localStorage.getItem("token")
-    const profile = localStorage.getItem("profile") || "demo"
-    const ai_usua_id = localStorage.getItem("ai_usua_id") || 5
-    const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
+    const profile = localStorage.getItem("profile")
+    const ai_usua_id = localStorage.getItem("usua_id")
+    const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     if (!token || !profile) {
       console.warn("Falta token o profile en localStorage.")
@@ -240,7 +240,7 @@ async function fetchDetalle(dtng_id) {
     const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"
     const params = {
       ai_usua_id,
-      ai_dtng_id: dtng_id,
+      ai_doad_id: doad_id,
       ac_anio_escolar,
       av_profile: profile
     }

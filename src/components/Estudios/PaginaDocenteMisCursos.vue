@@ -4,7 +4,7 @@
       <v-col>
         <h1 class="text-h5 mb-4">Mis Cursos</h1>
         <!-- Selector de Bimestre -->
-        <v-select
+        <!-- <v-select
           v-model="selectedBimestre"
           :items="bimestres"
           item-title="peed_nombre"
@@ -14,7 +14,7 @@
         />
         <v-btn color="primary" @click="filtrarCursos">
           Aplicar Filtro
-        </v-btn>
+        </v-btn> -->
       </v-col>
     </v-row>
 
@@ -217,9 +217,11 @@ const filteredCursos = computed(() => {
   return bimestreObj ? bimestreObj.cursos : []
 })
 
-function filtrarCursos() {
-  // Aquí se puede agregar lógica adicional si es necesario
-}
+
+
+// function filtrarCursos() {
+//   // Aquí se puede agregar lógica adicional si es necesario
+// }
 
 // Navegación al hacer clic en "Ver Notas"
 async function verNotas(curso) {

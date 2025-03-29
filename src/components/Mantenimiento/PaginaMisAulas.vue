@@ -1,9 +1,9 @@
 <template>
   <v-container fluid>
     <!-- Encabezado: Título y botón para Agregar Aula -->
-    <v-row class="py-3">
+    <v-row class="mb-2">
       <v-col cols="12" class="d-flex justify-space-between align-center">
-        <h1 class="text-h4">Mis Aulas</h1>
+        <h1 class="mb-2">Mis Aulas</h1>
         <v-btn color="primary" @click="abrirDialogAgregar">
           Agregar Aula
         </v-btn>

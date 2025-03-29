@@ -1,17 +1,13 @@
 <template>
   <v-container class="py-4">
-    <!-- Botón para regresar -->
-    <v-btn color="primary" @click="goBack" class="mb-4">
-      Regresar
-    </v-btn>
-
-    <!-- REGISTRO Y BIMESTRE -->
     <v-row class="mb-2">
-      <v-col cols="12" sm="6" class="mb-2">
-        <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
-      </v-col>
-      <v-col cols="12" sm="6" class="mb-2">
-        <strong>Bimestre:</strong> {{ bimestreSeleccionado?.peed_nombre }}
+      <v-col cols="12" class="d-flex justify-space-between align-center">
+        <h1 class="mb-2">
+          <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+        </h1>
+        <v-btn color="primary" @click="goBack" class="mb-4">
+          Regresar
+        </v-btn>
       </v-col>
     </v-row>
 
@@ -31,17 +27,52 @@
       </v-col>
     </v-row>
 
-    <!-- CAJA DE BÚSQUEDA -->
     <v-row class="mb-4">
-      <v-col cols="12" sm="6" md="4">
-        <v-text-field
-          v-model="searchQuery"
-          label="Buscar alumno"
-          clearable
-          solo
-        />
-      </v-col>
+      <template v-if="isDesktop">
+        <v-col cols="6">
+          <v-select
+            v-model="selectedBimestre"
+            :items="bimestres"
+            item-title="peed_nombre"
+            item-value="peed_id"
+            label="Bimestre"
+            dense
+            solo
+          />
+        </v-col>
+        <v-col cols="6">
+          <v-text-field
+            v-model="searchQuery"
+            label="Buscar alumno"
+            clearable
+            solo
+          />
+        </v-col>
+      </template>
+
+      <template v-else>
+        <v-col cols="12" class="mb-2">
+          <v-select
+            v-model="selectedBimestre"
+            :items="bimestres"
+            item-title="peed_nombre"
+            item-value="peed_id"
+            label="Bimestre"
+            dense
+            solo
+          />
+        </v-col>
+        <v-col cols="12">
+          <v-text-field
+            v-model="searchQuery"
+            label="Buscar alumno"
+            clearable
+            solo
+          />
+        </v-col>
+      </template>
     </v-row>
+
 
     <!-- TABLA DE NOTAS DINÁMICA (solo se muestra cuando ya se tienen headers) -->
     <div v-if="isDesktop">
@@ -147,10 +178,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed  } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify' // <-- Importar
 import axios from 'axios'
+
+const bimestres = ref([])
+const selectedBimestre = ref(null)
+
+async function fetchBimestres() {
+  const profile = localStorage.getItem("profile")
+  const token = localStorage.getItem("token")
+  const { data } = await axios.get("https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativo.php", {
+    params: { av_profile: profile },
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  if (data.status) {
+    bimestres.value = data.data
+    selectedBimestre.value = data.data[0]?.peed_id
+  }
+}
+
 
 // Detecta si la pantalla es "md" o mayor
 const { mdAndUp } = useDisplay()
@@ -166,11 +214,6 @@ const route = useRoute()
 const cursoSeleccionado = ref(
   route.query.curso
     ? JSON.parse(decodeURIComponent(route.query.curso))
-    : null
-)
-const bimestreSeleccionado = ref(
-  route.query.bimestre
-    ? JSON.parse(decodeURIComponent(route.query.bimestre))
     : null
 )
 
@@ -202,10 +245,10 @@ const paginatedPages = computed(() => {
 
 
 onMounted(() => {
-  if (!cursoSeleccionado.value || !bimestreSeleccionado.value) {
-    router.push({ name: 'DocenteMisCursos' })
-    return
-  }
+  fetchBimestres()
+  if (!cursoSeleccionado.value) return router.push({ name: 'DocenteMisCursos' })
+  // luego tu lógica existente para detalle…
+})
   
   // Si viene la información del API en el query, la usamos
   if (route.query.detalle) {
@@ -222,6 +265,11 @@ onMounted(() => {
     const doad_id = cursoSeleccionado.value.doad_id
     fetchDetalle(doad_id)
   }
+
+
+watch(selectedBimestre, () => {
+  currentPage.value = 1
+  parseDataForTable()
 })
 
 
@@ -281,8 +329,8 @@ function getColorForEvaluation(nombre) {
 /**
  * Genera dynamicHeaders y tableItems a partir de los datos del API.
  */
-function parseDataForTable() {
-  const bimestreId = bimestreSeleccionado.value.peed_id
+ function parseDataForTable() {
+  const bimestreId = selectedBimestre.value
   const dataBimestre = alumnos.value.filter(item => item.peed_id === bimestreId)
 
   if (!dataBimestre.length) {
