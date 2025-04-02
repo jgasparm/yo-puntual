@@ -613,6 +613,33 @@ const filteredPlanes = computed(() => {
 })
 const totalPages = computed(() => Math.ceil(filteredPlanes.value.length / itemsPerPage.value))
 
+function abrirDialogoActualizarPlan(plan) {
+  // Asigna el plan seleccionado
+  planSeleccionado.value = plan
+  // Pasa los datos que necesites mostrar/editar
+  planSeleccionadoHrs.value = plan.ples_horas
+  // Ajusta la conversión de estado
+  planSeleccionadoEstado.value = plan.ples_estado === 'A' ? 'Activo' : 'Inactivo'
+
+  // Finalmente, abre el diálogo
+  mostrarDialogoActualizarPlan.value = true
+}
+
+function abrirDialogoActualizarCurricular(item, plesId) {
+  // Guardamos el plan curricular seleccionado
+  planCurricularSeleccionado.value = { ...item, ples_id: plesId }
+  // Ajustamos los campos del diálogo
+  planCurricularHoras.value = item.pacu_horas
+  planCurricularEstado.value = item.pacu_estado === 'A' ? 'Activo' : 'Inactivo'
+
+  // Si necesitas usar el plesId (por si lo usas en alguna lógica posterior):
+  // const parentPlanId = plesId
+
+  // Finalmente mostramos el diálogo
+  mostrarDialogoActualizarCurricular.value = true
+}
+
+
 // Paginación Plan Curricular
 function paginatedCurr(plesId) {
   const list = planCurriculares.value[plesId] || []

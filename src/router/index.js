@@ -22,8 +22,8 @@ import AlumnoHorarioEscolar from '../components/Estudios/PaginaAlumnoHorarioEsco
 import PlanEstudios from '../components/Mantenimiento/PaginaPlanEstudios.vue';
 import Evaluaciones from '../components/Mantenimiento/PaginaEvaluaciones.vue';
 import DocentePlanEstudios from '../components/Estudios/PaginaDocentePlanEstudios.vue';
-
-
+import Matricula from '../components/Mantenimiento/PaginaMatricula.vue';
+import Alumnos from '../components/Mantenimiento/PaginaAlumno.vue';
 
 const routes = [
   {
@@ -135,6 +135,16 @@ const routes = [
         path: 'docente-plan-estudios',
         name: 'DocentePlanEstudios',
         component: DocentePlanEstudios
+      },
+      {
+        path: 'matricula',
+        name: 'Matricula',
+        component: Matricula
+      },
+      {
+        path: 'alumnos',
+        name: 'Alumnos',
+        component: Alumnos
       }
       
     ]

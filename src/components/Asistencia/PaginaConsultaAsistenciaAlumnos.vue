@@ -109,7 +109,7 @@
           <v-card-text>
             <v-row dense>
               <v-col cols="12" md="6">
-                <v-dialog v-model="menuFechaInicio" persistent max-width="320">
+                <v-dialog v-model="menuFechaNacimiento" persistent max-width="320">
                   <template #activator="{ props }">
                     <v-text-field
                       v-bind="props"

@@ -1,0 +1,429 @@
+<template>
+  <v-container fluid>
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex justify-space-between align-center">
+        <h1 class="mb-2">Alumnos</h1>
+        <v-btn color="primary" @click="openDialog()">
+          <v-icon left>mdi-account-plus</v-icon>
+          Agregar
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- Listado: Desktop -->
+    <div v-if="!isMobile">
+      <v-data-table
+        :items="alumnosConIndice"
+        :headers="tableHeaders"
+        :items-per-page="10"
+        class="elevation-1"
+      >
+        <template #item.pers_estado="{ item }">
+          <v-chip v-if="item.pers_estado === 'ACTIVO'" color="green">Activo</v-chip>
+          <v-chip v-else color="red">Inactivo</v-chip>
+        </template>
+        <template #item.actions="{ item }">
+          <v-icon small class="mr-2" @click="openDialog(item)">
+            mdi-pencil
+          </v-icon>
+        </template>
+      </v-data-table>
+    </div>
+
+    <!-- Listado: Mobile -->
+    <div v-else>
+      <v-row>
+        <v-col
+          v-for="(item, index) in paginatedAlumnos"
+          :key="item.pers_id"
+          cols="12"
+          sm="6"
+        >
+          <v-card class="mb-2" style="position: relative;">
+            <v-btn 
+              icon 
+              variant="text" 
+              style="position: absolute; top: 8px; right: 8px;"
+              @click="openDialog(item)"
+            >
+              <v-icon>mdi-pencil</v-icon>
+            </v-btn>
+            <v-card-title>
+              {{ (currentPage - 1) * itemsPerPageMobile + index + 1 }}
+            </v-card-title>
+            <v-card-title>
+              {{ item.pers_nombres }} {{ item.pers_apellido_paterno }}
+            </v-card-title>
+            <v-card-subtitle>{{ item.pers_numero_documento_identidad }}</v-card-subtitle>
+            <v-card-text>
+              <div><strong>Fecha Nac.:</strong> {{ item.pers_fecha_nacimiento }}</div>
+              <div><strong>Sexo:</strong> {{ item.pers_sexo }}</div>
+              <div>
+                <strong>Estado:</strong>
+                <v-chip v-if="item.pers_estado === 'ACTIVO'" color="green">Activo</v-chip>
+                <v-chip v-else color="red">Inactivo</v-chip>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+      <v-pagination v-model="currentPage" :length="mobilePageCount"></v-pagination>
+    </div>
+
+    <!-- Diálogo para agregar/editar -->
+    <v-dialog v-model="dialog" max-width="600px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h6">{{ formTitle }}</span>
+        </v-card-title>
+        <v-card-text>
+          <v-form ref="alumnoForm" lazy-validation>
+            <!-- Campo fijo para tipo: Alumno -->
+            <v-text-field v-model="form.pers_tipo" label="Tipo" disabled></v-text-field>
+            <v-text-field v-model="form.pers_nombres" label="Nombres" required></v-text-field>
+            <v-text-field v-model="form.pers_apellido_paterno" label="Apellido Paterno" required></v-text-field>
+            <v-text-field v-model="form.pers_apellido_materno" label="Apellido Materno"></v-text-field>
+            <!-- Select para Tipo de Documento -->
+            <v-select
+              v-model="form.tidi_id"
+              :items="tidiOptions"
+              item-value="tidi_id"
+              item-title="tidi_descripcion"
+              label="Tipo de Documento"
+              required
+            ></v-select>
+            <v-text-field v-model="form.pers_numero_documento_identidad" label="Número de Documento" required></v-text-field>
+  
+            <!-- Fecha de Nacimiento -->
+            <v-menu
+  v-model="menuFechaNacimiento"
+  transition="scale-transition"
+  offset-y
+  max-width="320"
+  min-width="auto"
+>
+  <template #activator="{ on, attrs }">
+    <v-text-field
+      v-model="formattedFecha"
+      label="Fecha de Nacimiento"
+      prepend-icon="mdi-calendar"
+      readonly
+      v-bind="attrs"
+      v-on="on"
+    />
+  </template>
+  <v-date-picker
+    v-model="form.pers_fecha_nacimiento"
+    locale="es"
+    @input="menuFechaNacimiento = false"
+  />
+</v-menu>
+  
+            <!-- Sexo -->
+            <v-select
+              v-model="form.pers_sexo"
+              :items="sexOptions"
+              item-value="value"
+              item-title="text"
+              label="Sexo"
+              required
+            ></v-select>
+  
+            <!-- Ubigeo: Departamento -->
+            <v-select
+              v-model="form.ubig_codigo_departamento"
+              :items="departments"
+              item-value="ubig_codigo_departamento"
+              item-title="ubig_descripcion_departamento"
+              label="Departamento"
+              required
+            ></v-select>
+  
+            <!-- Ubigeo: Provincia -->
+            <v-select
+              v-model="form.ubig_codigo_provincia"
+              :items="provinces"
+              item-value="ubig_codigo_provincia"
+              item-title="ubig_descripcion_provincia"
+              label="Provincia"
+              required
+            ></v-select>
+  
+            <!-- Ubigeo: Distrito -->
+            <v-select
+              v-model="form.ubig_codigo_distrito"
+              :items="districts"
+              item-value="ubig_codigo_distrito"
+              item-title="ubig_descripcion_distrito"
+              label="Distrito"
+              required
+            ></v-select>
+  
+            <v-select
+              v-model="form.pers_grupo_sanguineo"
+              :items="grupoSanguineoOptions"
+              label="Grupo Sanguíneo"
+              required
+            ></v-select>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="closeDialog">Cancelar</v-btn>
+          <v-btn color="primary" @click="saveAlumno">Guardar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-container>
+</template>
+
+<script>
+import { ref, computed, onMounted, watch } from 'vue'
+import axios from 'axios'
+
+// Obtener token y profile desde localStorage
+const token = localStorage.getItem('token')
+const profile = localStorage.getItem('profile')
+
+// Crear instancia de axios con configuración global
+const apiClient = axios.create({
+  baseURL: 'https://amsoftsolution.com/amss/ws/',
+  headers: { Authorization: `Bearer ${token}` }
+});
+
+export default {
+  name: 'AlumnosPage',
+  setup() {
+    // Datos reactivos
+    const alumnos = ref([]);
+    const dialog = ref(false);
+    const menuFechaNacimiento = ref(false);
+    const currentPage = ref(1);
+    const form = ref({
+      pers_id: null,
+      pers_tipo: 'A',
+      pers_nombres: '',
+      pers_apellido_paterno: '',
+      pers_apellido_materno: '',
+      pers_numero_documento_identidad: '',
+      tidi_id: null,
+      pers_fecha_nacimiento: null,
+      pers_sexo: '',
+      ubig_codigo_departamento: null,
+      ubig_codigo_provincia: null,
+      ubig_codigo_distrito: null,
+      pers_grupo_sanguineo: ''
+    });
+
+    // Opciones para selects
+    const tidiOptions = ref([]);
+    const grupoSanguineoOptions = ref(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
+    const sexOptions = ref([
+      { value: 'M', text: 'Masculino' },
+      { value: 'F', text: 'Femenino' }
+    ]);
+
+    // Ubigeo: Se carga una sola vez mediante el API unificado
+    const ubigeoData = ref([]);
+    const fetchUbigeoData = async () => {
+      try {
+        const res = await axios.get('https://amsoftsolution.com/amss/ws/wsListaUbigeo.php', {
+          params: { av_profile: profile },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.status) {
+          ubigeoData.value = res.data.data;
+        }
+      } catch (error) {
+        console.error('Error al cargar ubigeo:', error);
+      }
+    };
+
+    // Propiedades computadas para ubigeo
+    const departments = computed(() => ubigeoData.value);
+    const provinces = computed(() => {
+      if (!form.value.ubig_codigo_departamento) return [];
+      const dept = ubigeoData.value.find(
+        d => d.ubig_codigo_departamento === form.value.ubig_codigo_departamento
+      );
+      return dept ? dept.provincias : [];
+    });
+    const districts = computed(() => {
+      if (!form.value.ubig_codigo_departamento || !form.value.ubig_codigo_provincia) return [];
+      const dept = ubigeoData.value.find(
+        d => d.ubig_codigo_departamento === form.value.ubig_codigo_departamento
+      );
+      if (!dept) return [];
+      const prov = dept.provincias.find(
+        p => p.ubig_codigo_provincia === form.value.ubig_codigo_provincia
+      );
+      return prov ? prov.distritos : [];
+    });
+
+    // Watchers para reiniciar los selects:
+    watch(() => form.value.ubig_codigo_departamento, (newVal, oldVal) => {
+      // Solo reinicia si oldVal ya tenía un valor (para evitar reinicio al cargar inicialmente)
+      if (oldVal != null && newVal !== oldVal) {
+        form.value.ubig_codigo_provincia = null;
+        form.value.ubig_codigo_distrito = null;
+      }
+    });
+    watch(() => form.value.ubig_codigo_provincia, (newVal, oldVal) => {
+      if (oldVal != null && newVal !== oldVal) {
+        form.value.ubig_codigo_distrito = null;
+      }
+    });
+
+    // Otras variables y funciones
+    const tableHeaders = [
+      { title: 'Nro', value: 'correlativo', sortable: false },
+      { title: 'Apellido Paterno', value: 'pers_apellido_paterno' },
+      { title: 'Apellido Materno', value: 'pers_apellido_materno' },
+      { title: 'Nombres', value: 'pers_nombres' },
+      { title: 'Tipo doc', value: 'tipo_documento_identidad_abreviacion' },
+      { title: 'Documento', value: 'pers_numero_documento_identidad' },
+      { title: 'Sexo', value: 'pers_sexo' },
+      { title: 'Estado', value: 'pers_estado' },
+      { title: 'Acciones', value: 'actions', sortable: false }
+    ];
+
+    const isMobile = computed(() => window.innerWidth < 600);
+    const itemsPerPageMobile = 5;
+    const paginatedAlumnos = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPageMobile;
+      return alumnos.value.slice(start, start + itemsPerPageMobile);
+    });
+    const mobilePageCount = computed(() => Math.ceil(alumnos.value.length / itemsPerPageMobile));
+    const alumnosConIndice = computed(() =>
+      alumnos.value.map((item, index) => ({ ...item, correlativo: index + 1 }))
+    );
+    const formTitle = computed(() => (form.value.pers_id ? 'Editar Alumno' : 'Agregar Alumno'));
+
+    // Formateo de la fecha en dd/mm/yyyy
+    const formattedFecha = computed({
+      get() {
+        if (!form.value.pers_fecha_nacimiento) return '';
+        const date = new Date(form.value.pers_fecha_nacimiento);
+        const day = ('0' + date.getDate()).slice(-2);
+        const month = ('0' + (date.getMonth() + 1)).slice(-2);
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      },
+      set(val) {
+        const [day, month, year] = val.split('/');
+        form.value.pers_fecha_nacimiento = new Date(year, month - 1, day);
+      }
+    });
+
+    // Cargar alumnos
+    const loadAlumnos = async () => {
+      try {
+        const res = await apiClient.get('wsConsultaAlumnos.php', {
+          params: { av_profile: profile }
+        });
+        if (res.data.status) {
+          alumnos.value = res.data.data;
+        } else {
+          console.error('No se obtuvieron resultados');
+        }
+      } catch (error) {
+        console.error('Error al cargar alumnos', error);
+      }
+    };
+
+    // Abrir diálogo para agregar/editar alumno
+    const openDialog = async (item = null) => {
+      // Asegurarse de que el calendario esté cerrado
+      menuFechaNacimiento.value = false;
+      if (item) {
+        form.value = { ...item };
+        if (form.value.pers_fecha_nacimiento) {
+          form.value.pers_fecha_nacimiento = new Date(form.value.pers_fecha_nacimiento);
+        }
+        // Al editar, los watchers preservarán los valores actuales si no se cambian
+      } else {
+        form.value = {
+          pers_id: null,
+          pers_tipo: 'A',
+          pers_nombres: '',
+          pers_apellido_paterno: '',
+          pers_apellido_materno: '',
+          pers_numero_documento_identidad: '',
+          tidi_id: null,
+          pers_fecha_nacimiento: null,
+          pers_sexo: '',
+          ubig_codigo_departamento: null,
+          ubig_codigo_provincia: null,
+          ubig_codigo_distrito: null,
+          pers_grupo_sanguineo: ''
+        };
+      }
+      dialog.value = true;
+    };
+
+    const closeDialog = () => {
+      dialog.value = false;
+    };
+
+    const saveAlumno = async () => {
+      if (form.value.pers_id) {
+        console.log('Actualizando alumno', form.value);
+      } else {
+        console.log('Agregando alumno', form.value);
+      }
+      await loadAlumnos();
+      closeDialog();
+    };
+
+    onMounted(async () => {
+      await loadAlumnos();
+      await fetchTidiOptions();
+      await fetchUbigeoData();
+    });
+
+    // Funciones para cargar TDI (se deja el API existente)
+    const fetchTidiOptions = async () => {
+      try {
+        const res = await axios.get('https://amsoftsolution.com/amss/ws/wsListaTDI.php', {
+          params: { ac_tidi_estado: 'A', av_profile: profile },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.status) {
+          tidiOptions.value = res.data.data;
+        }
+      } catch (error) {
+        console.error('Error al cargar tipos de documento', error);
+      }
+    };
+
+    return {
+      alumnos,
+      alumnosConIndice,
+      dialog,
+      form,
+      menu: menuFechaNacimiento,
+      tidiOptions,
+      departments,
+      provinces,
+      districts,
+      grupoSanguineoOptions,
+      tableHeaders,
+      isMobile,
+      currentPage,
+      paginatedAlumnos,
+      mobilePageCount,
+      itemsPerPageMobile,
+      formTitle,
+      formattedFecha,
+      sexOptions,
+      openDialog,
+      closeDialog,
+      saveAlumno
+    };
+  }
+};
+</script>
+
+<style scoped>
+/* Estilos para mejorar la experiencia responsiva */
+</style>

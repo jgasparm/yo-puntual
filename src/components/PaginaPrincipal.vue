@@ -292,7 +292,9 @@ export default {
         "Mi horario escolar":"AlumnoHorarioEscolar",
         "Plan de estudios":"PlanEstudios",
         "Evaluaciones":"Evaluaciones",
-        "Mi plan de estudios":"DocentePlanEstudios"        
+        "Mi plan de estudios":"DocentePlanEstudios",
+        "Matrícula":"Matricula",
+        "Alumnos":"Alumnos"      
       };
 
       // Verificar si la vista seleccionada existe en la lista
