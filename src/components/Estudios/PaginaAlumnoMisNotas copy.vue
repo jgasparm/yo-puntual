@@ -1,35 +1,37 @@
 <template>
-  <v-container class="px-4">
+  <v-container>
     <v-row justify="center">
       <v-col cols="12" md="8">
         <!-- Información del Alumno -->
         <v-card class="mb-4" v-if="alumno">
           <v-card-title>
+            <!-- Fila 1: Turno y Nivel -->
             <v-row>
               <v-col cols="12" sm="6">
                 <div class="d-flex flex-row align-center">
                   <strong class="mr-1">Turno:</strong>
-                  <span :title="alumno.turn_nombre">{{ alumno.turn_nombre }}</span>
+                  <span class="truncate" :title="alumno.turn_nombre">{{ alumno.turn_nombre }}</span>
                 </div>
               </v-col>
               <v-col cols="12" sm="6">
                 <div class="d-flex flex-row align-center">
                   <strong class="mr-1">Nivel:</strong>
-                  <span :title="alumno.nive_nombre">{{ alumno.nive_nombre }}</span>
+                  <span class="truncate" :title="alumno.nive_nombre">{{ alumno.nive_nombre }}</span>
                 </div>
               </v-col>
             </v-row>
+            <!-- Fila 2: Grado y Sección -->
             <v-row>
               <v-col cols="12" sm="6">
                 <div class="d-flex flex-row align-center">
                   <strong class="mr-1">Grado:</strong>
-                  <span :title="alumno.grad_nombre">{{ alumno.grad_nombre }}</span>
+                  <span class="truncate" :title="alumno.grad_nombre">{{ alumno.grad_nombre }}</span>
                 </div>
               </v-col>
               <v-col cols="12" sm="6">
                 <div class="d-flex flex-row align-center">
                   <strong class="mr-1">Sección:</strong>
-                  <span :title="alumno.secc_nombre">{{ alumno.secc_nombre }}</span>
+                  <span class="truncate" :title="alumno.secc_nombre">{{ alumno.secc_nombre }}</span>
                 </div>
               </v-col>
             </v-row>
@@ -43,6 +45,7 @@
         <!-- Información agrupada por Bimestre y Curso -->
         <div v-if="bimestres.length">
           <div v-for="(bimester) in bimestres" :key="bimester.peed_id">
+            <!-- Encabezado del Bimestre -->
             <v-card class="mb-2">
               <v-card-title class="text-h6 text-center">
                 {{ bimester.peed_nombre }}
@@ -51,35 +54,35 @@
 
             <!-- Iteramos sobre cada curso del bimestre -->
             <div v-for="(course) in bimester.cursos" :key="course.aede_id">
+              <!-- Envolver los registros de curso en un contenedor v-expansion-panels -->
               <v-expansion-panels>
                 <v-expansion-panel
                   v-for="(courseData, dIndex) in course.cursos_data"
                   :key="dIndex"
                   class="mb-4"
                 >
-                  <!-- Título del panel -->
+                  <!-- Título del panel: dos layouts, uno para desktop y otro para mobile -->
                   <v-expansion-panel-title>
-                    <!-- Layout para desktop -->
+                    <!-- Layout para desktop y large desktop -->
                     <div class="d-none d-md-block w-100">
                       <v-row>
                         <v-col cols="6">
-                          <div class="text-h6 font-weight-bold curso"
+                          <div class="text-h6 font-weight-bold curso truncate"
                                :title="`Curso: ${course.aede_nombre}`">
                             <strong>Curso:</strong> {{ course.aede_nombre }}
                           </div>
                         </v-col>
                         <v-col cols="6" class="text-right">
-                          <div class="text-h6 font-weight-bold bimestre"
+                          <div class="text-h6 font-weight-bold bimestre truncate"
                                :title="`Promedio: ${courseData.pcal_promedio_periodo} (${courseData.pcal_promedio_periodo_letra})`">
                             Promedio: <span>{{ courseData.pcal_promedio_periodo }}</span>
                             ({{ courseData.pcal_promedio_periodo_letra }})
                           </div>
                         </v-col>
                       </v-row>
-                      <!-- Ahora el docente en una línea completa sin truncar -->
                       <v-row>
                         <v-col cols="12">
-                          <div class="text-h6 font-weight-bold docente docente-wrap"
+                          <div class="text-h6 font-weight-bold docente truncate"
                                :title="`Docente: ${courseData.docente}`">
                             <strong>Docente:</strong> {{ courseData.docente }}
                           </div>
@@ -87,23 +90,23 @@
                       </v-row>
                     </div>
 
-                    <!-- Layout para mobile -->
+                    <!-- Layout para mobile y tablet -->
                     <div class="d-md-none w-100">
-                      <v-row>
-                        <v-col cols="12">
-                          <div class="text-h6 font-weight-bold curso"
+                      <v-row class="w-100">
+                        <v-col cols="12" md="4">
+                          <div class="text-h6 font-weight-bold curso truncate"
                                :title="`Curso: ${course.aede_nombre}`">
                             <strong>Curso:</strong> {{ course.aede_nombre }}
                           </div>
                         </v-col>
-                        <v-col cols="12">
-                          <div class="text-h6 font-weight-bold docente docente-wrap"
+                        <v-col cols="12" md="4">
+                          <div class="text-h6 font-weight-bold docente truncate"
                                :title="`Docente: ${courseData.docente}`">
                             <strong>Docente:</strong> {{ courseData.docente }}
                           </div>
                         </v-col>
-                        <v-col cols="12" class="text-center">
-                          <div class="bimestre"
+                        <v-col cols="12" md="4" class="text-center">
+                          <div class="bimestre truncate"
                                :title="`Promedio: ${courseData.pcal_promedio_periodo} (${courseData.pcal_promedio_periodo_letra})`">
                             Promedio: <span>{{ courseData.pcal_promedio_periodo }}</span>
                             ({{ courseData.pcal_promedio_periodo_letra }})
@@ -136,8 +139,8 @@
                               v-for="(nota) in evaluacion.cursos_notas"
                               :key="nota.reau_id"
                             >
-                              <v-list-item-content
-                                :title="`Nota: ${nota.reau_evaluacion} (${nota.reau_evaluacion_letra})`">
+                              <v-list-item-content class="truncate"
+                                                    :title="`Nota: ${nota.reau_evaluacion} (${nota.reau_evaluacion_letra})`">
                                 {{ nota.reau_evaluacion }} ({{ nota.reau_evaluacion_letra }})
                               </v-list-item-content>
                             </v-list-item>
@@ -155,7 +158,6 @@
     </v-row>
   </v-container>
 </template>
-
 
 <script setup>
 import { ref, onMounted } from 'vue'
@@ -220,19 +222,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Añadimos padding lateral al contenedor principal */
-.v-container {
-  padding-left: 16px;
-  padding-right: 16px;
-}
-
-/* Permitir que el nombre del docente se envuelva en múltiples líneas */
-.docente-wrap {
-  overflow: visible;
-  white-space: normal;
-  word-break: break-word;
-}
-
 /* Truncar texto con puntos suspensivos */
 .truncate {
   overflow: hidden;

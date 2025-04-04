@@ -227,6 +227,7 @@
                 label="Grupo Sanguíneo"
                 required
               ></v-select>
+
               <v-select
               v-if="form.pers_id"
               v-model="form.pers_estado"
@@ -449,39 +450,38 @@
             try {
             // Construir el objeto de parámetros para la API.
             const data = {
-  ai_pers_id: form.value.pers_id,
-  av_pers_apellido_paterno: form.value.pers_apellido_paterno,
-  av_pers_apellido_materno: form.value.pers_apellido_materno,
-  av_pers_nombres: form.value.pers_nombres,
-  ac_tidi_id: form.value.tidi_id,
-  av_pers_numero_documento_identidad: form.value.pers_numero_documento_identidad,
-  adt_pers_fecha_nacimiento: form.value.pers_fecha_nacimiento
-    ? new Date(form.value.pers_fecha_nacimiento).toISOString().split('T')[0]
-    : null,
-  ac_pers_sexo: form.value.pers_sexo,
-  ac_ubig_codigo_departamento: form.value.ubig_codigo_departamento,
-  ac_ubig_codigo_provincia: form.value.ubig_codigo_provincia,
-  ac_ubig_codigo_distrito: form.value.ubig_codigo_distrito,
-  av_pers_direccion: form.value.pers_direccion,
-  av_pers_direccion_referencia: form.value.pers_direccion_referencia,
-  av_pers_telefono_movil1: form.value.pers_telefono_movil1,
-  av_pers_telefono_movil2: form.value.pers_telefono_movil2,
-  av_pers_correo_electronico: form.value.pers_correo_electronico,
-  av_pers_grupo_sanguineo: form.value.pers_grupo_sanguineo,
-  av_pers_comentario: form.value.pers_comentario,
-  av_pers_foto: form.value.pers_foto,
-  ac_pers_estado: form.value.pers_estado,
-  av_pers_usuario_modificacion: form.value.usuario_modificacion,
-  av_profile: profile
-};
+                ai_pers_id: form.value.pers_id,
+                av_pers_apellido_paterno: form.value.pers_apellido_paterno,
+                av_pers_apellido_materno: form.value.pers_apellido_materno,
+                av_pers_nombres: form.value.pers_nombres,
+                ac_tidi_id: form.value.tidi_id,
+                av_pers_numero_documento_identidad: form.value.pers_numero_documento_identidad,
+                adt_pers_fecha_nacimiento: form.value.pers_fecha_nacimiento
+                    ? new Date(form.value.pers_fecha_nacimiento).toISOString().split('T')[0]
+                    : null,
+                ac_pers_sexo: form.value.pers_sexo,
+                ac_ubig_codigo_departamento: form.value.ubig_codigo_departamento,
+                ac_ubig_codigo_provincia: form.value.ubig_codigo_provincia,
+                ac_ubig_codigo_distrito: form.value.ubig_codigo_distrito,
+                av_pers_direccion: form.value.pers_direccion,
+                av_pers_direccion_referencia: form.value.pers_direccion_referencia,
+                av_pers_telefono_movil1: form.value.pers_telefono_movil1,
+                av_pers_telefono_movil2: form.value.pers_telefono_movil2,
+                av_pers_correo_electronico: form.value.pers_correo_electronico,
+                av_pers_grupo_sanguineo: form.value.pers_grupo_sanguineo,
+                av_pers_comentario: form.value.pers_comentario,
+                av_pers_foto: form.value.pers_foto,
+                ac_pers_estado: form.value.pers_estado,
+                av_pers_usuario_modificacion: form.value.usuario_modificacion,
+                av_profile: profile
+                };
 
-const config = {
-  headers: {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  }
-};
-            
+                const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+                };
             // Se realiza la petición POST al API
             const res = await axios.post('https://amsoftsolution.com/amss/ws/wsActualizaAlumno.php', data, config);
             if (res.data.status) {
@@ -494,11 +494,52 @@ const config = {
             console.error('Error en la petición de actualización:', error);
         }
         } else {
-          console.log('Agregando alumno', form.value);
-        }
-        await loadAlumnos();
-        closeDialog();
-      };
+            try {
+                const data = {
+                    ac_pers_tipo: 'A', //Alumnos
+                    av_pers_apellido_paterno: form.value.pers_apellido_paterno,
+                    av_pers_apellido_materno: form.value.pers_apellido_materno,
+                    av_pers_nombres: form.value.pers_nombres,
+                    ac_tidi_id: form.value.tidi_id,
+                    av_pers_numero_documento_identidad: form.value.pers_numero_documento_identidad,
+                    adt_pers_fecha_nacimiento: form.value.pers_fecha_nacimiento
+                    ? new Date(form.value.pers_fecha_nacimiento).toISOString().split('T')[0]
+                    : null,
+                    ac_pers_sexo: form.value.pers_sexo,
+                    ac_ubig_codigo_departamento: form.value.ubig_codigo_departamento,
+                    ac_ubig_codigo_provincia: form.value.ubig_codigo_provincia,
+                    ac_ubig_codigo_distrito: form.value.ubig_codigo_distrito,
+                    av_pers_direccion: form.value.pers_direccion,
+                    av_pers_direccion_referencia: form.value.pers_direccion_referencia,
+                    av_pers_telefono_movil1: form.value.pers_telefono_movil1,
+                    av_pers_telefono_movil2: form.value.pers_telefono_movil2,
+                    av_pers_correo_electronico: form.value.pers_correo_electronico,
+                    av_pers_grupo_sanguineo: form.value.pers_grupo_sanguineo,
+                    av_pers_comentario: form.value.pers_comentario,
+                    av_pers_foto: form.value.pers_foto,
+                    av_profile: profile
+                };
+
+                const config = {
+                    headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                    }
+                };
+
+                const res = await axios.post('https://amsoftsolution.com/amss/ws/wsRegistraAlumno.php', data, config);
+                if (res.data.status) {
+                    console.log('Alumno registrado exitosamente');
+                } else {
+                    console.error('Error al registrar alumno:', res.data.message);
+                }
+                } catch (error) {
+                console.error('Error en la petición de registro:', error);
+                }
+            }
+            await loadAlumnos();
+            closeDialog();
+            };
   
       onMounted(async () => {
         await loadAlumnos();

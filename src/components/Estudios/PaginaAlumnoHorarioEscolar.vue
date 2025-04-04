@@ -141,7 +141,7 @@ async function fetchInformacionAlumno() {
       infoAlumno.value = response.data.data[0]
       // Y con ese aude_id, llamas a fetchHorarioEscolar
       if (infoAlumno.value.aude_id) {
-        fetchHorarioEscolar(infoAlumno.value.aude_id)
+        fetchHorarioEscolar(infoAlumno.value.aude_id, infoAlumno.value.nive_id)
       }
     }
   } catch (error) {
@@ -149,11 +149,14 @@ async function fetchInformacionAlumno() {
   }
 }
 
-async function fetchHorarioEscolar(audeId) {
+async function fetchHorarioEscolar(audeId, niveId) {
   try {
     const token = localStorage.getItem('token')
+    const anesId = localStorage.getItem('anes_id')
     const baseUrl = 'https://amsoftsolution.com/amss/ws/wsConsultaHorarioEscolar.php'
     const params = {
+      ai_anes_id: anesId,
+      ac_nive_id: niveId,
       ai_aude_id: audeId,
       av_profile: profile
     }
@@ -163,7 +166,10 @@ async function fetchHorarioEscolar(audeId) {
     }
     const response = await axios.get(baseUrl, config)
     if (response.data.status) {
-      horario.value = response.data.data
+      horario.value = response.data.data.map(rango => ({
+        ...rango,
+        dias: rango.dias.filter(dc => dc.hesc_estado === 'A')
+      }))
     } else {
       horario.value = []
     }

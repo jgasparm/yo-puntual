@@ -169,16 +169,16 @@
             label="Alumno"
             :items="alumnosNoMatriculados"
             v-model="nuevoMatricula.alum_id"
-            item-text="nombre_completo"
+            item-title="nombre_completo"
             item-value="alum_id"
             dense
             outlined
           />
           <v-select
             label="Aula Detalle"
-            :items="aulasDetalle"
+            :items="aulasDetalleFormateadas"
             v-model="nuevoMatricula.aude_id"
-            item-text="textoAula"
+            item-title="aulaConcatenada"
             item-value="aude_id"
             dense
             outlined
@@ -229,6 +229,11 @@ import { useDisplay } from "vuetify";
 export default {
   name: "PaginaMatricula",
   setup() {
+    
+    const anioEscolar = ref(localStorage.getItem("anio_escolar"));
+    const profile = ref(localStorage.getItem("profile"));
+    const token = ref(localStorage.getItem("token"));
+    
     // Detectar si es Desktop o Mobile
     const { mdAndUp } = useDisplay();
     const isDesktop = mdAndUp;
@@ -236,13 +241,10 @@ export default {
     const currentPage = ref(1);
     const itemsPerPage = computed(() => (isDesktop.value ? 10 : 5));
 
-    return { isDesktop, currentPage, itemsPerPage };
+    return { anioEscolar, profile, token, isDesktop, currentPage, itemsPerPage };
   },
   data() {
     return {
-      anioEscolar: localStorage.getItem("anio_escolar") || "2025",
-      profile: localStorage.getItem("profile") || "demo",
-      token: localStorage.getItem("token") || "",
 
       // Catálogos
       turnosAll: [],
@@ -300,6 +302,12 @@ export default {
     paginatedMatriculados() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       return this.matriculados.slice(start, start + this.itemsPerPage);
+    },
+    aulasDetalleFormateadas() {
+      return this.aulasDetalle.map(item => ({
+        ...item,
+        aulaConcatenada: `${item.turn_nombre} - ${item.nive_nombre} - ${item.grad_nombre} - ${item.secc_nombre}`
+      }));
     }
   },
   mounted() {
@@ -426,7 +434,7 @@ export default {
       this.nuevoMatricula.alum_id = null;
       this.nuevoMatricula.aude_id = null;
       await this.cargarAlumnosNoMatriculados();
-      // Cargar aulasDetalle si procede
+      await this.cargarAulaDetalle();
     },
     async cargarAlumnosNoMatriculados() {
       try {
@@ -450,6 +458,28 @@ export default {
         this.alumnosNoMatriculados = [];
       }
     },
+    async cargarAulaDetalle() {
+      try {
+        const url = "https://amsoftsolution.com/amss/ws/wsListaAulaDetalleAnioEscolar.php";
+        const config = {
+          params: {
+            ac_anio_escolar: this.anioEscolar,
+            av_profile: this.profile
+          },
+          headers: { Authorization: `Bearer ${this.token}` }
+        };
+        const resp = await axios.get(url, config);
+        if (resp.data.status) {
+          this.aulasDetalle = resp.data.data;
+        } else {
+          this.aulasDetalle = [];
+          console.error("Error al obtener las aulas detalle:", resp.data.message);
+        }
+      } catch (err) {
+        console.error("Error cargarAulaDetalle:", err);
+        this.aulasDetalle = [];
+      }
+    },
     async guardarMatricula() {
       if (!this.nuevoMatricula.alum_id || !this.nuevoMatricula.aude_id) {
         alert("Seleccione el alumno y el aula.");
@@ -457,16 +487,20 @@ export default {
       }
       try {
         const url = "https://amsoftsolution.com/amss/ws/wsRegistraMatricula.php";
-        const config = {
-          params: {
-            ai_alum_id: this.nuevoMatricula.alum_id,
-            ai_aude_id: this.nuevoMatricula.aude_id,
-            ac_anio_escolar: this.anioEscolar,
-            av_profile: this.profile
-          },
-          headers: { Authorization: `Bearer ${this.token}` }
+        // Crea el objeto de datos para el cuerpo de la petición
+        const data = {
+          ai_alum_id: this.nuevoMatricula.alum_id,
+          ai_aude_id: this.nuevoMatricula.aude_id,
+          ac_anio_escolar: this.anioEscolar,
+          av_profile: this.profile
         };
-        const resp = await axios.get(url, config);
+        const config = {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            "Content-Type": "application/json"
+          }
+        };
+        const resp = await axios.post(url, data, config);
         if (resp.data.status) {
           this.dialogoAgregar = false;
           // Llamar de nuevo para refrescar la tabla
@@ -490,15 +524,18 @@ export default {
       try {
         const nuevoEstado = this.matriculaSeleccionadaEstado === "Activo" ? "A" : "I";
         const url = "https://amsoftsolution.com/amss/ws/wsActualizaMatricula.php";
-        const config = {
-          params: {
-            ai_matr_id: this.matriculaSeleccionada.matr_id,
-            ac_matr_estado: nuevoEstado,
-            av_profile: this.profile
-          },
-          headers: { Authorization: `Bearer ${this.token}` }
+        const data = {
+          ai_matr_id: this.matriculaSeleccionada.matr_id,
+          ac_matr_estado: nuevoEstado,
+          av_profile: this.profile
         };
-        const resp = await axios.get(url, config);
+        const config = {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            "Content-Type": "application/json"
+          }
+        };
+        const resp = await axios.post(url, data, config);
         if (resp.data.status) {
           this.dialogoActualizar = false;
           // Volver a consultar

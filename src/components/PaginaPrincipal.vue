@@ -146,7 +146,7 @@ export default {
   data() {
     return {
       centroEducativo: "Centro Educativo Demo",
-      imagenPerfil: require("@/assets/images_perfil/10030796.jpg"),
+      imagenPerfil: require("@/assets/images_perfil/usuario-default.png"),
       usuarioNombre: "",
       showUserMenu: false,
       mobileMenuOpen: false,

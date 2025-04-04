@@ -263,7 +263,7 @@ export default {
         { title: "Estado", key: "estado", align: "center", sortable: true }
       ],
       currentPage: 1,
-      itemsPerPage: 5,
+      itemsPerPage: 10,
       dialogNoResults: false,
     };
   },

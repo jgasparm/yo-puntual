@@ -19,7 +19,7 @@
         class="elevation-1"
       >
         <template #item.pers_estado="{ item }">
-          <v-chip v-if="item.pers_estado === 'ACTIVO'" color="green">Activo</v-chip>
+          <v-chip v-if="item.pers_estado === 'Activo'" color="green">Activo</v-chip>
           <v-chip v-else color="red">Inactivo</v-chip>
         </template>
         <template #item.actions="{ item }">
@@ -60,7 +60,7 @@
               <div><strong>Sexo:</strong> {{ item.pers_sexo }}</div>
               <div>
                 <strong>Estado:</strong>
-                <v-chip v-if="item.pers_estado === 'ACTIVO'" color="green">Activo</v-chip>
+                <v-chip v-if="item.pers_estado === 'Activo'" color="green">Activo</v-chip>
                 <v-chip v-else color="red">Inactivo</v-chip>
               </div>
             </v-card-text>
@@ -79,7 +79,6 @@
         <v-card-text>
           <v-form ref="alumnoForm" lazy-validation>
             <!-- Campo fijo para tipo: Alumno -->
-            <v-text-field v-model="form.pers_tipo" label="Tipo" disabled></v-text-field>
             <v-text-field v-model="form.pers_nombres" label="Nombres" required></v-text-field>
             <v-text-field v-model="form.pers_apellido_paterno" label="Apellido Paterno" required></v-text-field>
             <v-text-field v-model="form.pers_apellido_materno" label="Apellido Materno"></v-text-field>
@@ -94,40 +93,89 @@
             ></v-select>
             <v-text-field v-model="form.pers_numero_documento_identidad" label="Número de Documento" required></v-text-field>
   
-            <!-- Fecha de Nacimiento -->
-            <v-menu
-  v-model="menuFechaNacimiento"
-  transition="scale-transition"
-  offset-y
-  max-width="320"
-  min-width="auto"
->
-  <template #activator="{ on, attrs }">
-    <v-text-field
-      v-model="formattedFecha"
-      label="Fecha de Nacimiento"
-      prepend-icon="mdi-calendar"
-      readonly
-      v-bind="attrs"
-      v-on="on"
-    />
-  </template>
-  <v-date-picker
-    v-model="form.pers_fecha_nacimiento"
-    locale="es"
-    @input="menuFechaNacimiento = false"
-  />
-</v-menu>
-  
-            <!-- Sexo -->
-            <v-select
-              v-model="form.pers_sexo"
-              :items="sexOptions"
-              item-value="value"
-              item-title="text"
-              label="Sexo"
-              required
-            ></v-select>
+            <!-- Sección para Fecha de Nacimiento y Sexo -->
+          <template v-if="!isMobile">
+            <!-- Desktop: Mismo renglón -->
+            <v-row>
+              <v-col cols="6">
+                <v-menu
+                  v-model="menuFechaNacimiento"
+                  transition="scale-transition"
+                  offset-y
+                  max-width="320"
+                  min-width="auto"
+                >
+                  <template #activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="formattedFecha"
+                      label="Fecha de Nacimiento"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
+                    />
+                  </template>
+                  <v-date-picker
+                    v-model="form.pers_fecha_nacimiento"
+                    locale="es"
+                    @update:modelValue="menuFechaNacimiento = false"
+                  />
+                </v-menu>
+              </v-col>
+              <v-col cols="6">
+                <v-select
+                  v-model="form.pers_sexo"
+                  :items="sexOptions"
+                  item-value="value"
+                  item-title="text"
+                  label="Sexo"
+                  required
+                ></v-select>
+              </v-col>
+            </v-row>
+          </template>
+          <template v-else>
+            <!-- Mobile: Cada campo en fila separada -->
+            <v-row>
+              <v-col cols="12">
+                <v-menu
+                  v-model="menuFechaNacimiento"
+                  transition="scale-transition"
+                  offset-y
+                  max-width="320"
+                  min-width="auto"
+                >
+                  <template #activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="formattedFecha"
+                      label="Fecha de Nacimiento"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
+                    />
+                  </template>
+                  <v-date-picker
+                    v-model="form.pers_fecha_nacimiento"
+                    locale="es"
+                    @update:modelValue="menuFechaNacimiento = false"
+                  />
+                </v-menu>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="12">
+                <v-select
+                  v-model="form.pers_sexo"
+                  :items="sexOptions"
+                  item-value="value"
+                  item-title="text"
+                  label="Sexo"
+                  required
+                ></v-select>
+              </v-col>
+            </v-row>
+          </template>
   
             <!-- Ubigeo: Departamento -->
             <v-select
@@ -158,6 +206,20 @@
               label="Distrito"
               required
             ></v-select>
+
+<!-- Nuevo campo: Teléfono Móvil -->
+<v-text-field
+v-model="form.pers_telefono_movil1"
+label="Teléfono Móvil"
+required
+></v-text-field>
+
+<!-- Nuevo campo: Correo Electrónico -->
+<v-text-field
+v-model="form.pers_correo_electronico"
+label="Correo Electrónico"
+required
+></v-text-field>
   
             <v-select
               v-model="form.pers_grupo_sanguineo"
@@ -165,6 +227,13 @@
               label="Grupo Sanguíneo"
               required
             ></v-select>
+            <v-select
+            v-if="form.pers_id"
+            v-model="form.pers_estado"
+            :items="estadoOptions"
+            label="Estado"
+            required
+          ></v-select>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -180,20 +249,26 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
-
-// Obtener token y profile desde localStorage
-const token = localStorage.getItem('token')
-const profile = localStorage.getItem('profile')
-
-// Crear instancia de axios con configuración global
-const apiClient = axios.create({
-  baseURL: 'https://amsoftsolution.com/amss/ws/',
-  headers: { Authorization: `Bearer ${token}` }
-});
-
 export default {
   name: 'AlumnosPage',
   setup() {
+      
+    // Obtener token y profile desde localStorage
+      const token = localStorage.getItem('token')
+      const profile = localStorage.getItem('profile')
+
+      
+      const estadoOptions = ref([
+      { title: 'Activo', value: 'A' },
+      { title: 'Inactivo', value: 'I' }
+      ]);
+      
+      // Crear instancia de axios con configuración global
+      const apiClient = axios.create({
+          baseURL: 'https://amsoftsolution.com/amss/ws/',
+          headers: { Authorization: `Bearer ${token}` }
+      });
+
     // Datos reactivos
     const alumnos = ref([]);
     const dialog = ref(false);
@@ -201,7 +276,6 @@ export default {
     const currentPage = ref(1);
     const form = ref({
       pers_id: null,
-      pers_tipo: 'A',
       pers_nombres: '',
       pers_apellido_paterno: '',
       pers_apellido_materno: '',
@@ -340,11 +414,16 @@ export default {
         if (form.value.pers_fecha_nacimiento) {
           form.value.pers_fecha_nacimiento = new Date(form.value.pers_fecha_nacimiento);
         }
+        
+        if (form.value.pers_estado === 'Activo') {
+          form.value.pers_estado = 'A';
+          } else if (form.value.pers_estado === 'Inactivo') {
+          form.value.pers_estado = 'I';
+          }
         // Al editar, los watchers preservarán los valores actuales si no se cambian
       } else {
         form.value = {
           pers_id: null,
-          pers_tipo: 'A',
           pers_nombres: '',
           pers_apellido_paterno: '',
           pers_apellido_materno: '',
@@ -367,7 +446,53 @@ export default {
 
     const saveAlumno = async () => {
       if (form.value.pers_id) {
-        console.log('Actualizando alumno', form.value);
+          try {
+          // Construir el objeto de parámetros para la API.
+          const data = {
+ai_pers_id: form.value.pers_id,
+av_pers_apellido_paterno: form.value.pers_apellido_paterno,
+av_pers_apellido_materno: form.value.pers_apellido_materno,
+av_pers_nombres: form.value.pers_nombres,
+ac_tidi_id: form.value.tidi_id,
+av_pers_numero_documento_identidad: form.value.pers_numero_documento_identidad,
+adt_pers_fecha_nacimiento: form.value.pers_fecha_nacimiento
+  ? new Date(form.value.pers_fecha_nacimiento).toISOString().split('T')[0]
+  : null,
+ac_pers_sexo: form.value.pers_sexo,
+ac_ubig_codigo_departamento: form.value.ubig_codigo_departamento,
+ac_ubig_codigo_provincia: form.value.ubig_codigo_provincia,
+ac_ubig_codigo_distrito: form.value.ubig_codigo_distrito,
+av_pers_direccion: form.value.pers_direccion,
+av_pers_direccion_referencia: form.value.pers_direccion_referencia,
+av_pers_telefono_movil1: form.value.pers_telefono_movil1,
+av_pers_telefono_movil2: form.value.pers_telefono_movil2,
+av_pers_correo_electronico: form.value.pers_correo_electronico,
+av_pers_grupo_sanguineo: form.value.pers_grupo_sanguineo,
+av_pers_comentario: form.value.pers_comentario,
+av_pers_foto: form.value.pers_foto,
+ac_pers_estado: form.value.pers_estado,
+av_pers_usuario_modificacion: form.value.usuario_modificacion,
+av_profile: profile
+};
+
+const config = {
+headers: {
+  Authorization: `Bearer ${token}`,
+  'Content-Type': 'application/json'
+}
+};
+          
+          // Se realiza la petición POST al API
+          const res = await axios.post('https://amsoftsolution.com/amss/ws/wsActualizaAlumno.php', data, config);
+          if (res.data.status) {
+          console.log('Alumno actualizado exitosamente');
+          // Aquí puedes recargar la lista de alumnos o realizar otra acción necesaria.
+          } else {
+          console.error('Error al actualizar alumno:', res.data.message);
+          }
+      } catch (error) {
+          console.error('Error en la petición de actualización:', error);
+      }
       } else {
         console.log('Agregando alumno', form.value);
       }
@@ -416,6 +541,7 @@ export default {
       formTitle,
       formattedFecha,
       sexOptions,
+      estadoOptions,
       openDialog,
       closeDialog,
       saveAlumno
