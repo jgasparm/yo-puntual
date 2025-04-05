@@ -21,6 +21,7 @@
           label="Bimestre"
           dense
           solo
+          @update:modelValue="onSelectBimestre"
         />
       </v-col>
 
@@ -222,6 +223,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-snackbar
+      v-model="errorSnackbar"
+      color="error"
+      timeout="5000"
+      top
+      right
+    >
+      {{ errorMessage }}
+    </v-snackbar>
+
   </v-container>
 </template>
 
@@ -232,8 +243,12 @@ import { useRouter, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import axios from 'axios'
 
+const errorSnackbar = ref(false)
+const errorMessage = ref('')
+
 const bimestres = ref([])
 const selectedBimestre = ref(null)
+const selectedPacuId = ref(null)
 //const rawNotas = ref([]) 
 
 // const filteredNotas = computed(() =>
@@ -246,13 +261,14 @@ const selectedBimestre = ref(null)
 async function fetchBimestres() {
   const profile = localStorage.getItem("profile")
   const token = localStorage.getItem("token")
-  const { data } = await axios.get("https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativo.php", {
-    params: { av_profile: profile },
+  const { data } = await axios.get("https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativoPlanCurricular.php", {
+    params: { ai_doad_id: doad_id.value, av_profile: profile },
     headers: { Authorization: `Bearer ${token}` }
   })
   if (data.status) {
     bimestres.value = data.data
     selectedBimestre.value = data.data[0]?.peed_id
+    selectedPacuId.value = data.data[0]?.pacu_id
   }
 }
 
@@ -278,6 +294,9 @@ const cursoSeleccionado = ref(
   route.query.curso ? JSON.parse(decodeURIComponent(route.query.curso)) : null
 )
 
+const doad_id = ref(
+  route.query.doad_id || (cursoSeleccionado.value ? cursoSeleccionado.value.doad_id : null  
+  ));
 
 const dialogNoResults = ref(false)
 
@@ -365,47 +384,57 @@ async function submitNote() {
   const token = localStorage.getItem("token")
   const profile = localStorage.getItem("profile") || "demo"
 
-  if (noteForm.value.mode === 'add') {
-    // Insertar
-    const payload = {
-      ai_pcae_id: noteForm.value.pcae_id,
-      adc_reau_evaluacion: noteForm.value.value,
-      ac_reau_evaluacion_letra: noteForm.value.letter,
-      av_profile: profile
-    }
+  try {
     const config = {
       headers: { Authorization: `Bearer ${token}` }
     }
-    const response = await axios.post(
-      "https://amsoftsolution.com/amss/ws/wsRegistraRegistroAuxiliar.php",
-      payload,
-      config
-    )
-    if (response.data.status) {
-      noteDialog.value = false
-      fetchNotas()
+
+    if (noteForm.value.mode === 'add') {
+      const payload = {
+        ai_pcal_id: noteForm.value.student.pcal_id,
+        ai_pcev_id: noteForm.value.student.pcev_id,
+        ai_pcae_id: noteForm.value.pcae_id,
+        adc_reau_evaluacion: noteForm.value.value,
+        ac_reau_evaluacion_letra: noteForm.value.letter,
+        av_profile: profile
+      }
+      const response = await axios.post(
+        "https://amsoftsolution.com/amss/ws/wsRegistraRegistroAuxiliar.php",
+        payload,
+        config
+      )
+      if (response.data.status) {
+        noteDialog.value = false
+        fetchNotas()
+      } else {
+        throw new Error(response.data.sage || 'Error al registrar la nota.')
+      }
+
+    } else if (noteForm.value.mode === 'edit') {
+      const payload = {
+        ai_reau_id: noteForm.value.reau_id,
+        adc_reau_evaluacion: noteForm.value.value,
+        ac_reau_evaluacion_letra: noteForm.value.letter,
+        av_profile: profile
+      }
+      const response = await axios.post(
+        "https://amsoftsolution.com/amss/ws/wsActualizaRegistroAuxiliar.php",
+        payload,
+        config
+      )
+      if (response.data.status) {
+        noteDialog.value = false
+        fetchNotas()
+      } else {
+        throw new Error(response.data.sage || 'Error al actualizar la nota.')
+      }
     }
-  } else if (noteForm.value.mode === 'edit') {
-    // Editar
-    const payload = {
-      ai_reau_id: noteForm.value.reau_id,
-      adc_reau_evaluacion: noteForm.value.value,
-      ac_reau_evaluacion_letra: noteForm.value.letter,
-      av_profile: profile
-    }
-    const config = {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-    const response = await axios.post(
-      "https://amsoftsolution.com/amss/ws/wsActualizaRegistroAuxiliar.php",
-      payload,
-      config
-    )
-    if (response.data.status) {
-      noteDialog.value = false
-      fetchNotas()
-    }
+  } catch (err) {
+    console.error('Error al guardar nota:', err)
+    errorMessage.value = err?.response?.data?.sage || err.message || 'Ocurrió un error inesperado.'
+    errorSnackbar.value = true
   }
+
 }
 
 // Cargar evaluaciones
@@ -419,9 +448,11 @@ async function fetchEvaluaciones() {
     const ai_doad_id = cursoSeleccionado.value
       ? cursoSeleccionado.value.doad_id
       : null
-    const ai_aude_id = cursoSeleccionado.value
-      ? cursoSeleccionado.value.aude_id
-      : null
+
+    const ai_pacu_id = selectedPacuId.value
+    // const ai_aude_id = cursoSeleccionado.value
+    //   ? cursoSeleccionado.value.aude_id
+    //   : null
     const ac_anio_escolar = localStorage.getItem("anio_escolar")
 
     const baseUrl =
@@ -430,7 +461,7 @@ async function fetchEvaluaciones() {
       ai_usua_id,
       ai_peed_id,
       ai_doad_id,
-      ai_aude_id,
+      ai_pacu_id,
       ac_anio_escolar,
       av_profile: profile
     }
@@ -443,9 +474,23 @@ async function fetchEvaluaciones() {
       evaluaciones.value = response.data.data
       if (evaluaciones.value.length > 0) {
         selectedEvaluacion.value = evaluaciones.value[0].eval_id
+      } else {
+        selectedEvaluacion.value = null
+        dynamicHeaders.value = []
+        tableItems.value = []
       }
     }
+    else {
+      evaluaciones.value = []
+      selectedEvaluacion.value = null
+      dynamicHeaders.value = []
+      tableItems.value = []
+    }
   } catch (error) {
+    evaluaciones.value = [];
+    selectedEvaluacion.value = null;
+    dynamicHeaders.value = []
+    tableItems.value = []
     console.error("Error fetching evaluations", error)
   }
 }
@@ -495,31 +540,24 @@ async function fetchNotas() {
 }
 
 // Parsear notas y construir dynamicHeaders + tableItems
-function parseNotasForTable(notasData) {
-  console.log('notasData:', notasData) 
-  let maxNotas = 0
-  // Hallar el mayor número de notas
-  notasData.forEach(student => {
-    if (student.evaluaciones && student.evaluaciones.length > maxNotas) {
-      maxNotas = student.evaluaciones.length
-    }
-  })
-
+function parseNotasForTable(notasData, maxNotas = 0) {
   const headersTemp = []
-  // Columnas fijas en Desktop (N°, Alumno)
+
   if (isDesktop.value) {
     headersTemp.push({ title: 'N°', key: 'numero', align: 'start' })
     headersTemp.push({ title: 'Alumno', key: 'alumno', align: 'start' })
   }
 
-  // Nombre/Abreviación de la evaluación
   const evalObj = evaluaciones.value.find(
     e => e.eval_id === selectedEvaluacion.value
   )
   const evalNombre = evalObj ? evalObj.eval_nombre : 'Evaluación'
   const evalAbre = evalObj ? evalObj.eval_abreviacion : ''
 
-  // Columnas para cada nota
+  if (!maxNotas && evalObj) {
+    maxNotas = parseInt(evalObj.pcev_cantidad_evaluacion) || 0
+  }
+
   for (let i = 1; i <= maxNotas; i++) {
     headersTemp.push({
       title: `${evalAbre} #${i}`,
@@ -529,7 +567,6 @@ function parseNotasForTable(notasData) {
     })
   }
 
-  // Columna de Prom
   headersTemp.push({
     title: `Prom. ${evalNombre}`,
     key: 'prom',
@@ -538,16 +575,16 @@ function parseNotasForTable(notasData) {
   })
 
   dynamicHeaders.value = headersTemp
-  console.log('dynamicHeaders final:', dynamicHeaders.value)
 
-  // Construir items
   const itemsTemp = []
   let index = 1
   notasData.forEach(student => {
     const row = {}
     row.numero = index++
     row.alumno = student.alumno
-    row.pcae_id = student.pcae_id // Para registrar
+    row.pcae_id = student.pcae_id
+    row.pcal_id = student.pcal_id
+    row.pcev_id = student.pcev_id
     const evals = student.evaluaciones || []
     evals.sort((a, b) => a.reau_id - b.reau_id)
 
@@ -561,18 +598,23 @@ function parseNotasForTable(notasData) {
       }
     }
 
-    // Prom
     row.prom =
       student.pcae_promedio_evaluacion && student.pcae_promedio_evaluacion_letra
         ? `${student.pcae_promedio_evaluacion} (${student.pcae_promedio_evaluacion_letra})`
         : ''
 
-    // Guardamos todas las evaluaciones
     row._evaluaciones = evals
     itemsTemp.push(row)
   })
 
   tableItems.value = itemsTemp
+}
+
+
+async function onSelectBimestre(peed_id) {
+  const selected = bimestres.value.find(b => b.peed_id === peed_id);
+  selectedPacuId.value = selected ? selected.pacu_id : null;
+  await fetchEvaluaciones();
 }
 
 // Color para cada abreviación
@@ -601,11 +643,30 @@ onMounted(async () => {
 })
 
 // Watch
-watch([selectedBimestre, selectedEvaluacion], () => {
-  if (selectedBimestre.value && selectedEvaluacion.value) {
-    fetchNotas()
+//watch([selectedBimestre, selectedEvaluacion], () => {
+//  if (selectedBimestre.value && selectedEvaluacion.value) {
+//    fetchNotas()
+//  }
+//})
+watch([selectedBimestre, selectedEvaluacion], async () => {
+  if (!selectedEvaluacion.value) {
+    dynamicHeaders.value = []
+    tableItems.value = []
+    return
   }
-})
+
+  const evalObj = evaluaciones.value.find(
+    e => e.eval_id === selectedEvaluacion.value
+  )
+  const cantidad = evalObj ? parseInt(evalObj.pcev_cantidad_evaluacion) || 0 : 0
+
+  // Generar columnas aunque no haya datos aún
+  parseNotasForTable([], cantidad)
+
+  // Luego traer datos reales (si existen)
+  await fetchNotas()
+}, { immediate: true })
+
 
 </script>
 

@@ -16,7 +16,7 @@
           <span>{{ formattedUserName }}</span>
           <span class="arrow">▼</span>
           <div class="user-menu" v-if="showUserMenu">
-            <div @click="verPerfil">Ver perfil</div>
+            <!-- <div @click="verPerfil">Ver perfil</div> -->
             <div @click="cerrarSesion">Cerrar sesión</div>
           </div>
         </div>
@@ -49,9 +49,9 @@
           </v-list>
         </v-list-item>
         <v-divider></v-divider>
-        <v-list-item @click="verPerfil">
+        <!-- <v-list-item @click="verPerfil">
           <v-icon>mdi-folder</v-icon> Ver perfil
-        </v-list-item>
+        </v-list-item> -->
         <v-list-item @click="cerrarSesion">
           <v-icon>mdi-logout</v-icon> Cerrar sesión
         </v-list-item>

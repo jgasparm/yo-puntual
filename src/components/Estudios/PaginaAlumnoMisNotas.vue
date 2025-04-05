@@ -45,7 +45,7 @@
           <div v-for="(bimester) in bimestres" :key="bimester.peed_id">
             <v-card class="mb-2">
               <v-card-title class="text-h6 text-center">
-                {{ bimester.peed_nombre }}
+                <strong>{{ bimester.peed_nombre }}</strong>
               </v-card-title>
             </v-card>
 
@@ -70,9 +70,8 @@
                         </v-col>
                         <v-col cols="6" class="text-right">
                           <div class="text-h6 font-weight-bold bimestre"
-                               :title="`Promedio: ${courseData.pcal_promedio_periodo} (${courseData.pcal_promedio_periodo_letra})`">
-                            Promedio: <span>{{ courseData.pcal_promedio_periodo }}</span>
-                            ({{ courseData.pcal_promedio_periodo_letra }})
+                               :title="`Promedio: ${courseData.pcal_promedio_periodo_letra}`">
+                            Promedio: <span>{{ courseData.pcal_promedio_periodo_letra }}</span>
                           </div>
                         </v-col>
                       </v-row>
@@ -104,9 +103,9 @@
                         </v-col>
                         <v-col cols="12" class="text-center">
                           <div class="bimestre"
-                               :title="`Promedio: ${courseData.pcal_promedio_periodo} (${courseData.pcal_promedio_periodo_letra})`">
+                               :title="`Promedio: ${courseData.pcal_promedio_periodo_letra}`">
                             Promedio: <span>{{ courseData.pcal_promedio_periodo }}</span>
-                            ({{ courseData.pcal_promedio_periodo_letra }})
+                            
                           </div>
                         </v-col>
                       </v-row>
@@ -120,26 +119,29 @@
                         v-for="(evaluacion) in courseData.cursos_promedios"
                         :key="evaluacion.eval_id"
                       >
-                        <v-expansion-panel-title>
-                          <div class="truncate" :title="evaluacion.eval_nombre">
-                            {{ evaluacion.eval_nombre }}
-                          </div>
-                          <div class="ml-2 truncate"
-                               :title="`Promedio: ${evaluacion.pcae_promedio_evaluacion} (${evaluacion.pcae_promedio_evaluacion_letra})`">
-                            - Promedio: {{ evaluacion.pcae_promedio_evaluacion }}
-                            ({{ evaluacion.pcae_promedio_evaluacion_letra }})
-                          </div>
-                        </v-expansion-panel-title>
+                      <v-expansion-panel-title class="expansion-title-responsive">
+  <div class="line" :title="evaluacion.eval_nombre">
+    {{ evaluacion.eval_nombre }}
+  </div>
+  <div class="line"
+       :title="`Promedio: ${evaluacion.pcae_promedio_evaluacion_letra}`">
+    Promedio: {{ evaluacion.pcae_promedio_evaluacion_letra }}
+  </div>
+</v-expansion-panel-title>
+
                         <v-expansion-panel-text>
                           <v-list>
                             <v-list-item
-                              v-for="(nota) in evaluacion.cursos_notas"
+                              v-for="(nota, index) in evaluacion.cursos_notas"
                               :key="nota.reau_id"
                             >
-                              <v-list-item-content
-                                :title="`Nota: ${nota.reau_evaluacion} (${nota.reau_evaluacion_letra})`">
-                                {{ nota.reau_evaluacion }} ({{ nota.reau_evaluacion_letra }})
-                              </v-list-item-content>
+                            <v-list-item-content>
+                              <strong>
+                                {{ evaluacion.eval_abreviacion || 'Nota' }} {{ index + 1 }}:
+                              </strong>
+                              {{ nota.reau_evaluacion_letra }}
+                            </v-list-item-content>
+
                             </v-list-item>
                           </v-list>
                         </v-expansion-panel-text>
@@ -220,6 +222,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.expansion-title-responsive {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
 /* Añadimos padding lateral al contenedor principal */
 .v-container {
   padding-left: 16px;
@@ -263,6 +272,13 @@ onMounted(async () => {
   }
   .v-card-title div {
     font-size: 0.95rem;
+  }
+  .expansion-title-responsive .line {
+    font-weight: 500;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 @media (min-width: 601px) and (max-width: 960px) {

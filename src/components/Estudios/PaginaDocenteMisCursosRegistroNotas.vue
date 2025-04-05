@@ -197,8 +197,15 @@
           </span>
         </v-card-title>
         <v-card-text>
-          <v-text-field label="Valor de Nota" v-model="noteForm.value" type="number" />
-          <v-text-field label="Letra" v-model="noteForm.letter" />
+          <v-text-field 
+            label="Valor de Nota" 
+            v-model="noteForm.value" 
+            type="number"
+            min="0"
+            max="20"
+            @input="onNoteValueChange"
+          />
+          <v-text-field label="Letra" v-model="noteForm.letter" readonly />
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -271,6 +278,7 @@ async function fetchBimestres() {
     selectedPacuId.value = data.data[0]?.pacu_id
   }
 }
+
 
 
 // dynamicHeaders, filteredDynamicHeaders, etc.
@@ -347,6 +355,8 @@ const noteForm = ref({
   pcae_id: null
 })
 
+
+
 // Abrir el diálogo
 function openNoteDialog(item, column) {
   console.log('openNoteDialog triggered', item, column)
@@ -372,8 +382,38 @@ function openNoteDialog(item, column) {
   }
   noteForm.value.student = item
   noteForm.value.noteIndex = noteIndex
+  // Lógica para actualizar la letra según valor ingresado
+  onNoteValueChange()
   noteDialog.value = true
 }
+
+function onNoteValueChange() {
+  let val = parseInt(noteForm.value.value)
+
+  if (isNaN(val)) {
+    noteForm.value.letter = ''
+    return
+  }
+
+  if (val < 0) val = 0
+  if (val > 20) val = 20
+
+  noteForm.value.value = val
+
+  if (val >= 0 && val <= 10) {
+    noteForm.value.letter = 'C'
+  } else if (val >= 11 && val <= 13) {
+    noteForm.value.letter = 'B'
+  } else if (val >= 14 && val <= 17) {
+    noteForm.value.letter = 'A'
+  } else if (val >= 18 && val <= 20) {
+    noteForm.value.letter = 'AD'
+  } else {
+    noteForm.value.letter = ''
+  }
+}
+
+
 
 function closeNoteDialog() {
   noteDialog.value = false

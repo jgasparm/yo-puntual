@@ -34,7 +34,7 @@
             v-model="selectedBimestre"
             :items="bimestres"
             item-title="peed_nombre"
-            item-value="peed_id"
+            return-object
             label="Bimestre"
             dense
             solo
@@ -56,7 +56,7 @@
             v-model="selectedBimestre"
             :items="bimestres"
             item-title="peed_nombre"
-            item-value="peed_id"
+            return-object
             label="Bimestre"
             dense
             solo
@@ -203,6 +203,8 @@ const searchQuery = ref("") // Variable reactiva para la búsqueda
 const router = useRouter()
 const route = useRoute()
 
+const evaluaciones = ref([])
+
 const cursoSeleccionado = ref(
   route.query.curso
     ? JSON.parse(decodeURIComponent(route.query.curso))
@@ -230,7 +232,7 @@ async function fetchBimestres() {
     const response = await axios.get(baseUrl, configReq)
     if (response.data.status) {
       bimestres.value = response.data.data
-      selectedBimestre.value = response.data.data[0]?.peed_id ?? null
+      selectedBimestre.value = response.data.data[0] ?? null
     }
 
 
@@ -243,10 +245,9 @@ async function fetchBimestres() {
   }
 }
 
-
-// const bimestreSeleccionado = computed(() =>
-//   bimestres.value.find(b => b.peed_id === selectedBimestre.value) || {}
-// )
+const selectedPacuId = computed(() => {
+  return selectedBimestre.value?.pacu_id || null
+})
 
 const alumnos = ref([])
 
@@ -275,10 +276,18 @@ const paginatedPages = computed(() => {
 })
 
 // Cuando cambie bimestre, reconstruye tabla y reinicia paginación
-watch(selectedBimestre, () => {
-  currentPage.value = 1
-  parseDataForTable()
-})
+watch(
+  () => selectedBimestre.value,
+  async (nuevo) => {
+    if (nuevo && nuevo.peed_id && nuevo.pacu_id) {
+      currentPage.value = 1
+      await fetchEvaluaciones()
+      parseDataForTable()
+    }
+  },
+  { immediate: true, deep: true } // <-- se ejecuta al inicio y detecta cambios internos
+)
+
 
 onMounted(() => {
   fetchBimestres()
@@ -302,7 +311,58 @@ onMounted(() => {
     fetchDetalle(doad_id)
   }
 
+// Cargar evaluaciones
+async function fetchEvaluaciones() {
+  try {
+    const token = localStorage.getItem("token")
+    const profile = localStorage.getItem("profile")
+    const ai_usua_id = localStorage.getItem("usua_id")
+    const ai_peed_id = selectedBimestre.value?.peed_id || null
 
+    const ai_doad_id = cursoSeleccionado.value
+      ? cursoSeleccionado.value.doad_id
+      : null
+
+    const ai_pacu_id = selectedPacuId.value
+    // const ai_aude_id = cursoSeleccionado.value
+    //   ? cursoSeleccionado.value.aude_id
+    //   : null
+    const ac_anio_escolar = localStorage.getItem("anio_escolar")
+
+    const baseUrl =
+      "https://amsoftsolution.com/amss/ws/wsListaEvaluacionesDocentePeriodo.php"
+    const params = {
+      ai_usua_id,
+      ai_peed_id,
+      ai_doad_id,
+      ai_pacu_id,
+      ac_anio_escolar,
+      av_profile: profile
+    }
+    const configReq = {
+      params,
+      headers: { Authorization: `Bearer ${token}` }
+    }
+    const response = await axios.get(baseUrl, configReq)
+    if (response.data.status) {
+      evaluaciones.value = response.data.data
+      if (evaluaciones.value.length < 1) {
+        dynamicHeaders.value = []
+        tableItems.value = []
+      }
+    }
+    else {
+      evaluaciones.value = []
+      dynamicHeaders.value = []
+      tableItems.value = []
+    }
+  } catch (error) {
+    evaluaciones.value = [];
+    dynamicHeaders.value = []
+    tableItems.value = []
+    console.error("Error fetching evaluations", error)
+  }
+}
 
 async function fetchDetalle(doad_id) {
   try {
@@ -360,95 +420,99 @@ function getColorForEvaluation(nombre) {
 /**
  * Genera dynamicHeaders y tableItems a partir de los datos del API.
  */
-function parseDataForTable() {
-  const bimestreId = selectedBimestre.value
-  const dataBimestre = alumnos.value.filter(item => item.peed_id === bimestreId)
+ function parseDataForTable() {
+  const bimestreId = selectedBimestre.value?.peed_id;
+  const dataBimestre = alumnos.value.filter(item => item.peed_id === bimestreId);
 
   if (!dataBimestre.length) {
-    dynamicHeaders.value = []
-    tableItems.value = []
-    return
+    dynamicHeaders.value = [];
+    tableItems.value = [];
+    return;
   }
 
-  const evalMap = {}
-  dataBimestre.forEach(alumnoItem => {
-    alumnoItem.alumnos_cursos_promedios.forEach(evalData => {
-      const { eval_id, eval_abreviacion, eval_nombre, alumnos_cursos_notas } = evalData
-      const numNotas = alumnos_cursos_notas.length
+  // Ordena las evaluaciones por pcev_orden
+  const sortedEvaluations = [...evaluaciones.value].sort((a, b) => a.pcev_orden - b.pcev_orden);
 
-      const nombreParaMostrar = isDesktop.value ? eval_abreviacion : eval_nombre
-
-      if (!evalMap[eval_id]) {
-        evalMap[eval_id] = { nombre: nombreParaMostrar, maxNotas: numNotas, abre: eval_abreviacion }
-      } else if (numNotas > evalMap[eval_id].maxNotas) {
-        evalMap[eval_id].maxNotas = numNotas
-      }
-    })
-  })
-
-  const builtHeaders = []
-
+  const builtHeaders = [];
   if (isDesktop.value) {
-    builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' }) //
-    builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' }) //
+    builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' });
+    builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' });
   }
 
-  Object.keys(evalMap).forEach(evalId => {
-    const evalInfo = evalMap[evalId]
-    // Obtén el color para la evaluación
-    
-    const bgColor = getColorForEvaluation(evalInfo.abre)
-    for (let i = 1; i <= evalInfo.maxNotas; i++) {
+  // Para cada evaluación ordenada, crea las columnas según pcev_cantidad_evaluacion
+  sortedEvaluations.forEach(evalObj => {
+    const maxNotas = parseInt(evalObj.pcev_cantidad_evaluacion) || 0;
+    const evalAbre = evalObj.eval_abreviacion;
+    const evalNombre = evalObj.eval_nombre;
+    const bgColor = getColorForEvaluation(evalAbre);
+    for (let i = 1; i <= maxNotas; i++) {
       builtHeaders.push({
-        title: `${evalInfo.nombre} #${i}`,
-        key: `eval_${evalId}_nota_${i}`,
+        title: `${evalAbre} #${i}`,
+        key: `eval_${evalObj.eval_id}_nota_${i}`,
         sortable: false,
         bgColor
-      })
+      });
     }
     builtHeaders.push({
-      title: `Prom. ${evalInfo.nombre}`,
-      key: `eval_${evalId}_prom`,
+      title: `Prom. ${evalNombre}`,
+      key: `eval_${evalObj.eval_id}_prom`,
       sortable: false,
       bgColor
-    })
-  })
+    });
+  });
 
   if (isDesktop.value) {
-    builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false }) //
+    builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false });
   }
-  
 
+  // Construye las filas para cada alumno
   const builtItems = dataBimestre.map((alumnoItem, index) => {
-    const row = {}
-    row.numero = index + 1
-    row.alumno = alumnoItem.alumno
-    alumnoItem.alumnos_cursos_promedios.forEach(evalData => {
-      const { eval_id, pcae_promedio_evaluacion, pcae_promedio_evaluacion_letra } = evalData
-      const { alumnos_cursos_notas } = evalData
-      alumnos_cursos_notas.forEach((notaItem, nIndex) => {
-        const colKey = `eval_${eval_id}_nota_${nIndex + 1}`
-        row[colKey] = `${notaItem.reau_evaluacion} (${notaItem.reau_evaluacion_letra})`
-      })
-      const maxNotas = evalMap[eval_id].maxNotas
-      if (alumnos_cursos_notas.length < maxNotas) {
-        for (let i = alumnos_cursos_notas.length + 1; i <= maxNotas; i++) {
-          const emptyKey = `eval_${eval_id}_nota_${i}`
-          row[emptyKey] = ''
-        }
-      }
-      const promKey = `eval_${eval_id}_prom`
-      row[promKey] = `${pcae_promedio_evaluacion} (${pcae_promedio_evaluacion_letra})`
-    })
-    row.promBim = `${alumnoItem.pcal_promedio_periodo} (${alumnoItem.pcal_promedio_periodo_letra})`
-    return row
-  })
+    const row = {};
+    row.numero = index + 1;
+    row.alumno = alumnoItem.alumno;
 
-  dynamicHeaders.value = builtHeaders
-  tableItems.value = builtItems
-  console.log(dynamicHeaders)
-  console.log(tableItems)
+    // Recorre las evaluaciones ordenadas
+    sortedEvaluations.forEach(evalObj => {
+      const maxNotas = parseInt(evalObj.pcev_cantidad_evaluacion) || 0;
+      // Busca si el alumno tiene datos para esta evaluación
+      const alumnoEval = alumnoItem.alumnos_cursos_promedios.find(e => e.eval_id === evalObj.eval_id);
+
+      if (alumnoEval) {
+        // Recorre las notas registradas
+        alumnoEval.alumnos_cursos_notas.forEach((notaItem, nIndex) => {
+          const colKey = `eval_${evalObj.eval_id}_nota_${nIndex + 1}`;
+          row[colKey] = `${notaItem.reau_evaluacion} (${notaItem.reau_evaluacion_letra})`;
+        });
+        // Si la cantidad de notas registradas es menor a maxNotas, rellena las restantes como vacías
+        for (let i = alumnoEval.alumnos_cursos_notas.length + 1; i <= maxNotas; i++) {
+          const colKey = `eval_${evalObj.eval_id}_nota_${i}`;
+          row[colKey] = '';
+        }
+        // Columna de promedio para la evaluación
+        const promKey = `eval_${evalObj.eval_id}_prom`;
+        row[promKey] = `${alumnoEval.pcae_promedio_evaluacion} (${alumnoEval.pcae_promedio_evaluacion_letra})`;
+      } else {
+        // Si no existe información para esta evaluación, deja las columnas vacías
+        for (let i = 1; i <= maxNotas; i++) {
+          const colKey = `eval_${evalObj.eval_id}_nota_${i}`;
+          row[colKey] = '';
+        }
+        const promKey = `eval_${evalObj.eval_id}_prom`;
+        row[promKey] = '';
+      }
+    });
+
+    // Promedio bimestral
+    row.promBim = `${alumnoItem.pcal_promedio_periodo} (${alumnoItem.pcal_promedio_periodo_letra})`;
+    return row;
+  });
+
+  dynamicHeaders.value = builtHeaders;
+  tableItems.value = builtItems;
+  console.log(dynamicHeaders.value);
+  console.log(tableItems.value);
 }
+
 
 function goBack() {
   router.push({ name: 'DocenteMisCursos' })
