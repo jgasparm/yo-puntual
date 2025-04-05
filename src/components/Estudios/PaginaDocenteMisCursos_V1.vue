@@ -4,7 +4,7 @@
       <v-col>
         <h1 class="text-h5 mb-4">Mis Cursos</h1>
         <!-- Selector de Bimestre -->
-        <v-select
+        <!-- <v-select
           v-model="selectedBimestre"
           :items="bimestres"
           item-title="peed_nombre"
@@ -14,7 +14,7 @@
         />
         <v-btn color="primary" @click="filtrarCursos">
           Aplicar Filtro
-        </v-btn>
+        </v-btn> -->
       </v-col>
     </v-row>
 
@@ -128,19 +128,13 @@ const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
 
 const allData = ref([])           // Data completa del API
-const bimestres = computed(() => {
-  const map = new Map()
-  alumnos.value.forEach(item => {
-    map.set(item.peed_id, { peed_id: item.peed_id, peed_nombre: item.peed_nombre })
-  })
-  return Array.from(map.values())
-})
+const bimestres = ref([])         // Lista de bimestres
 const selectedBimestre = ref(null)
 
 // Columnas de la tabla (solo se usan en vista Desktop)
 const headers = [
   { title: 'Curso', key: 'aede_nombre' },
-  { title: 'Aula', key: 'aula' }, 
+  { title: 'Aula', key: 'aula' },
   { title: 'Turno', key: 'turn_nombre' },
   { title: 'Nivel', key: 'nive_nombre' },
   { title: 'Grado', key: 'grad_nombre' },
@@ -223,9 +217,11 @@ const filteredCursos = computed(() => {
   return bimestreObj ? bimestreObj.cursos : []
 })
 
-function filtrarCursos() {
-  // Aquí se puede agregar lógica adicional si es necesario
-}
+
+
+// function filtrarCursos() {
+//   // Aquí se puede agregar lógica adicional si es necesario
+// }
 
 // Navegación al hacer clic en "Ver Notas"
 async function verNotas(curso) {

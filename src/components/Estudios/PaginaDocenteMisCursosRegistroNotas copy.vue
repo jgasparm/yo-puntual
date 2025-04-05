@@ -597,7 +597,7 @@ function goBack() {
 onMounted(async () => {
   await fetchBimestres()
   await fetchEvaluaciones()
-  fetchNotas()
+  
 })
 
 // Watch

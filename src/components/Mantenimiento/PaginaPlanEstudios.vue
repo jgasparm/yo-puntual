@@ -607,8 +607,11 @@ const filteredPlanes = computed(() => {
   return planesEstudio.value.filter(plan => {
     const okArea = selectedArea.value === 'TODOS' || plan.ared_id === selectedArea.value
     const okNivel =
-      selectedNivel.value === 'TODOS' ||
-      gradosList.value.find(g => g.grad_nombre === plan.grad_nombre)?.nive_id === selectedNivel.value
+    selectedNivel.value === 'TODOS' || plan.nive_id === selectedNivel.value
+
+    //const okNivel =
+    //  selectedNivel.value === 'TODOS' ||
+    //  gradosList.value.find(g => g.grad_nombre === plan.grad_nombre)?.nive_id === selectedNivel.value
     const okGrado = selectedGrado.value === 'TODOS' || plan.grad_nombre === selectedGrado.value
     return okArea && okNivel && okGrado
   })

@@ -79,19 +79,28 @@
           <v-card-text>
             <v-form ref="alumnoForm" lazy-validation>
               <!-- Campo fijo para tipo: Alumno -->
-              <v-text-field v-model="form.pers_nombres" label="Nombres" required></v-text-field>
-              <v-text-field v-model="form.pers_apellido_paterno" label="Apellido Paterno" required></v-text-field>
-              <v-text-field v-model="form.pers_apellido_materno" label="Apellido Materno"></v-text-field>
+              <v-text-field
+                class="campo-obligatorio" 
+                v-model="form.pers_nombres" label="Nombres" :rules="[requiredRule]" required></v-text-field>
+              <v-text-field
+                class="campo-obligatorio"
+                v-model="form.pers_apellido_paterno" label="Apellido Paterno" :rules="[requiredRule]" required></v-text-field>
+              <v-text-field
+                class="campo-obligatorio"
+                v-model="form.pers_apellido_materno" label="Apellido Materno" :rules="[requiredRule]" required></v-text-field>
               <!-- Select para Tipo de Documento -->
               <v-select
+                class="campo-obligatorio"
                 v-model="form.tidi_id"
                 :items="tidiOptions"
                 item-value="tidi_id"
                 item-title="tidi_descripcion"
                 label="Tipo de Documento"
-                required
+                :rules="[requiredRule]" required
               ></v-select>
-              <v-text-field v-model="form.pers_numero_documento_identidad" label="Número de Documento" required></v-text-field>
+              <v-text-field 
+                class="campo-obligatorio"
+                v-model="form.pers_numero_documento_identidad" label="Número de Documento" :rules="[requiredRule]" required></v-text-field>
     
               <!-- Sección para Fecha de Nacimiento y Sexo -->
             <template v-if="!isMobile">
@@ -254,6 +263,9 @@
     name: 'AlumnosPage',
     setup() {
         
+      const requiredRule = v => !!v || 'Este campo es obligatorio';
+      const alumnoForm = ref(null);
+
       // Obtener token y profile desde localStorage
         const token = localStorage.getItem('token')
         const profile = localStorage.getItem('profile')
@@ -444,8 +456,24 @@
       const closeDialog = () => {
         dialog.value = false;
       };
+
+      function scrollToFirstInvalidField() {
+        // Esperamos al siguiente tick para que los errores se muestren
+        requestAnimationFrame(() => {
+          const firstErrorField = document.querySelector('.campo-obligatorio input:invalid, .campo-obligatorio .v-input--error input, .campo-obligatorio .v-input--error .v-field__input');
+          if (firstErrorField) {
+            firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstErrorField.focus();
+          }
+        });
+      }
   
       const saveAlumno = async () => {
+        const formValid = await alumnoForm.value.validate();
+        if (!formValid.valid) {
+          scrollToFirstInvalidField();
+          return; // No guardar si hay errores
+        }
         if (form.value.pers_id) {
             try {
             // Construir el objeto de parámetros para la API.
@@ -585,7 +613,9 @@
         estadoOptions,
         openDialog,
         closeDialog,
-        saveAlumno
+        saveAlumno,
+        requiredRule,
+        alumnoForm
       };
     }
   };

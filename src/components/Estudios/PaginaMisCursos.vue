@@ -190,9 +190,10 @@ async function fetchAllData() {
 
 // Filtra los cursos según el bimestre seleccionado
 const filteredCursos = computed(() => {
-  if (!selectedBimestre.value) return []
-  const bimestreObj = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
-  return bimestreObj ? bimestreObj.cursos : []
+  //if (!selectedBimestre.value) return []
+  //const bimestreObj = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
+  //return bimestreObj ? bimestreObj.cursos : []
+  return allData.value
 })
 
 // Navegación al hacer clic en "Ver Notas"

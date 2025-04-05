@@ -209,6 +209,10 @@ const cursoSeleccionado = ref(
     : null
 )
 
+const doad_id = ref(
+  route.query.doad_id || (cursoSeleccionado.value ? cursoSeleccionado.value.doad_id : null  
+  ));
+
 const bimestres = ref([])
 const selectedBimestre = ref(null)
 
@@ -216,8 +220,8 @@ async function fetchBimestres() {
   try {
     const profile = localStorage.getItem("profile")
     const token = localStorage.getItem("token")
-    const baseUrl = "https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativo.php"
-    const params = { av_profile: profile }
+    const baseUrl = "https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativoPlanCurricular.php"
+    const params = { ai_doad_id: doad_id.value, av_profile: profile }
     const configReq = {
       params,
       headers: { Authorization: `Bearer ${token}` },

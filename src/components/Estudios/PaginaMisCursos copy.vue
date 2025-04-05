@@ -3,18 +3,6 @@
     <v-row>
       <v-col>
         <h1 class="text-h5 mb-4">Mis Cursos</h1>
-        <!-- Selector de Bimestre -->
-        <!-- <v-select
-          v-model="selectedBimestre"
-          :items="bimestres"
-          item-title="peed_nombre"
-          item-value="peed_id"
-          label="Bimestre"
-          class="mb-4"
-        />
-        <v-btn color="primary" @click="filtrarCursos">
-          Aplicar Filtro
-        </v-btn> -->
       </v-col>
     </v-row>
 
@@ -32,9 +20,9 @@
           <v-btn icon color="primary" class="action-btn" @click="verNotas(item)">
             <v-icon size="24">mdi-eye</v-icon>
           </v-btn>
-          <v-btn icon color="secondary" class="action-btn" @click="registrarNotas(item)">
+          <!-- <v-btn icon color="secondary" class="action-btn" @click="registrarNotas(item)">
             <v-icon size="24">mdi-pencil</v-icon>
-          </v-btn>
+          </v-btn> -->
         </div>
       </template>
       </v-data-table>
@@ -52,28 +40,18 @@
       cols="12"
       class="mb-2"
     >
-      <!-- Se agrega position: relative para poder posicionar los botones de forma absoluta -->
       <v-card outlined style="position: relative; text-align: left;">
-        <!-- Botón editar: se posiciona en la esquina superior derecha -->
-        <v-btn
-          icon
-          color="secondary"
-          @click="registrarNotas(curso)"
-          style="position: absolute; top: 8px; right: 8px;"
-        >
-          <v-icon>mdi-pencil</v-icon>
-        </v-btn>
-        <!-- Botón ver (opcional, si se requiere que también aparezca) -->
+        <!-- Botón de "ver" en la esquina superior derecha -->
         <v-btn
           icon
           color="primary"
           @click="verNotas(curso)"
-          style="position: absolute; top: 8px; right: 48px;"
+          style="position: absolute; top: 8px; right: 8px;"
         >
           <v-icon>mdi-eye</v-icon>
         </v-btn>
-        <!-- Contenido del curso con padding-top para dejar espacio a los botones -->
-        <v-card-text style="padding-top: 60px;">
+        <!-- Información del curso con padding-top para evitar superposición -->
+        <v-card-text style="padding-top: 40px;">
           <div><strong>Curso:</strong> {{ curso.aede_nombre }}</div>
           <div><strong>Aula:</strong> {{ curso.aula }}</div>
           <div><strong>Turno:</strong> {{ curso.turn_nombre }}</div>
@@ -84,6 +62,7 @@
       </v-card>
     </v-col>
   </v-row>
+
   <!-- Paginación para mobile -->
   <v-pagination
     v-if="paginatedPages > 1"
@@ -134,6 +113,7 @@ const selectedBimestre = ref(null)
 // Columnas de la tabla (solo se usan en vista Desktop)
 const headers = [
   { title: 'Curso', key: 'aede_nombre' },
+  { title: 'Docente', key: 'docente' },
   { title: 'Aula', key: 'aula' },
   { title: 'Turno', key: 'turn_nombre' },
   { title: 'Nivel', key: 'nive_nombre' },
@@ -172,9 +152,8 @@ watch(selectedBimestre, () => {
 async function fetchAllData() {
   try {
     const token = localStorage.getItem("token")
-    const profile = localStorage.getItem("profile")
-    const ai_usua_id = localStorage.getItem("usua_id")
-    const ac_anio_escolar = localStorage.getItem("anio_escolar")
+    const profile = localStorage.getItem("profile") || "demo"
+    const ac_anio_escolar = localStorage.getItem("ac_anio_escolar") || 2025
 
     if (!token || !profile) {
       console.warn("Falta token o profile en localStorage.")
@@ -182,9 +161,8 @@ async function fetchAllData() {
     }
     console.log("Ejecutando consulta a la API...")
 
-    const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnos.php"
+    const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocentesAlumnos.php"
     const params = {
-      ai_usua_id,
       ac_anio_escolar,
       av_profile: profile
     }
@@ -212,17 +190,10 @@ async function fetchAllData() {
 
 // Filtra los cursos según el bimestre seleccionado
 const filteredCursos = computed(() => {
-  //if (!selectedBimestre.value) return []
-  ///const bimestreObj = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
-  //return bimestreObj ? bimestreObj.cursos : []
-  return allData.value
+  if (!selectedBimestre.value) return []
+  const bimestreObj = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
+  return bimestreObj ? bimestreObj.cursos : []
 })
-
-
-
-// function filtrarCursos() {
-//   // Aquí se puede agregar lógica adicional si es necesario
-// }
 
 // Navegación al hacer clic en "Ver Notas"
 async function verNotas(curso) {
@@ -231,11 +202,10 @@ async function verNotas(curso) {
   // Datos necesarios para el API
   const token = localStorage.getItem("token")
   const profile = localStorage.getItem("profile")
-  const ai_usua_id = localStorage.getItem("usua_id")
+  const ai_usua_id = curso.usua_id
   const ac_anio_escolar = localStorage.getItem("anio_escolar")
   const doad_id = curso.doad_id
   const aude_id = curso.aude_id
-
   const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"
   const params = {
     ai_usua_id,
@@ -260,12 +230,11 @@ async function verNotas(curso) {
       console.log(curso)
       // Se navega a la página MisCursosDetalle y se pasa la respuesta del API
       router.push({
-        name: 'DocenteMisCursosConsultaNotas',
+        name: 'MisCursosConsultaNotas',
         query: {
           curso: encodeURIComponent(JSON.stringify(curso)),
           bimestre: encodeURIComponent(JSON.stringify(bimestre)),
-          detalle: encodeURIComponent(JSON.stringify(response.data)),
-          doad_id: curso.doad_id
+          detalle: encodeURIComponent(JSON.stringify(response.data))
         }
       })
     }
@@ -276,17 +245,16 @@ async function verNotas(curso) {
 
 
 // Función para registrar notas
-function registrarNotas(curso) {
-  const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
-  router.push({
-    name: 'DocenteMisCursosRegistroNotas',
-    query: {
-      curso: encodeURIComponent(JSON.stringify(curso)),
-      bimestre: encodeURIComponent(JSON.stringify(bimestre)),
-      doad_id: curso.doad_id
-    }
-  })
-}
+// function registrarNotas(curso) {
+//   const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
+//   router.push({
+//     name: 'DocenteMisCursosRegistroNotas',
+//     query: {
+//       curso: encodeURIComponent(JSON.stringify(curso)),
+//       bimestre: encodeURIComponent(JSON.stringify(bimestre))
+//     }
+//   })
+// }
 </script>
 
 <style scoped>

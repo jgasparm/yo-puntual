@@ -393,7 +393,7 @@
           />
           <v-select
             label="Docente / Curso"
-            :items="docentesOptions"
+            :items="filteredDocentesOptions"
             item-text="title"
             item-value="key"
             v-model="newCurricular.daed_id"
@@ -574,6 +574,8 @@ const newPlanEstudio = reactive({
   estado: 'Activo'
 })
 
+
+
 // Filtro “Grado” para el nuevo plan
 const newGradoOptions = computed(() => {
   return newPlanEstudio.nive_id
@@ -612,6 +614,18 @@ const filteredPlanes = computed(() => {
   })
 })
 const totalPages = computed(() => Math.ceil(filteredPlanes.value.length / itemsPerPage.value))
+
+function abrirDialogoAgregarCurricular(plan) {
+  // Si necesitas asignar algún dato del plan al nuevo plan curricular, hazlo aquí:
+  newCurricular.ples_id = plan.ples_id
+  newCurricular.ared_id = plan.ared_id 
+  // Reinicializa las demás propiedades
+  newCurricular.daed_id = null;
+  newCurricular.periodo_id = null;
+  newCurricular.pacu_horas = null;
+  // Abre el diálogo para agregar el plan curricular
+  mostrarDialogoAgregarCurricular.value = true
+}
 
 function abrirDialogoActualizarPlan(plan) {
   // Asigna el plan seleccionado
@@ -671,6 +685,8 @@ onMounted(() => {
   obtenerPlanesEstudio()
   obtenerAreasEducativas()
   obtenerNivelesGrados()
+  obtenerPeriodos()
+  obtenerDocentes()
 })
 
 // watch para resetear pág en filtros
@@ -720,6 +736,37 @@ async function obtenerPlanCurricular(id) {
     planCurriculares.value = { ...planCurriculares.value, [id]: data.data }
   }
 }
+
+async function obtenerPeriodos() {
+  try {
+    const { data } = await axiosInstance.get(`wsListaPeriodoEducativo.php?av_profile=${profile}`)
+    if (data.status) {
+      // Ajusta el mapeo según la estructura que devuelve tu API
+      periodosOptions.value = data.data.map(periodo => ({
+        title: periodo.peed_nombre,  // O la propiedad que corresponda
+        key: periodo.peed_id         // O la propiedad que corresponda
+      }))
+    }
+  } catch (error) {
+    console.error('Error al obtener periodos:', error)
+  }
+}
+
+async function obtenerDocentes() {
+  try {
+    const { data } = await axiosInstance.get(`wsListaDocenteAreaEducativaDetalle.php?ac_anio_escolar=2025&av_profile=${profile}`)
+    if (data.status) {
+      docentesOptions.value = data.data.map(docente => ({
+        title: docente.docente + ' / ' + docente.area_educativa,  // Ajusta según tu API
+        key: docente.daed_id,
+        ared_id: docente.ared_id
+      }))
+    }
+  } catch (error) {
+    console.error('Error al obtener docentes:', error)
+  }
+}
+
 
 // NUEVO: Carga de Evaluaciones
 async function obtenerPlanCurricularEvaluaciones(pacuId) {
@@ -852,6 +899,11 @@ function cerrarDialogoActualizarCurricular() {
   planCurricularHoras.value = null
   planCurricularEstado.value = ''
 }
+
+const filteredDocentesOptions = computed(() => {
+  if (!newCurricular.ared_id) return docentesOptions.value
+  return docentesOptions.value.filter(docente => docente.ared_id == newCurricular.ared_id)
+})
 
 // Paginación Mobile
 const mobilePage = ref(1)

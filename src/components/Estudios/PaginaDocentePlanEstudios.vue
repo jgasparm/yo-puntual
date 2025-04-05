@@ -631,6 +631,16 @@ const gradoOptions = computed(() => {
 const filteredPlanes = computed(() => {
   return planesEstudio.value.filter(plan => {
     const okArea = selectedArea.value === 'TODOS' || plan.ared_id === selectedArea.value
+    const okNivel = selectedNivel.value === 'TODOS' || plan.nive_id === selectedNivel.value
+    const okGrado = selectedGrado.value === 'TODOS' || plan.grad_nombre === selectedGrado.value
+    return okArea && okNivel && okGrado
+  })
+})
+
+/*
+const filteredPlanes = computed(() => {
+  return planesEstudio.value.filter(plan => {
+    const okArea = selectedArea.value === 'TODOS' || plan.ared_id === selectedArea.value
     const okGrado = selectedGrado.value === 'TODOS' || plan.grad_nombre === selectedGrado.value
     let okNivel = true
     if (selectedNivel.value !== 'TODOS') {
@@ -642,6 +652,7 @@ const filteredPlanes = computed(() => {
     return okArea && okNivel && okGrado
   })
 })
+*/
 const totalPages = computed(() => Math.ceil(filteredPlanes.value.length / itemsPerPage.value))
 
 // --- COMPUTED para EDICIÓN de Plan ---
