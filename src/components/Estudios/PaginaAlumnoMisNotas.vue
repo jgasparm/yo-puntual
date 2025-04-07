@@ -1,38 +1,59 @@
 <template>
   <v-container class="px-4">
+    <v-row>
+      <v-col cols="12">
+        <div class="text-h5 font-weight-bold text-primary mb-2">
+          📚 Consulta de Notas
+        </div>
+        <div class="text-body-2 text-grey-darken-1">
+          Revisa tus promedios y notas por bimestre y curso.
+        </div>
+      </v-col>
+    </v-row>
+
     <v-row justify="center">
       <v-col cols="12" md="8">
         <!-- Información del Alumno -->
         <v-card class="mb-4" v-if="alumno">
           <v-card-title>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <div class="d-flex flex-row align-center">
-                  <strong class="mr-1">Turno:</strong>
-                  <span :title="alumno.turn_nombre">{{ alumno.turn_nombre }}</span>
-                </div>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <div class="d-flex flex-row align-center">
-                  <strong class="mr-1">Nivel:</strong>
-                  <span :title="alumno.nive_nombre">{{ alumno.nive_nombre }}</span>
-                </div>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <div class="d-flex flex-row align-center">
-                  <strong class="mr-1">Grado:</strong>
-                  <span :title="alumno.grad_nombre">{{ alumno.grad_nombre }}</span>
-                </div>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <div class="d-flex flex-row align-center">
-                  <strong class="mr-1">Sección:</strong>
-                  <span :title="alumno.secc_nombre">{{ alumno.secc_nombre }}</span>
-                </div>
-              </v-col>
-            </v-row>
+            <v-sheet color="blue-lighten-5" class="pa-4 mb-4 rounded-lg elevation-1">
+  <v-row>
+    <v-col cols="12">
+      <div class="text-h6 font-weight-bold text-primary mb-2">
+        🧑‍🎓 Información del Alumno
+      </div>
+    </v-col>
+
+    <v-col cols="12" sm="6">
+      <div class="info-line">
+        <v-icon color="primary" start>mdi-clock-outline</v-icon>
+        <strong>Turno:</strong> <span>{{ alumno.turn_nombre }}</span>
+      </div>
+    </v-col>
+
+    <v-col cols="12" sm="6">
+      <div class="info-line">
+        <v-icon color="primary" start>mdi-school</v-icon>
+        <strong>Nivel:</strong> <span>{{ alumno.nive_nombre }}</span>
+      </div>
+    </v-col>
+
+    <v-col cols="12" sm="6">
+      <div class="info-line">
+        <v-icon color="primary" start>mdi-numeric</v-icon>
+        <strong>Grado:</strong> <span>{{ alumno.grad_nombre }}</span>
+      </div>
+    </v-col>
+
+    <v-col cols="12" sm="6">
+      <div class="info-line">
+        <v-icon color="primary" start>mdi-alpha-s-circle-outline</v-icon>
+        <strong>Sección:</strong> <span>{{ alumno.secc_nombre }}</span>
+      </div>
+    </v-col>
+  </v-row>
+</v-sheet>
+
           </v-card-title>
         </v-card>
 
@@ -65,7 +86,7 @@
                         <v-col cols="6">
                           <div class="text-h6 font-weight-bold curso"
                                :title="`Curso: ${course.aede_nombre}`">
-                            <strong>Curso:</strong> {{ course.aede_nombre }}
+                               <strong><v-icon left small color="primary">mdi-book</v-icon>Curso:</strong> {{ course.aede_nombre }}
                           </div>
                         </v-col>
                         <v-col cols="6" class="text-right">
@@ -92,7 +113,7 @@
                         <v-col cols="12">
                           <div class="text-h6 font-weight-bold curso"
                                :title="`Curso: ${course.aede_nombre}`">
-                            <strong>Curso:</strong> {{ course.aede_nombre }}
+                               <strong><v-icon left small color="primary">mdi-book</v-icon>Curso:</strong> {{ course.aede_nombre }}
                           </div>
                         </v-col>
                         <v-col cols="12">
@@ -102,15 +123,28 @@
                           </div>
                         </v-col>
                         <v-col cols="12" class="text-center">
+                          <strong>
                           <div class="bimestre"
                                :title="`Promedio: ${courseData.pcal_promedio_periodo_letra}`">
-                            Promedio: <span>{{ courseData.pcal_promedio_periodo }}</span>
-                            
+                            Promedio: <span>{{ courseData.pcal_promedio_periodo_letra }}</span>
                           </div>
+                        </strong>
                         </v-col>
                       </v-row>
                     </div>
                   </v-expansion-panel-title>
+
+                  <!-- Mensaje motivacional si el promedio es mayor o igual a 18 -->
+<v-alert
+  type="success"
+  dense
+  border="start"
+  color="green lighten-4"
+  class="mb-2"
+  v-if="courseData.pcal_promedio_periodo >= 18"
+>
+  🎉 ¡Felicitaciones! Excelente promedio en este curso.
+</v-alert>
 
                   <!-- Contenido colapsable: evaluaciones y notas -->
                   <v-expansion-panel-text>
@@ -120,14 +154,14 @@
                         :key="evaluacion.eval_id"
                       >
                       <v-expansion-panel-title class="expansion-title-responsive">
-  <div class="line" :title="evaluacion.eval_nombre">
-    {{ evaluacion.eval_nombre }}
-  </div>
-  <div class="line"
-       :title="`Promedio: ${evaluacion.pcae_promedio_evaluacion_letra}`">
-    Promedio: {{ evaluacion.pcae_promedio_evaluacion_letra }}
-  </div>
-</v-expansion-panel-title>
+                        <div class="line" :title="evaluacion.eval_nombre">
+                          {{ evaluacion.eval_nombre }}
+                        </div>
+                        <div class="line promedio"
+                            :title="`Promedio: ${evaluacion.pcae_promedio_evaluacion_letra}`">
+                          Promedio: {{ evaluacion.pcae_promedio_evaluacion_letra }}
+                        </div>
+                      </v-expansion-panel-title>
 
                         <v-expansion-panel-text>
                           <v-list>
@@ -137,7 +171,7 @@
                             >
                             <v-list-item-content>
                               <strong>
-                                {{ evaluacion.eval_abreviacion || 'Nota' }} {{ index + 1 }}:
+                                Nota {{ index + 1 }}:
                               </strong>
                               {{ nota.reau_evaluacion_letra }}
                             </v-list-item-content>
@@ -222,12 +256,40 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.info-line {
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+}
+.v-list-item-content {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.v-expansion-panel {
+  background-color: #f9f9fb; /* fondo claro suave */
+}
 .expansion-title-responsive {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column; /* <-- forzar disposición en columna (una línea abajo de otra) */
+  /*align-items: center;*/
+  gap: 4px; /* Espacio entre evaluación y promedio */
+}
+.expansion-title-responsive .line {
+    font-weight: 500;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    /*white-space: nowrap;*/
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    /*overflow: hidden;
+    text-overflow: ellipsis;*/
+  }
+  .expansion-title-responsive .line.promedio {
+  font-weight: bold;
+  color: #1976D2;
 }
 /* Añadimos padding lateral al contenedor principal */
 .v-container {
@@ -273,12 +335,11 @@ onMounted(async () => {
   .v-card-title div {
     font-size: 0.95rem;
   }
-  .expansion-title-responsive .line {
-    font-weight: 500;
+  .info-line {
     font-size: 1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    justify-content: center;
+    text-align: center;
+    flex-wrap: wrap;
   }
 }
 @media (min-width: 601px) and (max-width: 960px) {

@@ -1,68 +1,21 @@
 <template>
   <v-container>
-    <!-- Título principal -->
-    <v-row>
-      <v-col cols="12">
-        <div class="text-h5 font-weight-bold text-primary mb-2">
-          📅 Consulta de Asistencia
-        </div>
-        <div class="text-body-2 text-grey-darken-1">
-          Selecciona un rango de fechas para consultar. Puedes consultar asistencia dentro del año escolar {{ anioEscolar }} y por un máximo de 15 días por búsqueda.
-        </div>
-      </v-col>
-    </v-row>
-
-    <!-- Información del Alumno -->
-    <v-row class="my-4">
-      <v-col cols="12">
-        <v-sheet
-          v-if="alumno"
-          color="blue-lighten-5"
-          class="pa-4 mb-4 rounded-lg elevation-1"
-        >
-          <v-row>
-            <v-col cols="12">
-              <div class="text-h6 font-weight-bold text-primary mb-2">
-                🧑‍🏫 Información del Alumno
-              </div>
-            </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-icon start color="primary">mdi-clock-time-eight-outline</v-icon>
-              <strong>Turno:</strong> {{ alumno.turno }}
-            </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-icon start color="primary">mdi-school</v-icon>
-              <strong>Nivel:</strong> {{ alumno.nivel }}
-            </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-icon start color="primary">mdi-numeric</v-icon>
-              <strong>Grado:</strong> {{ alumno.grado }}
-            </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-icon start color="primary">mdi-alpha-s-circle-outline</v-icon>
-              <strong>Sección:</strong> {{ alumno.seccion }}
-            </v-col>
-          </v-row>
-        </v-sheet>
-
-        <v-alert v-else type="info" class="mb-4">
-          No se encontró información del alumno.
-        </v-alert>
-      </v-col>
-    </v-row>
-
-    <!-- Alertas -->
-    <transition name="fade">
-      <v-alert
-        v-if="errorMensaje"
-        type="error"
-        dense
-        outlined
-        class="mb-3"
-      >
-        {{ errorMensaje }}
-      </v-alert>
-    </transition>
+    <!-- Encabezado: Información del Empleado -->
+    <v-card class="pa-2 mb-2">
+      <v-card-title class="text-subtitle-3 font-weight-bold">
+        Asistencia del empleado
+      </v-card-title>
+      <v-card-text>
+        <v-row dense>
+          <v-col cols="12" sm="6" md="3">
+            <div><strong>Area:</strong> {{ empleado.area }}</div>
+          </v-col>
+          <v-col cols="12" sm="6" md="3">
+            <div><strong>Cargo:</strong> {{ empleado.cargo }}</div>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
 
     <!-- Filtro: Rango de Fechas -->
     <v-row dense>
@@ -134,20 +87,14 @@
     <!-- Botón de Consulta -->
     <v-row class="mt-2">
       <v-col cols="12" class="d-flex justify-end">
-        <v-btn
-          color="primary"
-          small
-          @click="consultarAsistencia"
-          :disabled="rangoInvalido"
-          :loading="loading"
-        >
+        <v-btn color="primary" small @click="consultarAsistencia">
           <v-icon left size="18">mdi-magnify</v-icon>
           Consultar
         </v-btn>
       </v-col>
     </v-row>
 
-    <!-- Resultados -->
+    <!-- Resultados de Asistencia -->
     <v-card class="pa-2 mt-3 rounded-lg elevation-2">
       <v-card-title class="text-subtitle-3 font-weight-bold">
         Resultados de la Consulta
@@ -155,7 +102,7 @@
       <v-divider></v-divider>
 
       <v-card-text>
-        <!-- Desktop -->
+        <!-- Vista para desktop: tabla -->
         <div v-if="isDesktop">
           <v-data-table
             :headers="headers"
@@ -164,8 +111,25 @@
             no-data-text="No hay resultados disponibles"
             :loading="loading"
           >
-            <template v-slot:progress>
-              <v-progress-linear indeterminate color="primary"></v-progress-linear>
+          <template v-slot:progress>
+            <v-progress-linear indeterminate color="primary"></v-progress-linear>
+          </template>
+
+            <template v-slot:header="{ headers }">
+              <tr>
+                <th
+                  v-for="header in headers"
+                  :key="header.key"
+                  class="text-center"
+                  @click="header.sort"
+                  style="cursor: pointer;"
+                >
+                  {{ header.title }}
+                  <v-icon small v-if="header.isSorted">
+                    {{ header.isSortedDesc ? 'mdi-arrow-down' : 'mdi-arrow-up' }}
+                  </v-icon>
+                </th>
+              </tr>
             </template>
             <template v-slot:item="{ item }">
               <tr>
@@ -180,24 +144,16 @@
             </template>
           </v-data-table>
         </div>
-
-        <!-- Mobile -->
+        <!-- Vista para mobile: tarjetas con paginación -->
         <div v-else>
           <v-alert v-if="!resultados.length && !loading" type="info">
             No hay resultados disponibles
           </v-alert>
 
-          <v-overlay
-            v-if="loading"
-            absolute
-            class="d-flex align-center justify-center"
-          >
-            <v-progress-circular
-              indeterminate
-              size="64"
-              color="primary"
-            ></v-progress-circular>
-          </v-overlay>
+          <!-- 🔹 Overlay para bloquear la vista mientras carga -->
+            <v-overlay v-if="loading" absolute class="d-flex align-center justify-center">
+              <v-progress-circular indeterminate size="64" color="primary"></v-progress-circular>
+            </v-overlay>
 
           <v-row v-else dense>
             <v-col
@@ -207,18 +163,18 @@
               class="mb-2"
             >
               <v-card outlined>
-                <v-card-text>
+                <v-card-title class="subtitle-2 font-weight-bold text-start">
+                  {{ empleado.nombre }}
+                </v-card-title>
+                <v-card-text class="text-start">
                   <v-row dense>
                     <v-col cols="12">
-                      <v-icon start color="primary">mdi-calendar</v-icon>
                       <strong>Fecha:</strong> {{ item.fecha }}
                     </v-col>
                     <v-col cols="12">
-                      <v-icon start color="primary">mdi-clock-outline</v-icon>
                       <strong>Hora:</strong> {{ item.hora }}
                     </v-col>
                     <v-col cols="12">
-                      <v-icon start color="primary">mdi-check-decagram</v-icon>
                       <strong>Estado:</strong>
                       <v-chip :color="estadoColor(item.estado)" dark small>
                         {{ item.estado }}
@@ -230,6 +186,7 @@
             </v-col>
           </v-row>
 
+          <!-- Paginación personalizada para mobile -->
           <v-pagination
             v-if="paginatedPages > 1"
             v-model="currentPage"
@@ -247,27 +204,27 @@
     </v-card>
 
     <!-- Modal de "No se encontraron resultados" -->
-    <v-dialog v-model="dialogNoResults" max-width="400">
-      <v-card>
-        <v-card-title class="headline">No se encontraron resultados</v-card-title>
-        <v-card-text>
-          La consulta no arrojó resultados. Por favor, ajusta los filtros e intenta nuevamente.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="dialogNoResults = false">Aceptar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+  <v-dialog v-model="dialogNoResults" max-width="400">
+    <v-card>
+      <v-card-title class="headline">No se encontraron resultados</v-card-title>
+      <v-card-text>
+        La consulta no arrojó resultados. Por favor, ajuste los filtros e intente nuevamente.
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" text @click="dialogNoResults = false">Aceptar</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   </v-container>
 </template>
-
 
 <script>
 import axios from "axios";
 import { useDisplay } from "vuetify";
 export default {
-  name: "PaginaConsultaAsistenciaAlumno",
+  name: "PaginaConsultaAsistenciaEmpleado",
   setup() {
     const { mdAndUp } = useDisplay();
     return { isDesktop: mdAndUp };
@@ -275,19 +232,14 @@ export default {
   data() {
     return {
       // La información del alumno se cargará desde el API; se obtienen parámetros desde localStorage
-      alumno: {
-        nombre: "",
-        turno: "",
-        nivel: "",
-        grado: "",
-        seccion: ""
+      empleado: {
+        area: "",
+        cargo: ""
       },
       filtros: {
         fechaInicio: this.formatearFecha(new Date()),
         fechaFinal: this.formatearFecha(new Date())
       },
-      errorMensaje: "",
-      anioEscolar: localStorage.getItem("anio_escolar"),
       menuFechaInicio: false,
       menuFechaFinal: false,
       fechaInicioObjeto: new Date(),
@@ -300,7 +252,7 @@ export default {
         { title: "Estado", key: "estado", align: "center", sortable: true }
       ],
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 5,
       dialogNoResults: false,
     };
   },
@@ -311,60 +263,19 @@ export default {
     },
     paginatedPages() {
       return Math.ceil(this.resultados.length / this.itemsPerPage);
-    },
-    rangoInvalido() {
-      const fechaInicio = new Date(this.toApiDate(this.filtros.fechaInicio));
-      const fechaFinal = new Date(this.toApiDate(this.filtros.fechaFinal));
-
-      const diasDiferencia = (fechaFinal - fechaInicio) / (1000 * 60 * 60 * 24);
-      const anio = parseInt(this.anioEscolar);
-
-      return (
-        fechaInicio > fechaFinal ||
-        diasDiferencia > 15 ||
-        fechaInicio.getFullYear() !== anio ||
-        fechaFinal.getFullYear() !== anio
-      );
     }
-
   },
   mounted() {
     const token = localStorage.getItem("token");
     const profile = localStorage.getItem("profile");
-    const anio_escolar = localStorage.getItem("anio_escolar");
     const usua_id = localStorage.getItem("usua_id");
     if (!token || !profile) {
       console.warn("Falta token o profile en localStorage.");
       return;
     }
-    this.cargarInformacionAlumno(token, profile, anio_escolar, usua_id);
-  },
-  watch: {
-    'filtros.fechaInicio'() {
-      this.validarFechasYLimpiar();
-    },
-    'filtros.fechaFinal'() {
-      this.validarFechasYLimpiar();
-    }
+    this.cargarInformacionEmpleado(token, profile, usua_id);
   },
   methods: {
-    validarFechasYLimpiar() {
-      const fechaInicio = new Date(this.toApiDate(this.filtros.fechaInicio));
-      const fechaFinal = new Date(this.toApiDate(this.filtros.fechaFinal));
-      const anio = parseInt(this.anioEscolar);
-
-      const diferenciaDias = (fechaFinal - fechaInicio) / (1000 * 60 * 60 * 24);
-
-      if (
-        fechaInicio <= fechaFinal &&
-        diferenciaDias <= 15 &&
-        fechaInicio.getFullYear() === anio &&
-        fechaFinal.getFullYear() === anio
-      ) {
-        this.errorMensaje = "";
-      }
-    },
-
     formatearFecha(fecha) {
       return new Intl.DateTimeFormat("es-ES", {
         day: "2-digit",
@@ -384,67 +295,33 @@ export default {
       this.filtros.fechaFinal = this.formatearFecha(this.fechaFinalObjeto);
       this.menuFechaFinal = false;
     },
-    async cargarInformacionAlumno(token, profile, anio_escolar, usua_id) {
+    async cargarInformacionEmpleado(token, profile, usua_id) {
       try {
         // Se obtienen los valores del localStorage
-        const url = `https://amsoftsolution.com/amss/ws/wsConsultaInformacionAlumno.php?ai_usua_id=${usua_id}&ac_anio_escolar=${anio_escolar}&av_profile=${profile}`;
+        const url = `https://amsoftsolution.com/amss/ws/wsConsultaInformacionEmpleado.php?ai_usua_id=${usua_id}&av_profile=${profile}`;
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const response = await axios.get(url, config);
             if (response.data.status) {
               const data = response.data.data[0];
-              this.alumno = {
-                turno: data.turn_nombre,
-                nivel: data.nive_nombre,
-                grado: data.grad_nombre,
-                seccion: data.secc_nombre
+              this.empleado = {
+                area: data.area_descripcion,
+                cargo: data.emca_descripcion,
               };
             } else {
-              console.error("Error al obtener información de alumno:", response.data.message);
+              console.error("Error al obtener información del empleado:", response.data.message);
             }
           } catch (error) {
-        console.error("Error al obtener información de alumno:", error);
+        console.error("Error al obtener información del empleado:", error);
       }
     },
-    validarFechas() {
-      const fechaInicio = new Date(this.toApiDate(this.filtros.fechaInicio));
-      const fechaFinal = new Date(this.toApiDate(this.filtros.fechaFinal));
-      const anio = parseInt(this.anioEscolar);
-
-      if (fechaInicio > fechaFinal) {
-        this.errorMensaje = "La fecha inicial no puede ser mayor que la final.";
-        return false;
-      }
-
-      const diferenciaDias = (fechaFinal - fechaInicio) / (1000 * 60 * 60 * 24);
-      if (diferenciaDias > 15) {
-        this.errorMensaje = "Solo puedes consultar un máximo de 15 días por búsqueda.";
-        return false;
-      }
-
-      if (
-        fechaInicio.getFullYear() !== anio ||
-        fechaFinal.getFullYear() !== anio
-      ) {
-        this.errorMensaje = `Las fechas deben pertenecer al año escolar ${anio}.`;
-        return false;
-      }
-
-      this.errorMensaje = ""; // Limpiar si todo está bien
-      return true;
-    },
-
     async consultarAsistencia() {
-      if (!this.validarFechas()) return;
       this.loading = true; 
-      this.resultados = [];
-
       const profile = localStorage.getItem("profile");
-      const anio_escolar = localStorage.getItem("anio_escolar");
       const usua_id = localStorage.getItem("usua_id");
       try {
         const fechaInicio = this.toApiDate(this.filtros.fechaInicio);
         const fechaFinal = this.toApiDate(this.filtros.fechaFinal);
-        const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaAsistenciaAlumno.php";
+        const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaAsistenciaEmpleado.php";
         const params = {
           ai_usua_id: usua_id,
           ai_hoes_id: 0,
@@ -455,7 +332,6 @@ export default {
           ai_asju_id: 0,
           ac_aprobacion: "T",
           ai_asde_id: 0,
-          ac_anio_escolar: anio_escolar,
           av_profile: profile,
         };
         const token = localStorage.getItem("token");
@@ -482,7 +358,7 @@ export default {
         }
       } catch (error) {
         console.error("Error al consultar asistencia:", error);
-        this.dialogNoResults = true;
+        this.resultados = [];
       } finally {
         this.loading = false;
       }
@@ -510,14 +386,8 @@ export default {
 };
 </script>
 <style scoped>
-  .my-overlay {
-    z-index: 9999;
-    background-color: rgba(255, 0, 0, 0.3);
-  }
-  .fade-enter-active, .fade-leave-active {
-    transition: opacity 0.3s;
-  }
-  .fade-enter-from, .fade-leave-to {
-    opacity: 0;
-  }
+.my-overlay {
+  z-index: 9999;
+  background-color: rgba(255, 0, 0, 0.3);
+}
 </style>

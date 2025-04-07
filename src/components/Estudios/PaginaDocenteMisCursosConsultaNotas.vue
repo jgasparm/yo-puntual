@@ -1,119 +1,113 @@
 <template>
   <v-container class="py-4">
     <v-row class="mb-2">
-      <v-col cols="12" class="d-flex justify-space-between align-center">
-        <h1 class="mb-2">
-          <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
-        </h1>
-        <v-btn color="primary" @click="goBack" class="mb-4">
-          Regresar
-        </v-btn>
+      <v-col cols="12">
+        <template v-if="isDesktop"></template>
+        <div class="d-flex justify-space-between align-center">
+          <div>
+            <h2 class="text-h5 font-weight-bold text-primary">📖 Consulta de Notas</h2>
+            <div class="text-subtitle-1 mt-1 curso-highlight">
+              <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
+              <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+            </div>
+          </div>
+          <v-btn color="primary" @click="goBack" class="mb-4" prepend-icon="mdi-arrow-left">
+            Regresar
+          </v-btn>
+        </div>
       </v-col>
     </v-row>
 
-    <!-- DATOS DEL CURSO / PROFESOR -->
+    <!-- Datos del Curso -->
+    <v-row class="mb-4 text-body-2">
+      <v-col cols="12" sm="6" md="3"><strong>Turno:</strong> {{ cursoSeleccionado?.turn_nombre }}</v-col>
+      <v-col cols="12" sm="6" md="3"><strong>Nivel:</strong> {{ cursoSeleccionado?.nive_nombre }}</v-col>
+      <v-col cols="12" sm="6" md="3"><strong>Grado:</strong> {{ cursoSeleccionado?.grad_nombre }}</v-col>
+      <v-col cols="12" sm="6" md="3"><strong>Sección:</strong> {{ cursoSeleccionado?.secc_nombre }}</v-col>
+    </v-row>
+
+    <!-- Filtros -->
     <v-row class="mb-4">
-      <v-col cols="12" sm="6" md="3">
-        <strong>Turno:</strong> {{ cursoSeleccionado?.turn_nombre }}
+      <v-col cols="12" sm="6">
+        <v-select
+          v-model="selectedBimestre"
+          :items="bimestres"
+          item-title="peed_nombre"
+          return-object
+          label="Bimestre"
+          dense
+          solo
+        />
       </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <strong>Nivel:</strong> {{ cursoSeleccionado?.nive_nombre }}
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <strong>Grado:</strong> {{ cursoSeleccionado?.grad_nombre }}
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <strong>Sección:</strong> {{ cursoSeleccionado?.secc_nombre }}
+      <v-col cols="12" sm="6">
+        <v-text-field
+          v-model="searchQuery"
+          label="Buscar alumno"
+          clearable
+          solo
+        />
       </v-col>
     </v-row>
 
-    <v-row class="mb-4">
-      <template v-if="isDesktop">
-        <v-col cols="6">
-          <v-select
-            v-model="selectedBimestre"
-            :items="bimestres"
-            item-title="peed_nombre"
-            return-object
-            label="Bimestre"
-            dense
-            solo
-          />
-        </v-col>
-        <v-col cols="6">
-          <v-text-field
-            v-model="searchQuery"
-            label="Buscar alumno"
-            clearable
-            solo
-          />
-        </v-col>
-      </template>
+    <!-- Tabla Desktop -->
+<div v-if="isDesktop">
+  <v-alert v-if="filteredItems.length === 0" type="info" class="mt-4">
+    No hay notas disponibles para este bimestre.
+  </v-alert>
 
-      <template v-else>
-        <v-col cols="12" class="mb-2">
-          <v-select
-            v-model="selectedBimestre"
-            :items="bimestres"
-            item-title="peed_nombre"
-            return-object
-            label="Bimestre"
-            dense
-            solo
-          />
-        </v-col>
-        <v-col cols="12">
-          <v-text-field
-            v-model="searchQuery"
-            label="Buscar alumno"
-            clearable
-            solo
-          />
-        </v-col>
-      </template>
-    </v-row>
+  <v-data-table
+    v-if="dynamicHeaders.length > 0"
+    :headers="dynamicHeaders"
+    :items="filteredItems"
+    :items-per-page="10"
+    class="elevation-1 mt-4"
+  >
+    <!-- Cabecera personalizada -->
+    <template #headers="{ columns }">
+      <tr>
+        <th
+          v-for="column in columns"
+          :key="column.key"
+          :class="[
+            column.key !== 'numero' && column.key !== 'alumno' ? column.groupClass : '',
+            'pa-2 text-center'
+          ]"
+        >
+          <span :class="column.class || ''">{{ column.title }}</span>
+        </th>
+      </tr>
+    </template>
 
-    <!-- TABLA DE NOTAS DINÁMICA (solo se muestra cuando ya se tienen headers) -->
-    <div v-if="isDesktop">
-      <!-- ALERTA SI NO HAY NOTAS -->
-      <v-alert
-        v-if="filteredItems.length === 0"
-        type="info"
-        class="mt-4"
-      >
-        No hay notas disponibles para este bimestre
-      </v-alert>
+    <!-- Contenido de filas -->
+    <template #item="{ item, columns }">
+      <tr>
+        <td v-for="(column) in columns" :key="column.key"
+            :class="[
+              column.key !== 'numero' && column.key !== 'alumno' ? column.groupClass : '',
+              column.key.includes('_prom') ? 'promedio-bold' : '',
+              'pa-2'
+            ]"
+        >
 
-      <!-- TABLA CUANDO SÍ HAY DATOS -->
-      <v-data-table
-        v-if="dynamicHeaders.length > 0"
-        :headers="dynamicHeaders"
-        :items="filteredItems"
-        :items-per-page="10"
-        class="elevation-1 mt-4"
-      >
-        <!-- Slot específico para la columna 'alumno', si deseas personalización -->
-        <!-- eslint-disable-next-line vue/valid-v-slot -->
-        <template #item.alumno="{ item }">
-          {{ item.alumno }}
-        </template>
-
-        <!-- Slot global para personalizar cada celda -->
-        <template #cell="{ item, column }">
-          <div class="cell-custom" :style="{ backgroundColor: column.bgColor || 'transparent' }">
+          <div
+            v-if="column.key !== 'numero' && column.key !== 'alumno'"
+            class="cell-custom"
+            :style="getNotaCellStyle(item[column.key])"
+          >
             {{ item[column.key] }}
           </div>
-        </template>
-      </v-data-table>
-    </div>
+          <span v-else>{{ item[column.key] }}</span>
+        </td>
+      </tr>
+    </template>
+  </v-data-table>
+</div>
 
-    <!-- VISTA MÓVIL: tarjetas con paginación -->
+
+    <!-- Tarjetas Móvil -->
     <div v-else>
-      <v-alert
-        v-if="dynamicHeaders.length === 0 || tableItems.length === 0"
-        type="info"
-      >
-        No hay notas disponibles
+      <v-alert v-if="dynamicHeaders.length === 0 || tableItems.length === 0" type="info">
+        No hay notas disponibles.
       </v-alert>
 
       <v-row v-else dense>
@@ -124,30 +118,35 @@
           class="mb-2"
         >
           <v-card outlined>
-            <v-col cols="12">
-              <strong>N°:</strong> {{ item.numero }}
-            </v-col>
-            <v-card-title class="subtitle-2 font-weight-bold text-start multiline2-ellipsis">
-              {{ item.alumno }}
+            <v-card-title class="subtitle-2 font-weight-bold text-start">
+              <div class="multiline2-ellipsis">{{ item.numero }}. {{ item.alumno }}</div>
             </v-card-title>
             <v-card-text class="text-start">
               <v-row dense>
-                <v-col cols="12">
-                  <h3> <strong>Promedio Bimestral: {{ item.promBim }} </strong></h3>
-                </v-col>
+                <template v-for="(group, groupIndex) in groupedHeaders" :key="groupIndex">
+                  <v-col cols="12" :class="groupIndex % 2 === 0 ? 'eval-group-a' : 'eval-group-b'">
+                    <v-row dense>
+                      <v-col
+                        v-for="(header, i) in group"
+                        :key="i"
+                        cols="12"
+                      >
+                      <div :class="{ 'prom-header-mobile': header.key.includes('_prom') }">
+                        <strong>{{ header.mobileTitle || header.title }}:</strong>
+                        <span :style="getNotaCellStyle(item[header.key])">
+                          {{ item[header.key] }}
+                        </span>
+                      </div>
+                      </v-col>
+                    </v-row>
+                  </v-col>
+                </template>
 
-                <!-- Si quieres mostrar todas las columnas dinámicas,
-                     puedes iterar sobre dynamicHeaders y usar item[header.key] -->
-                <v-col
-                  v-for="(header, i) in dynamicHeaders"
-                  :key="i"
-                  cols="12"
-                  :style="{ backgroundColor: header.bgColor || 'transparent' }"
-                >
-                  <strong :class="{'prom-header-mobile': header.key.includes('_prom')}">
-                    {{ header.title }}:
-                   {{ item[header.key] }}
-                  </strong>
+                <v-col cols="12" class="promedio-mobile">
+                  <strong>Promedio Bimestral:</strong>
+                  <div :style="getNotaCellStyle(item.promBim)">
+                    {{ item.promBim }}
+                  </div>
                 </v-col>
               </v-row>
             </v-card-text>
@@ -170,13 +169,11 @@
       />
     </div>
 
-    <!-- Modal de "No se encontraron resultados" -->
+    <!-- Modal sin resultados -->
     <v-dialog v-model="dialogNoResults" max-width="400">
       <v-card>
         <v-card-title class="headline">No se encontraron resultados</v-card-title>
-        <v-card-text>
-          La consulta no arrojó resultados.
-        </v-card-text>
+        <v-card-text>La consulta no arrojó resultados.</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" text @click="dialogNoResults = false">Aceptar</v-btn>
@@ -191,6 +188,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify' // <-- Importar
 import axios from 'axios'
+import { getNotaColor, getNotaTextColor } from '@/utils/notas'
 
 // Detecta si la pantalla es "md" o mayor
 const { mdAndUp } = useDisplay()
@@ -205,6 +203,8 @@ const route = useRoute()
 
 const evaluaciones = ref([])
 
+
+
 const cursoSeleccionado = ref(
   route.query.curso
     ? JSON.parse(decodeURIComponent(route.query.curso))
@@ -217,6 +217,40 @@ const doad_id = ref(
 
 const bimestres = ref([])
 const selectedBimestre = ref(null)
+
+// Agrupamos los headers dinámicos por evaluación
+const groupedHeaders = computed(() => {
+  const groups = []
+  let tempGroup = []
+
+  dynamicHeaders.value.forEach(header => {
+    if (header.key.includes('_nota_')) {
+      tempGroup.push(header)
+    } else if (header.key.includes('_prom')) {
+      tempGroup.push(header)
+      groups.push(tempGroup)
+      tempGroup = []
+    }
+  })
+
+  return groups
+})
+
+function getNotaCellStyle(valor) {
+  const notaStr = typeof valor === 'string' ? valor : '';
+  const match = notaStr.match(/^([\d.]+)/);
+  const notaNum = match ? parseFloat(match[1]) : null;
+  if (!Number.isFinite(notaNum)) return {};
+  return {
+    backgroundColor: getNotaColor(notaNum),
+    color: getNotaTextColor(notaNum),
+    padding: '4px 8px',
+    borderRadius: '6px',
+    display: 'inline-block',
+    minWidth: '60px',
+    textAlign: 'center'
+  };
+}
 
 async function fetchBimestres() {
   try {
@@ -405,7 +439,7 @@ async function fetchDetalle(doad_id) {
 /**
  * Función para asignar un color de fondo según la evaluación.
  */
-function getColorForEvaluation(nombre) {
+/* function getColorForEvaluation(nombre) {
   const colorMapping = {
     'PA': '#FFCDD2',  // Participaciones
     'PR': '#C8E6C9',  // Prácticas
@@ -415,7 +449,7 @@ function getColorForEvaluation(nombre) {
     'EB': '#FFCDD2',  // Examen
   }
   return colorMapping[nombre.toUpperCase()] || '#EEEEEE'
-}
+} */
 
 /**
  * Genera dynamicHeaders y tableItems a partir de los datos del API.
@@ -430,34 +464,40 @@ function getColorForEvaluation(nombre) {
     return;
   }
 
-  // Ordena las evaluaciones por pcev_orden
   const sortedEvaluations = [...evaluaciones.value].sort((a, b) => a.pcev_orden - b.pcev_orden);
-
   const builtHeaders = [];
+  //let groupIndex = 0;
+
   if (isDesktop.value) {
     builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' });
     builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' });
   }
 
-  // Para cada evaluación ordenada, crea las columnas según pcev_cantidad_evaluacion
-  sortedEvaluations.forEach(evalObj => {
+  sortedEvaluations.forEach((evalObj, evalIndex) => {
     const maxNotas = parseInt(evalObj.pcev_cantidad_evaluacion) || 0;
     const evalAbre = evalObj.eval_abreviacion;
     const evalNombre = evalObj.eval_nombre;
-    const bgColor = getColorForEvaluation(evalAbre);
+
     for (let i = 1; i <= maxNotas; i++) {
       builtHeaders.push({
         title: `${evalAbre} #${i}`,
         key: `eval_${evalObj.eval_id}_nota_${i}`,
+        mobileTitle: `${evalNombre} #${i}`,
         sortable: false,
-        bgColor
+        groupIndex: evalIndex,
+        groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`,
+        class: 'promedio-bold'
       });
     }
+
     builtHeaders.push({
       title: `Prom. ${evalNombre}`,
       key: `eval_${evalObj.eval_id}_prom`,
+      mobileTitle: `Prom. ${evalNombre}`,
       sortable: false,
-      bgColor
+      groupIndex: evalIndex,
+      groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`,
+      class: 'promedio-bold'
     });
   });
 
@@ -465,34 +505,27 @@ function getColorForEvaluation(nombre) {
     builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false });
   }
 
-  // Construye las filas para cada alumno
   const builtItems = dataBimestre.map((alumnoItem, index) => {
     const row = {};
     row.numero = index + 1;
     row.alumno = alumnoItem.alumno;
 
-    // Recorre las evaluaciones ordenadas
     sortedEvaluations.forEach(evalObj => {
       const maxNotas = parseInt(evalObj.pcev_cantidad_evaluacion) || 0;
-      // Busca si el alumno tiene datos para esta evaluación
       const alumnoEval = alumnoItem.alumnos_cursos_promedios.find(e => e.eval_id === evalObj.eval_id);
 
       if (alumnoEval) {
-        // Recorre las notas registradas
         alumnoEval.alumnos_cursos_notas.forEach((notaItem, nIndex) => {
           const colKey = `eval_${evalObj.eval_id}_nota_${nIndex + 1}`;
           row[colKey] = `${notaItem.reau_evaluacion} (${notaItem.reau_evaluacion_letra})`;
         });
-        // Si la cantidad de notas registradas es menor a maxNotas, rellena las restantes como vacías
         for (let i = alumnoEval.alumnos_cursos_notas.length + 1; i <= maxNotas; i++) {
           const colKey = `eval_${evalObj.eval_id}_nota_${i}`;
           row[colKey] = '';
         }
-        // Columna de promedio para la evaluación
         const promKey = `eval_${evalObj.eval_id}_prom`;
         row[promKey] = `${alumnoEval.pcae_promedio_evaluacion} (${alumnoEval.pcae_promedio_evaluacion_letra})`;
       } else {
-        // Si no existe información para esta evaluación, deja las columnas vacías
         for (let i = 1; i <= maxNotas; i++) {
           const colKey = `eval_${evalObj.eval_id}_nota_${i}`;
           row[colKey] = '';
@@ -502,7 +535,6 @@ function getColorForEvaluation(nombre) {
       }
     });
 
-    // Promedio bimestral
     row.promBim = `${alumnoItem.pcal_promedio_periodo} (${alumnoItem.pcal_promedio_periodo_letra})`;
     return row;
   });
@@ -520,24 +552,48 @@ function goBack() {
 </script>
 
 <style scoped>
-.mr-4 {
-  margin-right: 1rem;
-}
 .cell-custom {
   padding: 8px;
-  /* Forzamos el background si fuese necesario */
   background-clip: padding-box;
+  transition: background-color 0.3s ease;
 }
-.multiline2-ellipsis {
-  display: -webkit-box;         /* Flexbox antiguo para soportar -webkit-line-clamp */
-  -webkit-line-clamp: 2;        /* Limita a 2 líneas */
-  -webkit-box-orient: vertical; /* Define orientación vertical */
-  overflow: hidden;             /* Oculta el contenido extra */
-  text-overflow: ellipsis;      /* Muestra los "..." al truncar */
-  white-space: normal;          /* Permite que el texto ocupe varias líneas */
+.eval-group-a {
+  background-color: #f9f9f9;
+}
+.eval-group-b {
+  background-color: #f0f0f0;
 }
 .prom-header-mobile {
   font-weight: bold;
-  font-size: 16px; /* Ajusta el tamaño según lo requieras */
+  font-size: 16px;
+}
+.promedio-mobile {
+  font-weight: bold;
+  font-size: 18px;
+  margin-top: 4px;
+  display: inline-block;
+}
+.multiline2-ellipsis {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.table-desktop {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-desktop th,
+.table-desktop td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  vertical-align: middle;
+  text-align: center;
+}
+.promedio-bold {
+  font-weight: bold;
 }
 </style>

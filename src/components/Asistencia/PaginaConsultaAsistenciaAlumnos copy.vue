@@ -54,18 +54,9 @@
           </v-col>
         </v-row>
 
-        <!-- Alertas -->
-        <v-alert v-if="alertaRangoLargo" type="info" color="orange" dense outlined class="my-3">
-          Estás consultando un rango mayor a 30 días. La carga podría demorar más de lo habitual.
-        </v-alert>
-
-        <v-alert v-if="alertaAnioInvalido" type="error" color="red" dense outlined class="my-3">
-          Las fechas seleccionadas deben pertenecer al año escolar {{ anioEscolar }}.
-        </v-alert>
-
         <v-row class="mt-2">
           <v-col cols="12" class="d-flex justify-end">
-            <v-btn color="primary" small @click="consultarAsistencia" :loading="loading">
+            <v-btn color="primary" small @click="consultarAsistencia">
               <v-icon left size="18">mdi-magnify</v-icon>
               Consultar
             </v-btn>

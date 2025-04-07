@@ -1,119 +1,112 @@
 <template>
   <v-container class="py-4">
+    <!-- ENCABEZADO -->
     <v-row class="mb-2">
-      <v-col cols="12" class="d-flex justify-space-between align-center">
-        <h1 class="mb-2">
-          <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
-        </h1>
-        <v-btn color="primary" @click="goBack" class="mb-4">
-          Regresar
-        </v-btn>
-      </v-col>
-    </v-row>
-
-    <!-- DATOS DEL CURSO / PROFESOR -->
-    <v-row class="mb-4">
-      <v-col cols="12" sm="6" md="3">
-        <strong>Turno:</strong> {{ cursoSeleccionado?.turn_nombre }}
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <strong>Nivel:</strong> {{ cursoSeleccionado?.nive_nombre }}
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <strong>Grado:</strong> {{ cursoSeleccionado?.grad_nombre }}
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <strong>Sección:</strong> {{ cursoSeleccionado?.secc_nombre }}
-      </v-col>
-    </v-row>
-
-    <v-row class="mb-4">
-      <template v-if="isDesktop">
-        <v-col cols="6">
-          <v-select
-            v-model="selectedBimestre"
-            :items="bimestres"
-            item-title="peed_nombre"
-            item-value="peed_id"
-            label="Bimestre"
-            dense
-            solo
-          />
-        </v-col>
-        <v-col cols="6">
-          <v-text-field
-            v-model="searchQuery"
-            label="Buscar alumno"
-            clearable
-            solo
-          />
-        </v-col>
-      </template>
-
-      <template v-else>
-        <v-col cols="12" class="mb-2">
-          <v-select
-            v-model="selectedBimestre"
-            :items="bimestres"
-            item-title="peed_nombre"
-            item-value="peed_id"
-            label="Bimestre"
-            dense
-            solo
-          />
-        </v-col>
-        <v-col cols="12">
-          <v-text-field
-            v-model="searchQuery"
-            label="Buscar alumno"
-            clearable
-            solo
-          />
-        </v-col>
-      </template>
-    </v-row>
-
-    <!-- TABLA DE NOTAS DINÁMICA (solo se muestra cuando ya se tienen headers) -->
-    <div v-if="isDesktop">
-      <!-- ALERTA SI NO HAY NOTAS -->
-      <v-alert
-        v-if="filteredItems.length === 0"
-        type="info"
-        class="mt-4"
-      >
-        No hay notas disponibles para este bimestre
-      </v-alert>
-
-      <!-- TABLA CUANDO SÍ HAY DATOS -->
-      <v-data-table
-        v-if="dynamicHeaders.length > 0"
-        :headers="dynamicHeaders"
-        :items="filteredItems"
-        :items-per-page="10"
-        class="elevation-1 mt-4"
-      >
-        <!-- Slot específico para la columna 'alumno', si deseas personalización -->
-        <!-- eslint-disable-next-line vue/valid-v-slot -->
-        <template #item.alumno="{ item }">
-          {{ item.alumno }}
-        </template>
-
-        <!-- Slot global para personalizar cada celda -->
-        <template #cell="{ item, column }">
-          <div class="cell-custom" :style="{ backgroundColor: column.bgColor || 'transparent' }">
-            {{ item[column.key] }}
+      <v-col cols="12">
+        <template v-if="isDesktop">
+          <div class="d-flex justify-space-between align-center">
+            <h2 class="text-h5 font-weight-bold text-primary">📖 Consulta de Notas</h2>
+            <v-btn color="primary" @click="goBack" class="mb-4" prepend-icon="mdi-arrow-left">
+              Regresar
+            </v-btn>
           </div>
         </template>
-      </v-data-table>
-    </div>
+        <template v-else>
+          <v-btn block color="primary" @click="goBack" class="mb-2" prepend-icon="mdi-arrow-left">
+            Regresar
+          </v-btn>
+          <h2 class="text-h6 font-weight-bold text-primary">📖 Consulta de Notas</h2>
+        </template>
+      </v-col>
+    </v-row>
 
-    <!-- VISTA MÓVIL: tarjetas con paginación -->
+    <!-- Datos del Curso -->
+    <v-row class="mb-4 text-body-2">
+      <v-col cols="12" sm="6" md="3"><strong>Turno:</strong> {{ cursoSeleccionado?.turn_nombre }}</v-col>
+      <v-col cols="12" sm="6" md="3"><strong>Nivel:</strong> {{ cursoSeleccionado?.nive_nombre }}</v-col>
+      <v-col cols="12" sm="6" md="3"><strong>Grado:</strong> {{ cursoSeleccionado?.grad_nombre }}</v-col>
+      <v-col cols="12" sm="6" md="3"><strong>Sección:</strong> {{ cursoSeleccionado?.secc_nombre }}</v-col>
+    </v-row>
+
+    <!-- Filtros -->
+    <v-row class="mb-4">
+      <v-col cols="12" sm="6">
+        <v-select
+          v-model="selectedBimestre"
+          :items="bimestres"
+          item-title="peed_nombre"
+          return-object
+          label="Bimestre"
+          dense
+          solo
+        />
+      </v-col>
+      <v-col cols="12" sm="6">
+        <v-text-field
+          v-model="searchQuery"
+          label="Buscar alumno"
+          clearable
+          solo
+        />
+      </v-col>
+    </v-row>
+
+    <!-- Tabla Desktop -->
+<div v-if="isDesktop">
+  <v-alert v-if="filteredItems.length === 0" type="info" class="mt-4">
+    No hay notas disponibles para este bimestre.
+  </v-alert>
+
+  <v-data-table
+    v-if="dynamicHeaders.length > 0"
+    :headers="dynamicHeaders"
+    :items="filteredItems"
+    :items-per-page="10"
+    class="elevation-1 mt-4"
+  >
+    <!-- Cabecera personalizada -->
+    <template #headers="{ columns }">
+      <tr>
+        <th
+          v-for="column in columns"
+          :key="column.key"
+          :class="[
+            column.key !== 'numero' && column.key !== 'alumno' ? column.groupClass : '',
+            'pa-2 text-center'
+          ]"
+        >
+          {{ column.title }}
+        </th>
+      </tr>
+    </template>
+
+    <!-- Contenido de filas -->
+    <template #item="{ item, columns }">
+      <tr>
+        <td
+          v-for="column in columns"
+          :key="column.key"
+          :class="[column.key !== 'numero' && column.key !== 'alumno' ? column.groupClass : '', 'pa-2']"
+        >
+          <div
+            v-if="column.key !== 'numero' && column.key !== 'alumno'"
+            class="cell-custom"
+            :style="getNotaCellStyle(item[column.key])"
+          >
+            {{ item[column.key] }}
+          </div>
+          <span v-else>{{ item[column.key] }}</span>
+        </td>
+      </tr>
+    </template>
+  </v-data-table>
+</div>
+
+
+    <!-- Tarjetas Móvil -->
     <div v-else>
-      <v-alert
-        v-if="dynamicHeaders.length === 0 || tableItems.length === 0"
-        type="info"
-      >
-        No hay notas disponibles
+      <v-alert v-if="dynamicHeaders.length === 0 || tableItems.length === 0" type="info">
+        No hay notas disponibles.
       </v-alert>
 
       <v-row v-else dense>
@@ -124,30 +117,35 @@
           class="mb-2"
         >
           <v-card outlined>
-            <v-col cols="12">
-              <strong>N°:</strong> {{ item.numero }}
-            </v-col>
-            <v-card-title class="subtitle-2 font-weight-bold text-start multiline2-ellipsis">
-              {{ item.alumno }}
+            <v-card-title class="subtitle-2 font-weight-bold text-start">
+              <div class="multiline2-ellipsis">{{ item.numero }}. {{ item.alumno }}</div>
             </v-card-title>
             <v-card-text class="text-start">
               <v-row dense>
-                <v-col cols="12">
-                  <h3> <strong>Promedio Bimestral: {{ item.promBim }} </strong></h3>
-                </v-col>
+                <template v-for="(group, groupIndex) in groupedHeaders" :key="groupIndex">
+                  <v-col cols="12" :class="groupIndex % 2 === 0 ? 'eval-group-a' : 'eval-group-b'">
+                    <v-row dense>
+                      <v-col
+                        v-for="(header, i) in group"
+                        :key="i"
+                        cols="12"
+                      >
+                        <div
+                          :class="{ 'prom-header-mobile': header.key.includes('_prom') }"
+                          :style="getNotaCellStyle(item[header.key])"
+                        >
+                          <strong>{{ header.mobileTitle || header.title }}:</strong> {{ item[header.key] }}
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-col>
+                </template>
 
-                <!-- Si quieres mostrar todas las columnas dinámicas,
-                     puedes iterar sobre dynamicHeaders y usar item[header.key] -->
-                <v-col
-                  v-for="(header, i) in dynamicHeaders"
-                  :key="i"
-                  cols="12"
-                  :style="{ backgroundColor: header.bgColor || 'transparent' }"
-                >
-                  <strong :class="{'prom-header-mobile': header.key.includes('_prom')}">
-                    {{ header.title }}:
-                   {{ item[header.key] }}
-                  </strong>
+                <v-col cols="12" class="promedio-mobile">
+                  <strong>Promedio Bimestral:</strong>
+                  <div :style="getNotaCellStyle(item.promBim)">
+                    {{ item.promBim }}
+                  </div>
                 </v-col>
               </v-row>
             </v-card-text>
@@ -170,13 +168,11 @@
       />
     </div>
 
-    <!-- Modal de "No se encontraron resultados" -->
+    <!-- Modal sin resultados -->
     <v-dialog v-model="dialogNoResults" max-width="400">
       <v-card>
         <v-card-title class="headline">No se encontraron resultados</v-card-title>
-        <v-card-text>
-          La consulta no arrojó resultados.
-        </v-card-text>
+        <v-card-text>La consulta no arrojó resultados.</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" text @click="dialogNoResults = false">Aceptar</v-btn>
@@ -191,6 +187,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify' // <-- Importar
 import axios from 'axios'
+import { getNotaColor, getNotaTextColor } from '@/utils/notas'
 
 // Detecta si la pantalla es "md" o mayor
 const { mdAndUp } = useDisplay()
@@ -202,6 +199,10 @@ const searchQuery = ref("") // Variable reactiva para la búsqueda
 
 const router = useRouter()
 const route = useRoute()
+
+const evaluaciones = ref([])
+
+
 
 const cursoSeleccionado = ref(
   route.query.curso
@@ -215,6 +216,40 @@ const doad_id = ref(
 
 const bimestres = ref([])
 const selectedBimestre = ref(null)
+
+// Agrupamos los headers dinámicos por evaluación
+const groupedHeaders = computed(() => {
+  const groups = []
+  let tempGroup = []
+
+  dynamicHeaders.value.forEach(header => {
+    if (header.key.includes('_nota_')) {
+      tempGroup.push(header)
+    } else if (header.key.includes('_prom')) {
+      tempGroup.push(header)
+      groups.push(tempGroup)
+      tempGroup = []
+    }
+  })
+
+  return groups
+})
+
+function getNotaCellStyle(valor) {
+  const notaStr = typeof valor === 'string' ? valor : '';
+  const match = notaStr.match(/^([\d.]+)/);
+  const notaNum = match ? parseFloat(match[1]) : null;
+  if (!Number.isFinite(notaNum)) return {};
+  return {
+    backgroundColor: getNotaColor(notaNum),
+    color: getNotaTextColor(notaNum),
+    padding: '4px 8px',
+    borderRadius: '6px',
+    display: 'inline-block',
+    minWidth: '60px',
+    textAlign: 'center'
+  };
+}
 
 async function fetchBimestres() {
   try {
@@ -230,7 +265,7 @@ async function fetchBimestres() {
     const response = await axios.get(baseUrl, configReq)
     if (response.data.status) {
       bimestres.value = response.data.data
-      selectedBimestre.value = response.data.data[0]?.peed_id ?? null
+      selectedBimestre.value = response.data.data[0] ?? null
     }
 
 
@@ -243,10 +278,9 @@ async function fetchBimestres() {
   }
 }
 
-
-// const bimestreSeleccionado = computed(() =>
-//   bimestres.value.find(b => b.peed_id === selectedBimestre.value) || {}
-// )
+const selectedPacuId = computed(() => {
+  return selectedBimestre.value?.pacu_id || null
+})
 
 const alumnos = ref([])
 
@@ -275,10 +309,18 @@ const paginatedPages = computed(() => {
 })
 
 // Cuando cambie bimestre, reconstruye tabla y reinicia paginación
-watch(selectedBimestre, () => {
-  currentPage.value = 1
-  parseDataForTable()
-})
+watch(
+  () => selectedBimestre.value,
+  async (nuevo) => {
+    if (nuevo && nuevo.peed_id && nuevo.pacu_id) {
+      currentPage.value = 1
+      await fetchEvaluaciones()
+      parseDataForTable()
+    }
+  },
+  { immediate: true, deep: true } // <-- se ejecuta al inicio y detecta cambios internos
+)
+
 
 onMounted(() => {
   fetchBimestres()
@@ -302,7 +344,58 @@ onMounted(() => {
     fetchDetalle(doad_id)
   }
 
+// Cargar evaluaciones
+async function fetchEvaluaciones() {
+  try {
+    const token = localStorage.getItem("token")
+    const profile = localStorage.getItem("profile")
+    const ai_usua_id = localStorage.getItem("usua_id")
+    const ai_peed_id = selectedBimestre.value?.peed_id || null
 
+    const ai_doad_id = cursoSeleccionado.value
+      ? cursoSeleccionado.value.doad_id
+      : null
+
+    const ai_pacu_id = selectedPacuId.value
+    // const ai_aude_id = cursoSeleccionado.value
+    //   ? cursoSeleccionado.value.aude_id
+    //   : null
+    const ac_anio_escolar = localStorage.getItem("anio_escolar")
+
+    const baseUrl =
+      "https://amsoftsolution.com/amss/ws/wsListaEvaluacionesDocentePeriodo.php"
+    const params = {
+      ai_usua_id,
+      ai_peed_id,
+      ai_doad_id,
+      ai_pacu_id,
+      ac_anio_escolar,
+      av_profile: profile
+    }
+    const configReq = {
+      params,
+      headers: { Authorization: `Bearer ${token}` }
+    }
+    const response = await axios.get(baseUrl, configReq)
+    if (response.data.status) {
+      evaluaciones.value = response.data.data
+      if (evaluaciones.value.length < 1) {
+        dynamicHeaders.value = []
+        tableItems.value = []
+      }
+    }
+    else {
+      evaluaciones.value = []
+      dynamicHeaders.value = []
+      tableItems.value = []
+    }
+  } catch (error) {
+    evaluaciones.value = [];
+    dynamicHeaders.value = []
+    tableItems.value = []
+    console.error("Error fetching evaluations", error)
+  }
+}
 
 async function fetchDetalle(doad_id) {
   try {
@@ -345,7 +438,7 @@ async function fetchDetalle(doad_id) {
 /**
  * Función para asignar un color de fondo según la evaluación.
  */
-function getColorForEvaluation(nombre) {
+/* function getColorForEvaluation(nombre) {
   const colorMapping = {
     'PA': '#FFCDD2',  // Participaciones
     'PR': '#C8E6C9',  // Prácticas
@@ -355,100 +448,100 @@ function getColorForEvaluation(nombre) {
     'EB': '#FFCDD2',  // Examen
   }
   return colorMapping[nombre.toUpperCase()] || '#EEEEEE'
-}
+} */
 
 /**
  * Genera dynamicHeaders y tableItems a partir de los datos del API.
  */
-function parseDataForTable() {
-  const bimestreId = selectedBimestre.value
-  const dataBimestre = alumnos.value.filter(item => item.peed_id === bimestreId)
+ function parseDataForTable() {
+  const bimestreId = selectedBimestre.value?.peed_id;
+  const dataBimestre = alumnos.value.filter(item => item.peed_id === bimestreId);
 
   if (!dataBimestre.length) {
-    dynamicHeaders.value = []
-    tableItems.value = []
-    return
+    dynamicHeaders.value = [];
+    tableItems.value = [];
+    return;
   }
 
-  const evalMap = {}
-  dataBimestre.forEach(alumnoItem => {
-    alumnoItem.alumnos_cursos_promedios.forEach(evalData => {
-      const { eval_id, eval_abreviacion, eval_nombre, alumnos_cursos_notas } = evalData
-      const numNotas = alumnos_cursos_notas.length
-
-      const nombreParaMostrar = isDesktop.value ? eval_abreviacion : eval_nombre
-
-      if (!evalMap[eval_id]) {
-        evalMap[eval_id] = { nombre: nombreParaMostrar, maxNotas: numNotas, abre: eval_abreviacion }
-      } else if (numNotas > evalMap[eval_id].maxNotas) {
-        evalMap[eval_id].maxNotas = numNotas
-      }
-    })
-  })
-
-  const builtHeaders = []
+  const sortedEvaluations = [...evaluaciones.value].sort((a, b) => a.pcev_orden - b.pcev_orden);
+  const builtHeaders = [];
+  //let groupIndex = 0;
 
   if (isDesktop.value) {
-    builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' }) //
-    builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' }) //
+    builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' });
+    builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' });
   }
 
-  Object.keys(evalMap).forEach(evalId => {
-    const evalInfo = evalMap[evalId]
-    // Obtén el color para la evaluación
-    
-    const bgColor = getColorForEvaluation(evalInfo.abre)
-    for (let i = 1; i <= evalInfo.maxNotas; i++) {
+  sortedEvaluations.forEach((evalObj, evalIndex) => {
+    const maxNotas = parseInt(evalObj.pcev_cantidad_evaluacion) || 0;
+    const evalAbre = evalObj.eval_abreviacion;
+    const evalNombre = evalObj.eval_nombre;
+
+    for (let i = 1; i <= maxNotas; i++) {
       builtHeaders.push({
-        title: `${evalInfo.nombre} #${i}`,
-        key: `eval_${evalId}_nota_${i}`,
+        title: `${evalAbre} #${i}`,
+        key: `eval_${evalObj.eval_id}_nota_${i}`,
+        mobileTitle: `${evalNombre} #${i}`,
         sortable: false,
-        bgColor
-      })
+        groupIndex: evalIndex,
+        groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`
+      });
     }
+
     builtHeaders.push({
-      title: `Prom. ${evalInfo.nombre}`,
-      key: `eval_${evalId}_prom`,
+      title: `Prom. ${evalNombre}`,
+      key: `eval_${evalObj.eval_id}_prom`,
+      mobileTitle: `Prom. ${evalNombre}`,
       sortable: false,
-      bgColor
-    })
-  })
+      groupIndex: evalIndex,
+      groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`
+    });
+  });
 
   if (isDesktop.value) {
-    builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false }) //
+    builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false });
   }
-  
 
   const builtItems = dataBimestre.map((alumnoItem, index) => {
-    const row = {}
-    row.numero = index + 1
-    row.alumno = alumnoItem.alumno
-    alumnoItem.alumnos_cursos_promedios.forEach(evalData => {
-      const { eval_id, pcae_promedio_evaluacion, pcae_promedio_evaluacion_letra } = evalData
-      const { alumnos_cursos_notas } = evalData
-      alumnos_cursos_notas.forEach((notaItem, nIndex) => {
-        const colKey = `eval_${eval_id}_nota_${nIndex + 1}`
-        row[colKey] = `${notaItem.reau_evaluacion} (${notaItem.reau_evaluacion_letra})`
-      })
-      const maxNotas = evalMap[eval_id].maxNotas
-      if (alumnos_cursos_notas.length < maxNotas) {
-        for (let i = alumnos_cursos_notas.length + 1; i <= maxNotas; i++) {
-          const emptyKey = `eval_${eval_id}_nota_${i}`
-          row[emptyKey] = ''
-        }
-      }
-      const promKey = `eval_${eval_id}_prom`
-      row[promKey] = `${pcae_promedio_evaluacion} (${pcae_promedio_evaluacion_letra})`
-    })
-    row.promBim = `${alumnoItem.pcal_promedio_periodo} (${alumnoItem.pcal_promedio_periodo_letra})`
-    return row
-  })
+    const row = {};
+    row.numero = index + 1;
+    row.alumno = alumnoItem.alumno;
 
-  dynamicHeaders.value = builtHeaders
-  tableItems.value = builtItems
-  console.log(dynamicHeaders)
-  console.log(tableItems)
+    sortedEvaluations.forEach(evalObj => {
+      const maxNotas = parseInt(evalObj.pcev_cantidad_evaluacion) || 0;
+      const alumnoEval = alumnoItem.alumnos_cursos_promedios.find(e => e.eval_id === evalObj.eval_id);
+
+      if (alumnoEval) {
+        alumnoEval.alumnos_cursos_notas.forEach((notaItem, nIndex) => {
+          const colKey = `eval_${evalObj.eval_id}_nota_${nIndex + 1}`;
+          row[colKey] = `${notaItem.reau_evaluacion} (${notaItem.reau_evaluacion_letra})`;
+        });
+        for (let i = alumnoEval.alumnos_cursos_notas.length + 1; i <= maxNotas; i++) {
+          const colKey = `eval_${evalObj.eval_id}_nota_${i}`;
+          row[colKey] = '';
+        }
+        const promKey = `eval_${evalObj.eval_id}_prom`;
+        row[promKey] = `${alumnoEval.pcae_promedio_evaluacion} (${alumnoEval.pcae_promedio_evaluacion_letra})`;
+      } else {
+        for (let i = 1; i <= maxNotas; i++) {
+          const colKey = `eval_${evalObj.eval_id}_nota_${i}`;
+          row[colKey] = '';
+        }
+        const promKey = `eval_${evalObj.eval_id}_prom`;
+        row[promKey] = '';
+      }
+    });
+
+    row.promBim = `${alumnoItem.pcal_promedio_periodo} (${alumnoItem.pcal_promedio_periodo_letra})`;
+    return row;
+  });
+
+  dynamicHeaders.value = builtHeaders;
+  tableItems.value = builtItems;
+  console.log(dynamicHeaders.value);
+  console.log(tableItems.value);
 }
+
 
 function goBack() {
   router.push({ name: 'DocenteMisCursos' })
@@ -456,24 +549,45 @@ function goBack() {
 </script>
 
 <style scoped>
-.mr-4 {
-  margin-right: 1rem;
-}
 .cell-custom {
   padding: 8px;
-  /* Forzamos el background si fuese necesario */
   background-clip: padding-box;
+  transition: background-color 0.3s ease;
 }
-.multiline2-ellipsis {
-  display: -webkit-box;         /* Flexbox antiguo para soportar -webkit-line-clamp */
-  -webkit-line-clamp: 2;        /* Limita a 2 líneas */
-  -webkit-box-orient: vertical; /* Define orientación vertical */
-  overflow: hidden;             /* Oculta el contenido extra */
-  text-overflow: ellipsis;      /* Muestra los "..." al truncar */
-  white-space: normal;          /* Permite que el texto ocupe varias líneas */
+.eval-group-a {
+  background-color: #f9f9f9;
+}
+.eval-group-b {
+  background-color: #f0f0f0;
 }
 .prom-header-mobile {
   font-weight: bold;
-  font-size: 16px; /* Ajusta el tamaño según lo requieras */
+  font-size: 16px;
+}
+.promedio-mobile {
+  font-weight: bold;
+  font-size: 18px;
+  margin-top: 4px;
+  display: inline-block;
+}
+.multiline2-ellipsis {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.table-desktop {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-desktop th,
+.table-desktop td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  vertical-align: middle;
+  text-align: center;
 }
 </style>

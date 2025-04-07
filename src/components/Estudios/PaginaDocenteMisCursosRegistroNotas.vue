@@ -1,16 +1,24 @@
 <template>
-  <v-container class="py-4">    
+  <v-container class="py-4">
+    <!-- Encabezado con nombre del curso -->
     <v-row class="mb-2">
-      <v-col cols="12" class="d-flex justify-space-between align-center">
-        <h1 class="mb-2">
-          <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
-        </h1>
-        <v-btn color="primary" @click="goBack" class="mb-4">
-          Regresar
-        </v-btn>
+      <v-col cols="12">
+        <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center">
+          <div>
+            <h2 class="text-h5 font-weight-bold text-primary">📖 Registro de Notas</h2>
+            <div class="text-subtitle-1 mt-1 curso-highlight">
+              <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
+              <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+            </div>
+          </div>
+          <v-btn color="primary" @click="goBack" class="mt-3 mt-md-0" prepend-icon="mdi-arrow-left">
+            Regresar
+          </v-btn>
+        </div>
       </v-col>
     </v-row>
 
+    <!-- Filtros -->
     <v-row class="mb-4">
       <v-col cols="12" sm="6" md="4">
         <v-select
@@ -38,8 +46,6 @@
       </v-col>
     </v-row>
 
-
-    <!-- Filtro por Alumno -->
     <v-row class="mb-4">
       <v-col cols="12" sm="6" md="6">
         <v-text-field
@@ -51,92 +57,72 @@
       </v-col>
     </v-row>
 
-    <!-- Tabla de Notas (Desktop) -->
+    <!-- Vista Desktop -->
     <div v-if="isDesktop">
       <v-data-table
-  :headers="[]"
-  :items="filteredItems"
-  hide-default-header
-  class="elevation-1 mt-4"
->
-  <!-- Te defines un "default slot" en lugar de "body" -->
-  <template v-slot:default="{ items }">
-    <table style="width: 100%;">
-      <thead>
-        <tr>
-          <th
-            v-for="(header, colIndex) in dynamicHeaders"
-            :key="colIndex"
-          >
-            {{ header.title }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="(row, rowIndex) in items"
-          :key="rowIndex"
-        >
-          <td
-            v-for="(header, colIndex) in dynamicHeaders"
-            :key="colIndex"
-          >
-            <!-- 1) Si la columna es "prom", se muestra el valor o "0", sin clic -->
-            <template v-if="header.key === 'prom'">
-              <div class="cell-custom">
-                {{ row.prom || '0' }}
-              </div>
-            
-            <!-- 2) Si la columna incluye 'nota_', va con <v-tooltip> y @click -->
-            </template>
-            <template v-else-if="header.key.includes('nota_')">
-              <v-tooltip location="bottom">
-                <template #activator="{ props }">
-                  <div
-                    v-bind="props"
-                    class="cell-custom"
-                    :style="{
-                      backgroundColor: header.bgColor || 'transparent',
-                      cursor: 'pointer'
-                    }"
-                    @click.stop="openNoteDialog(row, header)"
-                  >
-                    {{ row[header.key] || 'Agregar' }}
-                  </div>
-                </template>
-                Clic para agregar o modificar nota
-              </v-tooltip>
-            
-            <!-- 3) De lo contrario (ej: "N°", "Alumno"), solo muestra el valor sin clic -->
-            </template>
-            <template v-else>
-              <div class="cell-custom">
-                {{ row[header.key] }}
-              </div>
-            </template>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </template>
-</v-data-table>
+        :headers="[]"
+        :items="filteredItems"
+        hide-default-header
+        class="elevation-1 mt-4"
+      >
+        <template v-slot:default="{ items }">
+          <table class="table-desktop">
+            <thead>
+              <tr>
+                <th
+                  v-for="(header, colIndex) in dynamicHeaders"
+                  :key="colIndex"
+                  :class="[{'prom-header': header.key === 'prom'}, 'font-weight-bold']"
+                >
+                  {{ header.title }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, rowIndex) in items" :key="rowIndex">
+                <td v-for="(header, colIndex) in dynamicHeaders" :key="colIndex">
+                  <template v-if="header.key === 'prom'">
+                    <div class="cell-custom prom-header" :style="getNotaStyle(row.prom, false)">
+                      {{ row.prom || '0' }}
+                    </div>
+                  </template>
+
+                  <template v-else-if="header.key.includes('nota_')">
+                    <v-tooltip location="bottom">
+                      <template #activator="{ props }">
+                        <div
+                          v-bind="props"
+                          class="cell-custom"
+                          :style="getNotaStyle(row[header.key], true)"
+                          @click.stop="openNoteDialog(row, header)"
+                        >
+                          {{ row[header.key] || 'Agregar' }}
+                        </div>
+                      </template>
+                      <span>
+                        {{ row[header.key] ? 'Clic para modificar la nota' : 'Clic para agregar nota' }}
+                      </span>
+                    </v-tooltip>
+                  </template>
+
+                  <template v-else>
+                    <div class="cell-custom">{{ row[header.key] }}</div>
+                  </template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+      </v-data-table>
     </div>
 
-    <!-- Vista Mobile: Tarjetas (igual que siempre) -->
+    <!-- Vista Mobile -->
     <div v-else>
-      <v-alert
-        v-if="dynamicHeaders.length === 0 || filteredItems.length === 0"
-        type="info"
-      >
+      <v-alert v-if="dynamicHeaders.length === 0 || filteredItems.length === 0" type="info">
         No hay notas disponibles
       </v-alert>
       <v-row v-else dense>
-        <v-col
-          v-for="(item, index) in paginatedItems"
-          :key="index"
-          cols="12"
-          class="mb-2"
-        >
+        <v-col v-for="(item, index) in paginatedItems" :key="index" cols="12" class="mb-2">
           <v-card outlined>
             <v-col cols="12">
               <strong>N°:</strong> {{ item.numero }}
@@ -146,34 +132,35 @@
             </v-card-title>
             <v-card-text class="text-start">
               <v-row dense>
-                <v-col cols="12">
-                  <h3>
-                    <strong>
-                      Prom. {{ selectedEvaluacionName }}: {{ item.prom }}
-                    </strong>
-                  </h3>
+                <v-col cols="12" class="promedio-mobile">
+                  <div class="text-subtitle-1 font-weight-bold">
+                    Prom. {{ selectedEvaluacionName }}:
+                  </div>
+                  <div class="cell-custom text-subtitle-1 font-weight-bold" :style="getNotaStyle(item.prom, false)">
+                    {{ item.prom }}
+                  </div>
                 </v-col>
-                
+
+
                 <v-col
                   v-for="(header, i) in filteredDynamicHeaders"
                   :key="i"
                   cols="12"
-                  :style="{ backgroundColor: header.bgColor || 'transparent', cursor: 'pointer' }"
                   @click="openNoteDialog(item, header)"
                 >
-                  <strong>
-                    {{ header.title }}:
-                    {{ item[header.key] ? item[header.key] : 'Agregar' }}
-                  </strong>
-                </v-col>
+                <div>
+                  <span>{{ selectedEvaluacionName }} #{{ i + 1 }}:</span>
+                  <span class="cell-custom d-inline-block ml-2" :style="getNotaStyle(item[header.key], true)">
+                    {{ item[header.key] || 'Agregar' }}
+                  </span>
+                </div>
 
+                </v-col>
               </v-row>
             </v-card-text>
           </v-card>
         </v-col>
       </v-row>
-
-      <!-- Paginación Mobile -->
       <v-pagination
         v-if="paginatedPages > 1"
         v-model="currentPage"
@@ -187,7 +174,6 @@
         class="mt-2 custom-pagination"
       />
     </div>
-
     <!-- Diálogo para Agregar/Actualizar Nota -->
     <v-dialog v-model="noteDialog" max-width="500" attach="body">
       <v-card>
@@ -198,6 +184,7 @@
         </v-card-title>
         <v-card-text>
           <v-text-field 
+            ref="noteInput"
             label="Valor de Nota" 
             v-model="noteForm.value" 
             type="number"
@@ -239,16 +226,34 @@
     >
       {{ errorMessage }}
     </v-snackbar>
-
   </v-container>
 </template>
 
 <script setup>
 
-import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import axios from 'axios'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { getNotaColor, getNotaTextColor } from '@/utils/notas'
+
+
+function getNotaStyle(notaStr, editable = true) {
+  const match = notaStr?.match?.(/^([\d.]+)/);
+  const nota = match ? parseFloat(match[1]) : null;
+  const baseStyle = {
+    backgroundColor: Number.isFinite(nota) ? getNotaColor(nota) : '',
+    color: Number.isFinite(nota) ? getNotaTextColor(nota) : '',
+    fontWeight: 'bold'
+  }
+  if (editable) {
+    baseStyle.cursor = 'pointer';
+  } else {
+    baseStyle.cursor = 'default';
+  }
+  return baseStyle;
+}
+
 
 const errorSnackbar = ref(false)
 const errorMessage = ref('')
@@ -358,22 +363,18 @@ const noteForm = ref({
 
 
 // Abrir el diálogo
+const noteInput = ref(null)
+
 function openNoteDialog(item, column) {
-  console.log('openNoteDialog triggered', item, column)
   const noteIndex = parseInt(column.key.split('_')[1]) - 1
-  const noteObj =
-    item._evaluaciones && item._evaluaciones[noteIndex]
-      ? item._evaluaciones[noteIndex]
-      : null
+  const noteObj = item._evaluaciones?.[noteIndex] || null
 
   if (noteObj) {
-    // Editar
     noteForm.value.mode = 'edit'
     noteForm.value.reau_id = noteObj.reau_id
     noteForm.value.value = noteObj.reau_evaluacion
     noteForm.value.letter = noteObj.reau_evaluacion_letra
   } else {
-    // Agregar
     noteForm.value.mode = 'add'
     noteForm.value.reau_id = null
     noteForm.value.value = ''
@@ -382,9 +383,11 @@ function openNoteDialog(item, column) {
   }
   noteForm.value.student = item
   noteForm.value.noteIndex = noteIndex
-  // Lógica para actualizar la letra según valor ingresado
   onNoteValueChange()
   noteDialog.value = true
+  nextTick(() => {
+    noteInput.value?.focus()
+  })
 }
 
 function onNoteValueChange() {
@@ -611,7 +614,7 @@ function parseNotasForTable(notasData, maxNotas = 0) {
     title: `Prom. ${evalNombre}`,
     key: 'prom',
     sortable: false,
-    bgColor: getColorForEvaluation(evalAbre)
+    class: 'prom-header'
   })
 
   dynamicHeaders.value = headersTemp
@@ -713,14 +716,36 @@ watch([selectedBimestre, selectedEvaluacion], async () => {
 <style scoped>
 .cell-custom {
   padding: 8px;
-  background-clip: padding-box;
+  border-radius: 6px;
+  display: inline-block;
+  min-width: 60px;
+  font-weight: 500;
+  text-align: center;
 }
-/* Si quieres un color de texto en th: */
-table thead th {
-  color: black; 
+
+.cell-custom[data-nota],
+.cell-custom[style*="background-color"] {
   font-weight: bold;
-  text-align: left;
 }
+.table-desktop {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-desktop th,
+.table-desktop td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  vertical-align: middle;
+  text-align: center;
+}
+.table-desktop th {
+  font-weight: bold;
+}
+.table-desktop th.prom-header,
+.table-desktop td.prom-header {
+  font-weight: bold !important;
+}
+
 .multiline2-ellipsis {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -728,5 +753,16 @@ table thead th {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
+}
+.curso-highlight {
+  background-color: #f5f5f5;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+}
+.prom-header {
+  font-weight: bold !important;
 }
 </style>

@@ -22,6 +22,22 @@
         </v-row>
       </v-card-text>
     </v-card>
+    <transition name="fade">
+      <v-alert
+        v-if="errorMensaje"
+        type="error"
+        dense
+        outlined
+        class="mb-3"
+      >
+        {{ errorMensaje }}
+      </v-alert>
+    </transition>
+
+    <v-alert type="info" dense outlined class="mb-3">
+      Puedes consultar asistencia dentro del año escolar {{ anioEscolar }} y por un máximo de 15 días por búsqueda.
+    </v-alert>
+
 
     <!-- Filtro: Rango de Fechas -->
     <v-row dense>
@@ -93,7 +109,7 @@
     <!-- Botón de Consulta -->
     <v-row class="mt-2">
       <v-col cols="12" class="d-flex justify-end">
-        <v-btn color="primary" small @click="consultarAsistencia">
+        <v-btn color="primary" small @click="consultarAsistencia" :disabled="rangoInvalido">
           <v-icon left size="18">mdi-magnify</v-icon>
           Consultar
         </v-btn>
@@ -251,6 +267,8 @@ export default {
         fechaInicio: this.formatearFecha(new Date()),
         fechaFinal: this.formatearFecha(new Date())
       },
+      errorMensaje: "",
+      anioEscolar: localStorage.getItem("anio_escolar"),
       menuFechaInicio: false,
       menuFechaFinal: false,
       fechaInicioObjeto: new Date(),
@@ -274,7 +292,22 @@ export default {
     },
     paginatedPages() {
       return Math.ceil(this.resultados.length / this.itemsPerPage);
+    },
+    rangoInvalido() {
+      const fechaInicio = new Date(this.toApiDate(this.filtros.fechaInicio));
+      const fechaFinal = new Date(this.toApiDate(this.filtros.fechaFinal));
+
+      const diasDiferencia = (fechaFinal - fechaInicio) / (1000 * 60 * 60 * 24);
+      const anio = parseInt(this.anioEscolar);
+
+      return (
+        fechaInicio > fechaFinal ||
+        diasDiferencia > 15 ||
+        fechaInicio.getFullYear() !== anio ||
+        fechaFinal.getFullYear() !== anio
+      );
     }
+
   },
   mounted() {
     const token = localStorage.getItem("token");
@@ -287,7 +320,32 @@ export default {
     }
     this.cargarInformacionAlumno(token, profile, anio_escolar, usua_id);
   },
+  watch: {
+    'filtros.fechaInicio'() {
+      this.validarFechasYLimpiar();
+    },
+    'filtros.fechaFinal'() {
+      this.validarFechasYLimpiar();
+    }
+  },
   methods: {
+    validarFechasYLimpiar() {
+      const fechaInicio = new Date(this.toApiDate(this.filtros.fechaInicio));
+      const fechaFinal = new Date(this.toApiDate(this.filtros.fechaFinal));
+      const anio = parseInt(this.anioEscolar);
+
+      const diferenciaDias = (fechaFinal - fechaInicio) / (1000 * 60 * 60 * 24);
+
+      if (
+        fechaInicio <= fechaFinal &&
+        diferenciaDias <= 15 &&
+        fechaInicio.getFullYear() === anio &&
+        fechaFinal.getFullYear() === anio
+      ) {
+        this.errorMensaje = "";
+      }
+    },
+
     formatearFecha(fecha) {
       return new Intl.DateTimeFormat("es-ES", {
         day: "2-digit",
@@ -328,8 +386,39 @@ export default {
         console.error("Error al obtener información de alumno:", error);
       }
     },
+    validarFechas() {
+      const fechaInicio = new Date(this.toApiDate(this.filtros.fechaInicio));
+      const fechaFinal = new Date(this.toApiDate(this.filtros.fechaFinal));
+      const anio = parseInt(this.anioEscolar);
+
+      if (fechaInicio > fechaFinal) {
+        this.errorMensaje = "La fecha inicial no puede ser mayor que la final.";
+        return false;
+      }
+
+      const diferenciaDias = (fechaFinal - fechaInicio) / (1000 * 60 * 60 * 24);
+      if (diferenciaDias > 15) {
+        this.errorMensaje = "Solo puedes consultar un máximo de 15 días por búsqueda.";
+        return false;
+      }
+
+      if (
+        fechaInicio.getFullYear() !== anio ||
+        fechaFinal.getFullYear() !== anio
+      ) {
+        this.errorMensaje = `Las fechas deben pertenecer al año escolar ${anio}.`;
+        return false;
+      }
+
+      this.errorMensaje = ""; // Limpiar si todo está bien
+      return true;
+    },
+
     async consultarAsistencia() {
+      if (!this.validarFechas()) return;
       this.loading = true; 
+      this.resultados = [];
+
       const profile = localStorage.getItem("profile");
       const anio_escolar = localStorage.getItem("anio_escolar");
       const usua_id = localStorage.getItem("usua_id");
@@ -374,7 +463,7 @@ export default {
         }
       } catch (error) {
         console.error("Error al consultar asistencia:", error);
-        this.resultados = [];
+        this.dialogNoResults = true;
       } finally {
         this.loading = false;
       }
@@ -402,8 +491,14 @@ export default {
 };
 </script>
 <style scoped>
-.my-overlay {
-  z-index: 9999;
-  background-color: rgba(255, 0, 0, 0.3);
-}
+  .my-overlay {
+    z-index: 9999;
+    background-color: rgba(255, 0, 0, 0.3);
+  }
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity 0.3s;
+  }
+  .fade-enter-from, .fade-leave-to {
+    opacity: 0;
+  }
 </style>

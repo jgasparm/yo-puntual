@@ -7,25 +7,28 @@
       </div>
       <div class="NombreCentroEducativo">
         <h1>{{ centroEducativo }}</h1>
-        <!-- <h1 class="site-title">{{ centroEducativo }}</h1> -->
       </div>
       <div class="user">
         <img class="user-img" :src="imagenPerfil" alt="Usuario">
-        <!-- Contenedor para el nombre y la flecha, con el menú desplegable -->
         <div class="user-info" @click="toggleUserMenu">
           <span>{{ formattedUserName }}</span>
           <span class="arrow">▼</span>
-          <div class="user-menu" v-if="showUserMenu">
-            <!-- <div @click="verPerfil">Ver perfil</div> -->
-            <div @click="cerrarSesion">Cerrar sesión</div>
-          </div>
+          <transition name="fade">
+            <div class="user-menu" v-if="showUserMenu">
+              <div @click="cerrarSesion">
+                <v-icon left small>mdi-logout</v-icon> Cerrar sesión
+              </div>
+            </div>
+          </transition>
         </div>
       </div>
-      <!-- Botón menú hamburguesa en móviles -->
       <div class="menu-toggle" v-if="isMobile" @click="toggleMobileMenu">
         <v-icon>mdi-menu</v-icon>
       </div>
     </header>
+
+    <!-- TÍTULO INICIAL -->
+
 
     <!-- MENÚ LATERAL RESPONSIVO -->
     <v-navigation-drawer v-model="mobileMenuOpen" app temporary>
@@ -49,33 +52,26 @@
           </v-list>
         </v-list-item>
         <v-divider></v-divider>
-        <!-- <v-list-item @click="verPerfil">
-          <v-icon>mdi-folder</v-icon> Ver perfil
-        </v-list-item> -->
         <v-list-item @click="cerrarSesion">
           <v-icon>mdi-logout</v-icon> Cerrar sesión
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
-    
+
     <!-- CONTENIDO PRINCIPAL -->
     <div class="main-content">
-      <!-- Columna Izquierda: Menú -->
       <aside class="sidebar">
         <ul class="menu">
-          <!-- Menú fijo: Inicio -->
           <li @click="$router.push({ name: 'inicio' })" :class="{ active: activeMenu === 'Inicio' }">
             <v-icon>mdi-home</v-icon> Inicio
           </li>
-          <!-- Menús dinámicos obtenidos desde wsLoginWeb -->
           <li
             v-for="mod in modulosLogin"
             :key="mod.modu_id"
             @click="toggleSubmenu(mod.modu_id)"
             :class="{ active: activeMenu === mod.modu_id }"
           >
-          <v-icon>{{ mod.icono }}</v-icon> {{ mod.modu_nombre }}
-            <!-- Submenús para cada módulo, usando los datos agrupados por modu_id -->
+            <v-icon>{{ mod.icono }}</v-icon> {{ mod.modu_nombre }}
             <transition name="fade">
               <ul v-if="openSubmenu === mod.modu_id" class="submenu">
                 <li
@@ -92,17 +88,17 @@
         </ul>
       </aside>
 
-      <!-- Columna Central: Contenido -->
       <section class="content">
         <router-view></router-view>
       </section>
 
-      <!-- Columna Derecha: Banner y Anuncios/Noticias -->
       <aside class="rightbar">
+        <h3 class="text-subtitle-1 font-weight-bold text-center mb-3">📰 Novedades</h3>
         <AnunciosPublicados/>
       </aside>
     </div>
-    <!-- Modal para sesión expirada -->
+
+    <!-- Modal sesión expirada -->
     <v-dialog v-model="sessionExpiredModal" max-width="400">
       <v-card>
         <v-card-title class="headline">Sesión Expirada</v-card-title>
@@ -111,9 +107,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="cerrarSesion">
-            Ir a Iniciar Sesión
-          </v-btn>
+          <v-btn color="primary" text @click="cerrarSesion">Ir a Iniciar Sesión</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -490,10 +484,11 @@ export default {
 }
 
 .main-content {
-  flex: 1;
   display: flex;
+  flex-wrap: nowrap;
+  flex: 1;
+  overflow: hidden; /* Previene que se expanda de más */
 }
-
 .sidebar {
   width: 250px;
   background: #f0f0f0;
@@ -557,13 +552,15 @@ export default {
 
 .content {
   flex: 1;
+  min-width: 0; /* 🔑 Esto permite que respete el ancho del contenedor */
   padding: 10px;
   background: white;
+  overflow-x: auto; /* opcional: scroll si hay mucho contenido horizontal */
 }
 
 .rightbar {
-  flex: none;
-  max-width: 400px;
+  width: 400px; /* Fijamos el ancho exacto que deseas */
+  flex-shrink: 0; /* 🔑 Evita que se reduzca o desaparezca si no hay espacio */
   background: #e8e8e8;
   padding: 10px;
   display: flex;
