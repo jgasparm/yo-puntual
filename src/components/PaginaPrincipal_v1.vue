@@ -7,25 +7,28 @@
       </div>
       <div class="NombreCentroEducativo">
         <h1>{{ centroEducativo }}</h1>
-        <!-- <h1 class="site-title">{{ centroEducativo }}</h1> -->
       </div>
       <div class="user">
         <img class="user-img" :src="imagenPerfil" alt="Usuario">
-        <!-- Contenedor para el nombre y la flecha, con el menú desplegable -->
         <div class="user-info" @click="toggleUserMenu">
           <span>{{ formattedUserName }}</span>
           <span class="arrow">▼</span>
-          <div class="user-menu" v-if="showUserMenu">
-            <div @click="verPerfil">Ver perfil</div>
-            <div @click="cerrarSesion">Cerrar sesión</div>
-          </div>
+          <transition name="fade">
+            <div class="user-menu" v-if="showUserMenu">
+              <div @click="cerrarSesion">
+                <v-icon left small>mdi-logout</v-icon> Cerrar sesión
+              </div>
+            </div>
+          </transition>
         </div>
       </div>
-      <!-- Botón menú hamburguesa en móviles -->
       <div class="menu-toggle" v-if="isMobile" @click="toggleMobileMenu">
         <v-icon>mdi-menu</v-icon>
       </div>
     </header>
+
+    <!-- TÍTULO INICIAL -->
+
 
     <!-- MENÚ LATERAL RESPONSIVO -->
     <v-navigation-drawer v-model="mobileMenuOpen" app temporary>
@@ -49,33 +52,26 @@
           </v-list>
         </v-list-item>
         <v-divider></v-divider>
-        <v-list-item @click="verPerfil">
-          <v-icon>mdi-folder</v-icon> Ver perfil
-        </v-list-item>
         <v-list-item @click="cerrarSesion">
           <v-icon>mdi-logout</v-icon> Cerrar sesión
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
-    
+
     <!-- CONTENIDO PRINCIPAL -->
     <div class="main-content">
-      <!-- Columna Izquierda: Menú -->
       <aside class="sidebar">
         <ul class="menu">
-          <!-- Menú fijo: Inicio -->
           <li @click="$router.push({ name: 'inicio' })" :class="{ active: activeMenu === 'Inicio' }">
             <v-icon>mdi-home</v-icon> Inicio
           </li>
-          <!-- Menús dinámicos obtenidos desde wsLoginWeb -->
           <li
             v-for="mod in modulosLogin"
             :key="mod.modu_id"
             @click="toggleSubmenu(mod.modu_id)"
             :class="{ active: activeMenu === mod.modu_id }"
           >
-          <v-icon>{{ mod.icono }}</v-icon> {{ mod.modu_nombre }}
-            <!-- Submenús para cada módulo, usando los datos agrupados por modu_id -->
+            <v-icon>{{ mod.icono }}</v-icon> {{ mod.modu_nombre }}
             <transition name="fade">
               <ul v-if="openSubmenu === mod.modu_id" class="submenu">
                 <li
@@ -92,39 +88,17 @@
         </ul>
       </aside>
 
-      <!-- Columna Central: Contenido -->
       <section class="content">
         <router-view></router-view>
       </section>
 
-      <!-- Columna Derecha: Banner y Anuncios/Noticias -->
       <aside class="rightbar">
-        <!-- Banner Superior (se muestra en la parte superior de la columna derecha) -->
-        <v-sheet color="blue lighten-4" class="pa-6 text-center" height="50%">
-          <h2 class="text-h5 font-weight-bold">
-            ¡Visita nuestra web y conoce más de nosotros! 
-            <v-icon color="red">mdi-hand-pointing-right</v-icon>
-          </h2>
-          <v-carousel
-            class="banner-carousel"
-            hide-delimiters
-            cycle
-            interval="5000"
-          >
-            <v-carousel-item v-for="(item, i) in bannerItems" :key="i">
-              <v-img :src="item.src" contain height="auto" width="100%" class="banner-img"></v-img>
-            </v-carousel-item>
-          </v-carousel>
-        </v-sheet>
-
-        <!-- Sección de Anuncios/Noticias -->
-        <h3>Anuncios</h3>
-        <ul>
-          <li v-for="(anuncio, index) in anuncios" :key="index">{{ anuncio }}</li>
-        </ul>
+        <h3 class="text-subtitle-1 font-weight-bold text-center mb-3">📰 Novedades</h3>
+        <AnunciosPublicados/>
       </aside>
     </div>
-    <!-- Modal para sesión expirada -->
+
+    <!-- Modal sesión expirada -->
     <v-dialog v-model="sessionExpiredModal" max-width="400">
       <v-card>
         <v-card-title class="headline">Sesión Expirada</v-card-title>
@@ -133,9 +107,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="cerrarSesion">
-            Ir a Iniciar Sesión
-          </v-btn>
+          <v-btn color="primary" text @click="cerrarSesion">Ir a Iniciar Sesión</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -160,13 +132,15 @@
 
 // Para validar si venció el token
 //import jwtDecode from 'jwt-decode';
-
+import AnunciosPublicados from '@/components/PaginaAnunciosPublicados.vue'
 export default {
   name: "MainLayoutDesign1",
+  components: { AnunciosPublicados },
+
   data() {
     return {
       centroEducativo: "Centro Educativo Demo",
-      imagenPerfil: require("@/assets/images_perfil/10030796.jpg"),
+      imagenPerfil: require("@/assets/images_perfil/usuario-default.png"),
       usuarioNombre: "",
       showUserMenu: false,
       mobileMenuOpen: false,
@@ -280,7 +254,7 @@ export default {
       this.mobileMenuOpen = !this.mobileMenuOpen;
     },
     verPerfil() {
-      alert("Ver perfil");
+      //alert("Ver perfil");
     },
     cerrarSesion() {
       localStorage.removeItem("auth");
@@ -309,7 +283,12 @@ export default {
         "Dashboard del alumno": "DashboardAlumno",
         "Docentes del año escolar": "DocentesAnioEscolar",
         "Aulas": "MisAulas",
-        "Mi horario escolar":"AlumnoHorarioEscolar"
+        "Mi horario escolar":"AlumnoHorarioEscolar",
+        "Plan de estudios":"PlanEstudios",
+        "Evaluaciones":"Evaluaciones",
+        "Mi plan de estudios":"DocentePlanEstudios",
+        "Matrícula":"Matricula",
+        "Alumnos":"Alumnos"      
       };
 
       // Verificar si la vista seleccionada existe en la lista
@@ -505,14 +484,16 @@ export default {
 }
 
 .main-content {
-  flex: 1;
   display: flex;
+  flex-wrap: nowrap;
+  flex: 1;
+  overflow: hidden; /* Previene que se expanda de más */
 }
-
 .sidebar {
   width: 250px;
   background: #f0f0f0;
   padding: 10px;
+  flex: none;
 }
 
 .menu {
@@ -571,12 +552,15 @@ export default {
 
 .content {
   flex: 1;
+  min-width: 0; /* 🔑 Esto permite que respete el ancho del contenedor */
   padding: 10px;
   background: white;
+  overflow-x: auto; /* opcional: scroll si hay mucho contenido horizontal */
 }
 
 .rightbar {
-  width: 400px;
+  width: 400px; /* Fijamos el ancho exacto que deseas */
+  flex-shrink: 0; /* 🔑 Evita que se reduzca o desaparezca si no hay espacio */
   background: #e8e8e8;
   padding: 10px;
   display: flex;

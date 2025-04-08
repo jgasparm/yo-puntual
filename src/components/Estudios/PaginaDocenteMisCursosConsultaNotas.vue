@@ -1,22 +1,51 @@
 <template>
-  <v-container class="py-4">
-    <v-row class="mb-2">
-      <v-col cols="12">
-        <template v-if="isDesktop"></template>
-        <div class="d-flex justify-space-between align-center">
-          <div>
-            <h2 class="text-h5 font-weight-bold text-primary">📖 Consulta de Notas</h2>
-            <div class="text-subtitle-1 mt-1 curso-highlight">
-              <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
-              <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
-            </div>
-          </div>
-          <v-btn color="primary" @click="goBack" class="mb-4" prepend-icon="mdi-arrow-left">
-            Regresar
-          </v-btn>
-        </div>
-      </v-col>
-    </v-row>
+  <v-container class="pt-0 pb-4">
+    <v-container class="pt-0 pb-4">
+  <!-- Mobile: Botón en primera fila (oculto en desktop) -->
+  <v-row class="d-md-none mt-0 mb-2">
+    <v-col cols="12" class="text-start">
+      <v-btn color="primary" @click="goBack" prepend-icon="mdi-arrow-left">
+        Regresar
+      </v-btn>
+    </v-col>
+  </v-row>
+
+  <!-- Título centrado -->
+  <v-row class="mb-2">
+    <v-col cols="12" class="text-center">
+      <h2 class="text-h5 font-weight-bold text-primary">📖 Consulta de Notas</h2>
+      <p class="text-subtitle-2 mt-1 text-grey-darken-1">
+        Visualiza las calificaciones registradas por periodo y tipo de evaluación.
+      </p>
+    </v-col>
+  </v-row>
+
+  <!-- Mobile: curso centrado -->
+  <v-row class="d-md-none mt-0 mb-2">
+    <v-col cols="12" class="text-center">
+      <div class="text-subtitle-1 curso-highlight">
+        <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
+        <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+      </div>
+    </v-col>
+  </v-row>
+
+  <!-- Desktop: curso a la izquierda y botón a la derecha -->
+  <v-row class="d-none d-md-flex mb-4 align-center">
+    <v-col md="6" class="text-md-left">
+      <div class="text-subtitle-1 curso-highlight">
+        <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
+        <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+      </div>
+    </v-col>
+    <v-col md="6" class="text-md-right">
+      <v-btn color="primary" @click="goBack" prepend-icon="mdi-arrow-left">
+        Regresar
+      </v-btn>
+    </v-col>
+  </v-row>
+</v-container>
+
 
     <!-- Datos del Curso -->
     <v-row class="mb-4 text-body-2">
@@ -89,13 +118,14 @@
             ]"
         >
 
-          <div
-            v-if="column.key !== 'numero' && column.key !== 'alumno'"
-            class="cell-custom"
-            :style="getNotaCellStyle(item[column.key])"
-          >
-            {{ item[column.key] }}
-          </div>
+        <div
+          v-if="column.key !== 'numero' && column.key !== 'alumno'"
+          class="cell-custom"
+          :style="getNotaCellStyle(item[column.key])"
+        >
+          <div class="nota-num">{{ getNotaNumero(item[column.key]) }}</div>
+          <div class="nota-letra">{{ getNotaLetra(item[column.key]) }}</div>
+        </div>
           <span v-else>{{ item[column.key] }}</span>
         </td>
       </tr>
@@ -190,6 +220,7 @@ import { useDisplay } from 'vuetify' // <-- Importar
 import axios from 'axios'
 import { getNotaColor, getNotaTextColor } from '@/utils/notas'
 
+
 // Detecta si la pantalla es "md" o mayor
 const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
@@ -251,6 +282,19 @@ function getNotaCellStyle(valor) {
     textAlign: 'center'
   };
 }
+
+function getNotaNumero(valor) {
+  const notaStr = typeof valor === 'string' ? valor : ''
+  const match = notaStr.match(/^([\d.]+)/)
+  return match ? match[1] : ''
+}
+
+function getNotaLetra(valor) {
+  const notaStr = typeof valor === 'string' ? valor : ''
+  const match = notaStr.match(/\(([^)]+)\)/)
+  return match ? match[1] : ''
+}
+
 
 async function fetchBimestres() {
   try {

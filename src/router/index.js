@@ -8,7 +8,7 @@ import ConsultaAsistenciaEmpleados from '../components/Asistencia/PaginaConsulta
 import MiAsistencia from '../components/Asistencia/PaginaConsultaAsistenciaAlumno.vue';
 import ConsultaAsistenciaEmpleado from '../components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue';
 import CalendarioEscolar from '../components/Estudios/PaginaCalendarioEscolar.vue';
-import RegistroAsistencia from '../components/Asistencia/PaginaAsistencia.vue';
+import RegistroAsistencia from '../components/Asistencia/PaginaRegistroAsistencia.vue';
 import AlumnoMisNotas from '../components/Estudios/PaginaAlumnoMisNotas.vue';
 import DashboardAlumno from '../components/Dashboard/PaginaDashboardAlumno.vue';
 import DocenteMisCursos from '../components/Estudios/PaginaDocenteMisCursos.vue';

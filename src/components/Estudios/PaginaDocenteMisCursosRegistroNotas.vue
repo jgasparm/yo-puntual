@@ -1,22 +1,50 @@
 <template>
-  <v-container class="py-4">
-    <!-- Encabezado con nombre del curso -->
-    <v-row class="mb-2">
-      <v-col cols="12">
-        <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center">
-          <div>
-            <h2 class="text-h5 font-weight-bold text-primary">📖 Registro de Notas</h2>
-            <div class="text-subtitle-1 mt-1 curso-highlight">
-              <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
-              <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
-            </div>
-          </div>
-          <v-btn color="primary" @click="goBack" class="mt-3 mt-md-0" prepend-icon="mdi-arrow-left">
-            Regresar
-          </v-btn>
-        </div>
-      </v-col>
-    </v-row>
+  <v-container class="pt-0 pb-4">
+    <v-container class="pt-0 pb-4">
+  <!-- Mobile: Botón en primera fila (oculto en desktop) -->
+  <v-row class="d-md-none mt-0 mb-2">
+    <v-col cols="12" class="text-start">
+      <v-btn color="primary" @click="goBack" prepend-icon="mdi-arrow-left">
+        Regresar
+      </v-btn>
+    </v-col>
+  </v-row>
+
+  <!-- Título centrado -->
+  <v-row class="mb-2">
+    <v-col cols="12" class="text-center">
+      <h2 class="text-h5 font-weight-bold text-primary">📖 Registro de Notas</h2>
+      <p class="text-subtitle-2 mt-1 text-grey-darken-1">
+        Registra y actualiza las calificaciones por periodo y evaluación de cada alumno.
+      </p>
+    </v-col>
+  </v-row>
+
+  <!-- Mobile: curso centrado -->
+  <v-row class="d-md-none mt-0 mb-2">
+    <v-col cols="12" class="text-center">
+      <div class="text-subtitle-1 curso-highlight">
+        <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
+        <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+      </div>
+    </v-col>
+  </v-row>
+
+  <!-- Desktop: curso a la izquierda y botón a la derecha -->
+  <v-row class="d-none d-md-flex mb-4 align-center">
+    <v-col md="6" class="text-md-left">
+      <div class="text-subtitle-1 curso-highlight">
+        <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
+        <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+      </div>
+    </v-col>
+    <v-col md="6" class="text-md-right">
+      <v-btn color="primary" @click="goBack" prepend-icon="mdi-arrow-left">
+        Regresar
+      </v-btn>
+    </v-col>
+  </v-row>
+</v-container>
 
     <!-- Filtros -->
     <v-row class="mb-4">
@@ -83,7 +111,8 @@
                 <td v-for="(header, colIndex) in dynamicHeaders" :key="colIndex">
                   <template v-if="header.key === 'prom'">
                     <div class="cell-custom prom-header" :style="getNotaStyle(row.prom, false)">
-                      {{ row.prom || '0' }}
+                      <div :class="notaNumClass">{{ row.prom?.valor || '—' }}</div>
+                      <div :class="notaLetraClass">{{ row.prom?.letra || '' }}</div>
                     </div>
                   </template>
 
@@ -96,7 +125,10 @@
                           :style="getNotaStyle(row[header.key], true)"
                           @click.stop="openNoteDialog(row, header)"
                         >
-                          {{ row[header.key] || 'Agregar' }}
+                          <!-- {{ row[header.key] || 'Agregar' }} -->
+                          <div :class="notaNumClass">{{ row[header.key]?.valor || 'Agregar' }}</div>
+                          <div :class="notaLetraClass">{{ row[header.key]?.letra || '' }}</div>
+
                         </div>
                       </template>
                       <span>
@@ -137,8 +169,9 @@
                     Prom. {{ selectedEvaluacionName }}:
                   </div>
                   <div class="cell-custom text-subtitle-1 font-weight-bold" :style="getNotaStyle(item.prom, false)">
-                    {{ item.prom }}
+                    {{ item.prom?.valor || '—' }} ({{ item.prom?.letra || '' }})
                   </div>
+
                 </v-col>
 
 
@@ -151,7 +184,7 @@
                 <div>
                   <span>{{ selectedEvaluacionName }} #{{ i + 1 }}:</span>
                   <span class="cell-custom d-inline-block ml-2" :style="getNotaStyle(item[header.key], true)">
-                    {{ item[header.key] || 'Agregar' }}
+                    {{ item[header.key]?.valor || 'Agregar' }}<span v-if="item[header.key]?.letra"> ({{ item[header.key]?.letra }})</span>
                   </span>
                 </div>
 
@@ -235,10 +268,9 @@ import { useRouter, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import axios from 'axios'
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
-import { getNotaColor, getNotaTextColor } from '@/utils/notas'
+import { notaNumClass, notaLetraClass, getNotaColor, getNotaTextColor } from '@/utils/notas'
 
-
-function getNotaStyle(notaStr, editable = true) {
+/* function getNotaStyle(notaStr, editable = true) {
   const match = notaStr?.match?.(/^([\d.]+)/);
   const nota = match ? parseFloat(match[1]) : null;
   const baseStyle = {
@@ -251,6 +283,21 @@ function getNotaStyle(notaStr, editable = true) {
   } else {
     baseStyle.cursor = 'default';
   }
+  return baseStyle;
+} */
+
+function getNotaStyle(notaObj, editable = true) {
+  const valor = typeof notaObj === 'object' && notaObj?.valor !== undefined
+    ? parseFloat(notaObj.valor)
+    : null;
+
+  const baseStyle = {
+    backgroundColor: Number.isFinite(valor) ? getNotaColor(valor) : '',
+    color: Number.isFinite(valor) ? getNotaTextColor(valor) : '',
+    fontWeight: 'bold'
+  }
+
+  baseStyle.cursor = editable ? 'pointer' : 'default'
   return baseStyle;
 }
 
@@ -635,16 +682,19 @@ function parseNotasForTable(notasData, maxNotas = 0) {
       if (i < evals.length) {
         let valor = evals[i].reau_evaluacion
         let letra = evals[i].reau_evaluacion_letra
-        row[`nota_${i + 1}`] = `${valor} (${letra})`
+        row[`nota_${i + 1}`] = { valor, letra }
       } else {
         row[`nota_${i + 1}`] = ''
       }
     }
 
-    row.prom =
+/*     row.prom =
       student.pcae_promedio_evaluacion && student.pcae_promedio_evaluacion_letra
         ? `${student.pcae_promedio_evaluacion} (${student.pcae_promedio_evaluacion_letra})`
-        : ''
+        : '' */
+        row.prom = student.pcae_promedio_evaluacion
+        ? { valor: student.pcae_promedio_evaluacion, letra: student.pcae_promedio_evaluacion_letra }
+        : { valor: '', letra: '' }
 
     row._evaluaciones = evals
     itemsTemp.push(row)

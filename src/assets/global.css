@@ -1,0 +1,10 @@
+.nota-num {
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1.2;
+  }
+  .nota-letra {
+    font-size: 12px;
+    line-height: 1.2;
+    margin-top: 2px;
+  }

@@ -115,23 +115,8 @@
 </template>
 
 <script>
-// Importa tus componentes reales. Aquí se usan nombres de ejemplo.
-// import Inicio from "@/components/PaginaInicio.vue";
-// import RegistroAsistencia from "@/components/Asistencia/PaginaAsistencia.vue";
-// import ConsultaAsistenciaAlumnos from "@/components/Asistencia/PaginaConsultaAsistenciaAlumnos.vue";
-// import ConsultaAsistenciaEmpleados from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleados.vue";
-// import ConsultaAsistenciaAlumno from "@/components/Asistencia/PaginaConsultaAsistenciaAlumno.vue";
-// import ConsultaAsistenciaEmpleado from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue";
-// import CalendarioEscolar from "@/components/Estudios/PaginaCalendarioEscolar.vue";
-// import MisNotas from "@/components/Estudios/PaginaAlumnoMisNotas.vue";
-// import DocenteMisCursos from "@/components/Estudios/PaginaDocenteMisCursos.vue";
-// import DocenteMisCursosDetalle from "@/components/Estudios/PaginaDocenteMisCursosDetalle.vue";
-// import DashboardAlumno from "@/components/Dashboard/PaginaDashboardAlumno.vue";
-
-
 
 // Para validar si venció el token
-//import jwtDecode from 'jwt-decode';
 import AnunciosPublicados from '@/components/PaginaAnunciosPublicados.vue'
 export default {
   name: "MainLayoutDesign1",
@@ -274,7 +259,7 @@ export default {
         "Mi asistencia": "MiAsistencia",
         "Mi asistencia ": "ConsultaAsistenciaEmpleado",
         "Calendario escolar": "CalendarioEscolar",
-        "Registro de asistencias": "RegistroAsistencia",
+        "Registro de asistencia": "RegistroAsistencia",
         "Mis notas": "AlumnoMisNotas",
         "Cursos del docente": "DocenteMisCursos",
         "Cursos": "MisCursos",
@@ -487,7 +472,6 @@ export default {
   display: flex;
   flex-wrap: nowrap;
   flex: 1;
-  overflow: hidden; /* Previene que se expanda de más */
 }
 .sidebar {
   width: 250px;
@@ -634,6 +618,10 @@ export default {
   }
   .rightbar {
     width: 100%;
+    position: static !important;
+    height: auto !important;
+    margin-top: 16px;
+    background: #f5f5f5;
   }
   .menu-header {
     display: flex;
@@ -648,11 +636,19 @@ export default {
     margin-right: 8px; /* separa un poco la imagen del texto */
   }
 
-  @media (max-width: 768px) {
-    /* Ajustes extra si deseas que sea aún más pequeño en móviles */
-    .menu-logo-mobile {
-      max-width: 35px;
-    }
+@media (min-width: 769px) {
+  .rightbar {
+    position: absolute;
+    top: 80px; /* o el alto de tu cabecera */
+    right: 0;
+    width: 400px;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    background: #e8e8e8;
   }
+  .main-content {
+    margin-right: 400px; /* espacio para que no lo tape el rightbar */
+  }
+}
 }
 </style>

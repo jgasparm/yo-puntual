@@ -460,7 +460,7 @@ export default {
     },
     async cargarEmpleados(profile, token) {
       try {
-        const url = `https://amsoftsolution.com/amss/ws/wsConsultaPersonas.php?ac_tipo_persona=E&ac_indicador_todos=S&av_profile=${profile}`;
+        const url = `https://amsoftsolution.com/amss/ws/wsListaPersonas.php?ac_tipo_persona=E&ac_indicador_todos=S&av_profile=${profile}`;
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const response = await axios.get(url, config);
         if (response.data.status) {

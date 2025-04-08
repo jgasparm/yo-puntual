@@ -53,9 +53,6 @@
     <!-- TABLA DE HORARIO (VERSIÓN DESKTOP) -->
     <div v-if="isDesktop">
       <v-card>
-        <v-card-title>
-          <span class="text-h6">Horario Escolar</span>
-        </v-card-title>
         <v-card-text>
           <!-- Cabecera con días de la semana -->
           <table class="horario-desktop-table">

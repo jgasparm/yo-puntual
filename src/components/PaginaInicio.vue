@@ -140,6 +140,7 @@ const accesosDirectos = [
 ]
 
 const teacherCards = [
+  { title: 'Mi plan de estudios', icon: 'mdi-domain', cta: 'Ver plan de estudios', link: '/principal/docente-plan-estudios' },
   { title: 'Mis cursos', icon: 'mdi-book-open-page-variant', cta: 'Ver cursos', link: '/principal/mis-cursos-docente' },
   { title: 'Mi Asistencia', icon: 'mdi-check-circle-outline', cta: 'Ver mi asistencia', link: '/principal/consulta-asistencia-empleado' },
 ]

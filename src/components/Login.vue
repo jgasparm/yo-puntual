@@ -2,14 +2,13 @@
   <div class="login-wrapper">
     <v-app>
       <v-container class="d-flex justify-center align-center" style="min-height: 100vh">
-        <v-card class="pa-6" max-width="420" elevation="10" outlined>
+        <v-card class="pa-6" max-width="420" width="100%" elevation="10" outlined>
           <!-- Logo -->
           <v-img src="./logo.webp" height="120" contain class="mx-auto mb-2" />
 
           <!-- Título -->
           <h2 class="text-center text-h5 font-weight-bold mb-4">Ingreso al Sistema</h2>
 
-          <!-- Formulario de Login -->
           <v-form>
             <v-select
               v-model="document_type"
@@ -31,16 +30,26 @@
               outlined
               dense
               :rules="[v => !!v || 'Campo obligatorio']"
+              ref="docInput"
             />
 
             <v-text-field
               v-model="password"
+              :type="showPassword ? 'text' : 'password'"
               label="Contraseña"
               prepend-icon="mdi-lock-outline"
-              type="password"
+              :append-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+              @click:append="showPassword = !showPassword"
               outlined
               dense
               :rules="[v => !!v || 'Campo obligatorio']"
+            />
+
+            <v-checkbox
+              v-model="rememberMe"
+              label="Recordarme"
+              dense
+              class="mt-1"
             />
 
             <v-btn
@@ -51,17 +60,17 @@
               :disabled="!document_number || !password"
               @click="login"
             >
-              Iniciar sesión
+              {{ loading ? 'Ingresando...' : 'Iniciar sesión' }}
             </v-btn>
-
-            <!-- <v-btn text class="mt-2" @click="recoverPassword">
-              ¿Olvidaste tu contraseña?
-            </v-btn> -->
-
-            <!-- Recaptcha -->
-            <div class="mt-4 text-center">
-              <VueRecaptcha sitekey="your-site-key" @verify="onVerify" />
-            </div>
+<!-- 
+            <v-tooltip bottom>
+              <template #activator="{ on, attrs }">
+                <v-btn text class="mt-2" v-bind="attrs" v-on="on" @click="recoverPassword">
+                  ¿Olvidaste tu contraseña?
+                </v-btn>
+              </template>
+              <span>Próximamente disponible</span>
+            </v-tooltip> -->
           </v-form>
 
           <!-- Modal de error -->
@@ -84,11 +93,8 @@
 </template>
 
 <script>
-import { VueRecaptcha } from 'vue-recaptcha-v3';
-
 export default {
   name: 'LoginForm',
-  components: { VueRecaptcha },
   data() {
     return {
       document_type: '1',
@@ -96,25 +102,52 @@ export default {
         { title: 'DNI', key: '1' },
         { title: 'Carnet de extranjería', key: '4' }
       ],
-      document_number: '10030795',
-      password: '99999999',
+      document_number: '',
+      password: '',
+      showPassword: false,
+      rememberMe: false,
       loading: false,
       ModalNoCredenciales: false
     };
   },
+  mounted() {
+    if (localStorage.getItem('auth') === 'true') {
+      this.$router.push('/principal');
+    }
+
+    const rememberedDoc = localStorage.getItem('remembered_document');
+    if (rememberedDoc) {
+      this.document_number = rememberedDoc;
+      this.rememberMe = true;
+    }
+
+    this.$nextTick(() => {
+      this.$refs.docInput.focus();
+    });
+  },
   methods: {
     async login() {
       if (!this.document_number || !this.password) return;
+
       this.loading = true;
 
-      const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWeb.php?ai_tipo_documento=${this.document_type}&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}`;
-
       try {
+        // ✅ Ejecutar reCAPTCHA v3 invisible
+        const token = await this.$recaptcha('login');
+
+        const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWeb.php?ai_tipo_documento=${this.document_type}&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}&recaptcha=${token}`;
+
         const response = await fetch(apiUrl);
         const result = await response.json();
 
         if (result.status && result.data.length > 0) {
           const userData = result.data[0];
+          //Opción Recordarme
+          if (this.rememberMe) {
+            localStorage.setItem('remembered_document', this.document_number);
+          } else {
+            localStorage.removeItem('remembered_document');
+          }
           localStorage.setItem('auth', 'true');
           localStorage.setItem('token', userData.token);
           localStorage.setItem('profile', userData.profile);
@@ -151,24 +184,7 @@ export default {
     },
     recoverPassword() {
       alert('Funcionalidad de recuperación aún no implementada.');
-    },
-    onVerify(response) {
-      console.log('Recaptcha verificado:', response);
     }
   }
 };
 </script>
-
-<style scoped>
-.login-wrapper {
-  background-color: #f4f4f9;
-  min-height: 100vh;
-}
-.v-card {
-  border-radius: 16px;
-  background-color: #fff;
-}
-h2 {
-  color: #1976D2;
-}
-</style>

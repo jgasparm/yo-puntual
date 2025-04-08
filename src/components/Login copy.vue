@@ -1,15 +1,16 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
+  <div class="login-wrapper">
     <v-app>
-      <v-container class="d-flex justify-center align-center" style="min-height: 100vh; background-color: #f4f4f9;">
-        <v-card class="pa-6" max-width="400" elevation="10" outlined>
+      <v-container class="d-flex justify-center align-center" style="min-height: 100vh">
+        <v-card class="pa-6" max-width="420" elevation="10" outlined>
           <!-- Logo -->
-          <v-img src="./logo.png" height="150" class="mb-4" contain></v-img>
+          <v-img src="./logo.webp" height="120" contain class="mx-auto mb-2" />
+
+          <!-- Título -->
+          <h2 class="text-center text-h5 font-weight-bold mb-4">Ingreso al Sistema</h2>
 
           <!-- Formulario de Login -->
           <v-form>
-            <!-- NUEVO: Select para tipo de documento -->
             <v-select
               v-model="document_type"
               :items="tipoDocumentoItems"
@@ -19,63 +20,64 @@
               required
               outlined
               prepend-icon="mdi-card-account-details"
-            >
-            </v-select>
+              dense
+            />
 
-            <!-- Campo de Usuario -->
             <v-text-field
               v-model="document_number"
               label="Número de documento"
-              prepend-icon="mdi-account"
-              required
+              placeholder="Ej. 12345678"
+              prepend-icon="mdi-account-circle-outline"
               outlined
-            ></v-text-field>
+              dense
+              :rules="[v => !!v || 'Campo obligatorio']"
+            />
 
-            <!-- Campo de Contraseña -->
             <v-text-field
               v-model="password"
               label="Contraseña"
-              prepend-icon="mdi-lock"
+              prepend-icon="mdi-lock-outline"
               type="password"
-              required
               outlined
-            ></v-text-field>
+              dense
+              :rules="[v => !!v || 'Campo obligatorio']"
+            />
 
-            <!-- Botón de Login -->
             <v-btn
               color="primary"
               block
-              @click="login"
+              class="mt-4"
+              :loading="loading"
               :disabled="!document_number || !password"
+              @click="login"
             >
               Iniciar sesión
             </v-btn>
 
-            <!-- Enlace para recuperar contraseña -->
-            <v-btn text class="mt-2" @click="recoverPassword">
+            <!-- <v-btn text class="mt-2" @click="recoverPassword">
               ¿Olvidaste tu contraseña?
-            </v-btn>
+            </v-btn> -->
 
-            <!-- Recaptcha (si se requiere) -->
-            <div class="mt-4">
-              <VueRecaptcha sitekey="your-site-key" @verify="onVerify"></VueRecaptcha>
+            <!-- Recaptcha -->
+            <div class="mt-4 text-center">
+              <VueRecaptcha sitekey="your-site-key" @verify="onVerify" />
             </div>
           </v-form>
-        </v-card>
 
-        <!-- Modal de "Credenciales incorrectas" -->
-        <v-dialog v-model="ModalNoCredenciales" max-width="400">
-          <v-card>
-            <v-card-title class="headline">Credenciales incorrectas</v-card-title>
-            <v-card-text>
-              Por favor, revisa tu usuario y contraseña, e intenta nuevamente.
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="primary" text @click="ModalNoCredenciales = false">Aceptar</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+          <!-- Modal de error -->
+          <v-dialog v-model="ModalNoCredenciales" max-width="400">
+            <v-card>
+              <v-card-title class="headline">Credenciales incorrectas</v-card-title>
+              <v-card-text>
+                Por favor, revisa tu usuario y contraseña, e intenta nuevamente.
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" text @click="ModalNoCredenciales = false">Aceptar</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </v-card>
       </v-container>
     </v-app>
   </div>
@@ -86,36 +88,25 @@ import { VueRecaptcha } from 'vue-recaptcha-v3';
 
 export default {
   name: 'LoginForm',
-  components: {
-    VueRecaptcha
-  },
+  components: { VueRecaptcha },
   data() {
     return {
-      // NUEVO: variable para el tipo de documento
-      document_type: '1', // Valor por defecto (1 = DNI)
-      // Opciones para el select del tipo de documento
+      document_type: '1',
       tipoDocumentoItems: [
         { title: 'DNI', key: '1' },
         { title: 'Carnet de extranjería', key: '4' }
       ],
-
-      document_number: '10030796',
+      document_number: '10030795',
       password: '99999999',
       loading: false,
-      msg: 'Bienvenido',
       ModalNoCredenciales: false
     };
   },
   methods: {
     async login() {
-      if (!this.document_number || !this.password) {
-        alert('Ingrese su número de documento y contraseña.');
-        return;
-      }
+      if (!this.document_number || !this.password) return;
+      this.loading = true;
 
-      this.loading = true; // Activa el estado de carga
-
-      // Ajustamos la URL para incluir ai_tipo_documento = this.document_type
       const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWeb.php?ai_tipo_documento=${this.document_type}&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}`;
 
       try {
@@ -124,8 +115,6 @@ export default {
 
         if (result.status && result.data.length > 0) {
           const userData = result.data[0];
-
-          // Guardar datos del usuario en localStorage
           localStorage.setItem('auth', 'true');
           localStorage.setItem('token', userData.token);
           localStorage.setItem('profile', userData.profile);
@@ -136,25 +125,19 @@ export default {
           localStorage.setItem('perfil', userData.id_perfil);
           localStorage.setItem('user', JSON.stringify(userData));
 
-          // Llamar al servicio wsConsultaUsuarioPermisos con ai_perf_id obtenido del usuario
           const submenuUrl = `https://amsoftsolution.com/amss/ws/wsConsultaUsuarioPermisos.php?ai_perf_id=${userData.id_perfil}`;
-
-          // Llamar al servicio con el Bearer Token en los encabezados
           const submenuResponse = await fetch(submenuUrl, {
-            method: "GET",
             headers: {
-              "Authorization": `Bearer ${userData.token}`,
-              "Content-Type": "application/json"
+              Authorization: `Bearer ${userData.token}`,
+              'Content-Type': 'application/json'
             }
           });
           const submenuResult = await submenuResponse.json();
+
           if (submenuResult.status) {
             localStorage.setItem('submenus', JSON.stringify(submenuResult));
-          } else {
-            console.error("Error al obtener submenús:", submenuResult.message);
           }
 
-          // Redirigir a la página principal
           this.$router.push('/principal');
         } else {
           this.ModalNoCredenciales = true;
@@ -163,11 +146,11 @@ export default {
         console.error('Error en la solicitud:', error);
         alert('Error al conectar con el servidor.');
       } finally {
-        this.loading = false; // Desactiva el estado de carga
+        this.loading = false;
       }
     },
     recoverPassword() {
-      console.log('Recuperación de contraseña solicitada');
+      alert('Funcionalidad de recuperación aún no implementada.');
     },
     onVerify(response) {
       console.log('Recaptcha verificado:', response);
@@ -177,18 +160,15 @@ export default {
 </script>
 
 <style scoped>
-h3 {
-  margin: 40px 0 0;
+.login-wrapper {
+  background-color: #f4f4f9;
+  min-height: 100vh;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+.v-card {
+  border-radius: 16px;
+  background-color: #fff;
 }
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
+h2 {
+  color: #1976D2;
 }
 </style>

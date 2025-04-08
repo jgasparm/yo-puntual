@@ -1,5 +1,8 @@
 // src/utils/notas.js
 
+export const notaNumClass = 'nota-num'
+export const notaLetraClass = 'nota-letra'
+
 export function getNotaColor(nota) {
     const n = parseFloat(nota);
     if (isNaN(n)) return '#EEEEEE'; // Gris claro por defecto

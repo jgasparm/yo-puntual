@@ -1,22 +1,20 @@
 <template>
   <v-container class="py-4">
-    <!-- ENCABEZADO -->
     <v-row class="mb-2">
       <v-col cols="12">
-        <template v-if="isDesktop">
-          <div class="d-flex justify-space-between align-center">
+        <template v-if="isDesktop"></template>
+        <div class="d-flex justify-space-between align-center">
+          <div>
             <h2 class="text-h5 font-weight-bold text-primary">📖 Consulta de Notas</h2>
-            <v-btn color="primary" @click="goBack" class="mb-4" prepend-icon="mdi-arrow-left">
-              Regresar
-            </v-btn>
+            <div class="text-subtitle-1 mt-1 curso-highlight">
+              <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
+              <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+            </div>
           </div>
-        </template>
-        <template v-else>
-          <v-btn block color="primary" @click="goBack" class="mb-2" prepend-icon="mdi-arrow-left">
+          <v-btn color="primary" @click="goBack" class="mb-4" prepend-icon="mdi-arrow-left">
             Regresar
           </v-btn>
-          <h2 class="text-h6 font-weight-bold text-primary">📖 Consulta de Notas</h2>
-        </template>
+        </div>
       </v-col>
     </v-row>
 
@@ -75,7 +73,7 @@
             'pa-2 text-center'
           ]"
         >
-          {{ column.title }}
+          <span :class="column.class || ''">{{ column.title }}</span>
         </th>
       </tr>
     </template>
@@ -83,11 +81,14 @@
     <!-- Contenido de filas -->
     <template #item="{ item, columns }">
       <tr>
-        <td
-          v-for="column in columns"
-          :key="column.key"
-          :class="[column.key !== 'numero' && column.key !== 'alumno' ? column.groupClass : '', 'pa-2']"
+        <td v-for="(column) in columns" :key="column.key"
+            :class="[
+              column.key !== 'numero' && column.key !== 'alumno' ? column.groupClass : '',
+              column.key.includes('_prom') ? 'promedio-bold' : '',
+              'pa-2'
+            ]"
         >
+
           <div
             v-if="column.key !== 'numero' && column.key !== 'alumno'"
             class="cell-custom"
@@ -130,12 +131,12 @@
                         :key="i"
                         cols="12"
                       >
-                        <div
-                          :class="{ 'prom-header-mobile': header.key.includes('_prom') }"
-                          :style="getNotaCellStyle(item[header.key])"
-                        >
-                          <strong>{{ header.mobileTitle || header.title }}:</strong> {{ item[header.key] }}
-                        </div>
+                      <div :class="{ 'prom-header-mobile': header.key.includes('_prom') }">
+                        <strong>{{ header.mobileTitle || header.title }}:</strong>
+                        <span :style="getNotaCellStyle(item[header.key])">
+                          {{ item[header.key] }}
+                        </span>
+                      </div>
                       </v-col>
                     </v-row>
                   </v-col>
@@ -484,7 +485,8 @@ async function fetchDetalle(doad_id) {
         mobileTitle: `${evalNombre} #${i}`,
         sortable: false,
         groupIndex: evalIndex,
-        groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`
+        groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`,
+        class: 'promedio-bold'
       });
     }
 
@@ -494,7 +496,8 @@ async function fetchDetalle(doad_id) {
       mobileTitle: `Prom. ${evalNombre}`,
       sortable: false,
       groupIndex: evalIndex,
-      groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`
+      groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`,
+      class: 'promedio-bold'
     });
   });
 
@@ -589,5 +592,8 @@ function goBack() {
   padding: 8px;
   vertical-align: middle;
   text-align: center;
+}
+.promedio-bold {
+  font-weight: bold;
 }
 </style>
