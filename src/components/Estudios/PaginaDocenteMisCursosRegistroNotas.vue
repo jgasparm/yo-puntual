@@ -270,22 +270,6 @@ import axios from 'axios'
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { notaNumClass, notaLetraClass, getNotaColor, getNotaTextColor } from '@/utils/notas'
 
-/* function getNotaStyle(notaStr, editable = true) {
-  const match = notaStr?.match?.(/^([\d.]+)/);
-  const nota = match ? parseFloat(match[1]) : null;
-  const baseStyle = {
-    backgroundColor: Number.isFinite(nota) ? getNotaColor(nota) : '',
-    color: Number.isFinite(nota) ? getNotaTextColor(nota) : '',
-    fontWeight: 'bold'
-  }
-  if (editable) {
-    baseStyle.cursor = 'pointer';
-  } else {
-    baseStyle.cursor = 'default';
-  }
-  return baseStyle;
-} */
-
 function getNotaStyle(notaObj, editable = true) {
   const valor = typeof notaObj === 'object' && notaObj?.valor !== undefined
     ? parseFloat(notaObj.valor)

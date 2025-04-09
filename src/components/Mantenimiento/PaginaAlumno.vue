@@ -1,260 +1,337 @@
 <template>
-    <v-container fluid>
-      <v-row class="mb-2">
-        <v-col cols="12" class="d-flex justify-space-between align-center">
+  <v-container fluid>
+    <!-- Cabecera -->
+    <v-row class="mb-2">
+      <v-col cols="12">
+        <v-row class="mb-2" align="center" justify="space-between">
           <h1 class="mb-2">Alumnos</h1>
           <v-btn color="primary" @click="openDialog()">
             <v-icon left>mdi-account-plus</v-icon>
             Agregar
           </v-btn>
-        </v-col>
-      </v-row>
-  
-      <!-- Listado: Desktop -->
-      <div v-if="!isMobile">
-        <v-data-table
-          :items="alumnosConIndice"
-          :headers="tableHeaders"
-          :items-per-page="10"
-          class="elevation-1"
-        >
-          <template #item.pers_estado="{ item }">
-            <v-chip v-if="item.pers_estado === 'Activo'" color="green">Activo</v-chip>
-            <v-chip v-else color="red">Inactivo</v-chip>
-          </template>
-          <template #item.actions="{ item }">
-            <v-icon small class="mr-2" @click="openDialog(item)">
-              mdi-pencil
-            </v-icon>
-          </template>
-        </v-data-table>
-      </div>
-  
-      <!-- Listado: Mobile -->
-      <div v-else>
-        <v-row>
-          <v-col
-            v-for="(item, index) in paginatedAlumnos"
-            :key="item.pers_id"
-            cols="12"
-            sm="6"
-          >
-            <v-card class="mb-2" style="position: relative;">
-              <v-btn 
-                icon 
-                variant="text" 
-                style="position: absolute; top: 8px; right: 8px;"
-                @click="openDialog(item)"
-              >
-                <v-icon>mdi-pencil</v-icon>
-              </v-btn>
-              <v-card-title>
-                {{ (currentPage - 1) * itemsPerPageMobile + index + 1 }}
-              </v-card-title>
-              <v-card-title>
-                {{ item.pers_nombres }} {{ item.pers_apellido_paterno }}
-              </v-card-title>
-              <v-card-subtitle>{{ item.pers_numero_documento_identidad }}</v-card-subtitle>
-              <v-card-text>
-                <div><strong>Fecha Nac.:</strong> {{ item.pers_fecha_nacimiento }}</div>
-                <div><strong>Sexo:</strong> {{ item.pers_sexo }}</div>
-                <div>
-                  <strong>Estado:</strong>
-                  <v-chip v-if="item.pers_estado === 'Activo'" color="green">Activo</v-chip>
-                  <v-chip v-else color="red">Inactivo</v-chip>
-                </div>
-              </v-card-text>
-            </v-card>
+        </v-row>
+
+        <!-- Filtros desktop -->
+        <v-row v-if="!isMobile" class="mb-4" dense align="center">
+          <v-col cols="12" sm="6" md="6">
+            <v-text-field
+              v-model="filtros.nombre"
+              label="Buscar por nombre o apellido"
+              clearable
+              prepend-inner-icon="mdi-magnify"
+              density="comfortable"
+            />
+          </v-col>
+
+          <v-col cols="6" sm="3" md="3">
+            <v-select
+              v-model="filtros.sexo"
+              :items="sexOptions"
+              item-title="text"
+              item-value="value"
+              label="Sexo"
+              clearable
+              prepend-inner-icon="mdi-gender-male-female"
+              density="comfortable"
+            />
+          </v-col>
+
+          <v-col cols="6" sm="3" md="3">
+            <v-select
+              v-model="filtros.estado"
+              :items="['Activo', 'Inactivo']"
+              label="Estado"
+              clearable
+              prepend-inner-icon="mdi-account-check"
+              density="comfortable"
+            />
           </v-col>
         </v-row>
-        <v-pagination v-model="currentPage" :length="mobilePageCount"></v-pagination>
-      </div>
+
+        <!-- Filtros mobile -->
+        <div v-else class="mb-4 text-right">
+          <v-btn color="primary" variant="outlined" @click="dialogFiltros = true">
+            <v-icon left>mdi-filter</v-icon>
+            Filtros
+          </v-btn>
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Listado: Desktop -->
+    <div v-if="!isMobile">
+      <v-data-table
+        :items="alumnosFiltrados"
+        :headers="tableHeaders"
+        :items-per-page="10"
+        class="elevation-1"
+      >
+        <template #item.pers_estado="{ item }">
+          <v-chip v-if="item.pers_estado === 'Activo'" color="green">Activo</v-chip>
+          <v-chip v-else color="red">Inactivo</v-chip>
+        </template>
+        <template #item.actions="{ item }">
+          <v-icon small class="mr-2" @click="openDialog(item)">
+            mdi-pencil
+          </v-icon>
+        </template>
+      </v-data-table>
+    </div>
+
+    <!-- Listado: Mobile -->
+    <div v-else>
+      <v-row>
+        <v-col
+          v-for="(item, index) in paginatedAlumnos"
+          :key="item.pers_id"
+          cols="12"
+          sm="6"
+        >
+          <v-card class="mb-2" style="position: relative;">
+            <v-btn 
+              icon 
+              variant="text" 
+              style="position: absolute; top: 8px; right: 8px;"
+              @click="openDialog(item)"
+            >
+              <v-icon>mdi-pencil</v-icon>
+            </v-btn>
+            <v-card-title>
+              {{ (currentPage - 1) * itemsPerPageMobile + index + 1 }}
+            </v-card-title>
+            <v-card-title>
+              {{ item.pers_nombres }} {{ item.pers_apellido_paterno }}
+            </v-card-title>
+            <v-card-subtitle>{{ item.pers_numero_documento_identidad }}</v-card-subtitle>
+            <v-card-text>
+              <div><strong>Fecha Nac.:</strong> {{ item.pers_fecha_nacimiento }}</div>
+              <div><strong>Sexo:</strong> {{ item.pers_sexo }}</div>
+              <div>
+                <strong>Estado:</strong>
+                <v-chip v-if="item.pers_estado === 'Activo'" color="green">Activo</v-chip>
+                <v-chip v-else color="red">Inactivo</v-chip>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+      <v-pagination v-model="currentPage" :length="mobilePageCount"></v-pagination>
+    </div>
+
+    <!-- Diálogo de filtros en mobile -->
+    <v-dialog v-model="dialogFiltros" max-width="400px" persistent>
+      <v-card>
+        <v-card-title class="text-h6">Filtrar alumnos</v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="filtros.nombre"
+            label="Buscar por nombre o apellido"
+            clearable
+            prepend-inner-icon="mdi-magnify"
+            density="comfortable"
+          />
+
+          <v-select
+            v-model="filtros.sexo"
+            :items="sexOptions"
+            item-title="text"
+            item-value="value"
+            label="Sexo"
+            clearable
+            prepend-inner-icon="mdi-gender-male-female"
+            density="comfortable"
+          />
+
+          <v-select
+            v-model="filtros.estado"
+            :items="['Activo', 'Inactivo']"
+            label="Estado"
+            clearable
+            prepend-inner-icon="mdi-account-check"
+            density="comfortable"
+          />
+        </v-card-text>
+        <v-card-actions class="justify-end">
+          <v-btn text @click="dialogFiltros = false">Cerrar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Diálogo para agregar/editar alumno -->
+    <v-dialog v-model="dialog" max-width="600px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h6">{{ formTitle }}</span>
+        </v-card-title>
+        <v-card-text>
+          <v-form ref="alumnoForm" lazy-validation>
+            <!-- Campo fijo para tipo: Alumno -->
+            <v-text-field v-model="form.pers_nombres" label="Nombres" required></v-text-field>
+            <v-text-field v-model="form.pers_apellido_paterno" label="Apellido Paterno" required></v-text-field>
+            <v-text-field v-model="form.pers_apellido_materno" label="Apellido Materno"></v-text-field>
+            <!-- Select para Tipo de Documento -->
+            <v-select
+              v-model="form.tidi_id"
+              :items="tidiOptions"
+              item-value="tidi_id"
+              item-title="tidi_descripcion"
+              label="Tipo de Documento"
+              required
+            ></v-select>
+            <v-text-field v-model="form.pers_numero_documento_identidad" label="Número de Documento" required></v-text-field>
   
-      <!-- Diálogo para agregar/editar -->
-      <v-dialog v-model="dialog" max-width="600px">
-        <v-card>
-          <v-card-title>
-            <span class="text-h6">{{ formTitle }}</span>
-          </v-card-title>
-          <v-card-text>
-            <v-form ref="alumnoForm" lazy-validation>
-              <!-- Campo fijo para tipo: Alumno -->
-              <v-text-field
-                class="campo-obligatorio" 
-                v-model="form.pers_nombres" label="Nombres" :rules="[requiredRule]" required></v-text-field>
-              <v-text-field
-                class="campo-obligatorio"
-                v-model="form.pers_apellido_paterno" label="Apellido Paterno" :rules="[requiredRule]" required></v-text-field>
-              <v-text-field
-                class="campo-obligatorio"
-                v-model="form.pers_apellido_materno" label="Apellido Materno" :rules="[requiredRule]" required></v-text-field>
-              <!-- Select para Tipo de Documento -->
-              <v-select
-                class="campo-obligatorio"
-                v-model="form.tidi_id"
-                :items="tidiOptions"
-                item-value="tidi_id"
-                item-title="tidi_descripcion"
-                label="Tipo de Documento"
-                :rules="[requiredRule]" required
-              ></v-select>
-              <v-text-field 
-                class="campo-obligatorio"
-                v-model="form.pers_numero_documento_identidad" label="Número de Documento" :rules="[requiredRule]" required></v-text-field>
-    
-              <!-- Sección para Fecha de Nacimiento y Sexo -->
-            <template v-if="!isMobile">
-              <!-- Desktop: Mismo renglón -->
-              <v-row>
-                <v-col cols="6">
-                  <v-menu
-                    v-model="menuFechaNacimiento"
-                    transition="scale-transition"
-                    offset-y
-                    max-width="320"
-                    min-width="auto"
-                  >
-                    <template #activator="{ on, attrs }">
-                      <v-text-field
-                        v-model="formattedFecha"
-                        label="Fecha de Nacimiento"
-                        prepend-icon="mdi-calendar"
-                        readonly
-                        v-bind="attrs"
-                        v-on="on"
-                      />
-                    </template>
-                    <v-date-picker
-                      v-model="form.pers_fecha_nacimiento"
-                      locale="es"
-                      @update:modelValue="menuFechaNacimiento = false"
+            <!-- Sección para Fecha de Nacimiento y Sexo -->
+          <template v-if="!isMobile">
+            <!-- Desktop: Mismo renglón -->
+            <v-row>
+              <v-col cols="6">
+                <v-menu
+                  v-model="menuFechaNacimiento"
+                  transition="scale-transition"
+                  offset-y
+                  max-width="320"
+                  min-width="auto"
+                >
+                  <template #activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="formattedFecha"
+                      label="Fecha de Nacimiento"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
                     />
-                  </v-menu>
-                </v-col>
-                <v-col cols="6">
-                  <v-select
-                    v-model="form.pers_sexo"
-                    :items="sexOptions"
-                    item-value="value"
-                    item-title="text"
-                    label="Sexo"
-                    required
-                  ></v-select>
-                </v-col>
-              </v-row>
-            </template>
-            <template v-else>
-              <!-- Mobile: Cada campo en fila separada -->
-              <v-row>
-                <v-col cols="12">
-                  <v-menu
-                    v-model="menuFechaNacimiento"
-                    transition="scale-transition"
-                    offset-y
-                    max-width="320"
-                    min-width="auto"
-                  >
-                    <template #activator="{ on, attrs }">
-                      <v-text-field
-                        v-model="formattedFecha"
-                        label="Fecha de Nacimiento"
-                        prepend-icon="mdi-calendar"
-                        readonly
-                        v-bind="attrs"
-                        v-on="on"
-                      />
-                    </template>
-                    <v-date-picker
-                      v-model="form.pers_fecha_nacimiento"
-                      locale="es"
-                      @update:modelValue="menuFechaNacimiento = false"
+                  </template>
+                  <v-date-picker
+                    v-model="form.pers_fecha_nacimiento"
+                    locale="es"
+                    @update:modelValue="menuFechaNacimiento = false"
+                  />
+                </v-menu>
+              </v-col>
+              <v-col cols="6">
+                <v-select
+                  v-model="form.pers_sexo"
+                  :items="sexOptions"
+                  item-value="value"
+                  item-title="text"
+                  label="Sexo"
+                  required
+                ></v-select>
+              </v-col>
+            </v-row>
+          </template>
+          <template v-else>
+            <!-- Mobile: Cada campo en fila separada -->
+            <v-row>
+              <v-col cols="12">
+                <v-menu
+                  v-model="menuFechaNacimiento"
+                  transition="scale-transition"
+                  offset-y
+                  max-width="320"
+                  min-width="auto"
+                >
+                  <template #activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="formattedFecha"
+                      label="Fecha de Nacimiento"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
                     />
-                  </v-menu>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="12">
-                  <v-select
-                    v-model="form.pers_sexo"
-                    :items="sexOptions"
-                    item-value="value"
-                    item-title="text"
-                    label="Sexo"
-                    required
-                  ></v-select>
-                </v-col>
-              </v-row>
-            </template>
-    
-              <!-- Ubigeo: Departamento -->
-              <v-select
-                v-model="form.ubig_codigo_departamento"
-                :items="departments"
-                item-value="ubig_codigo_departamento"
-                item-title="ubig_descripcion_departamento"
-                label="Departamento"
-                required
-              ></v-select>
-    
-              <!-- Ubigeo: Provincia -->
-              <v-select
-                v-model="form.ubig_codigo_provincia"
-                :items="provinces"
-                item-value="ubig_codigo_provincia"
-                item-title="ubig_descripcion_provincia"
-                label="Provincia"
-                required
-              ></v-select>
-    
-              <!-- Ubigeo: Distrito -->
-              <v-select
-                v-model="form.ubig_codigo_distrito"
-                :items="districts"
-                item-value="ubig_codigo_distrito"
-                item-title="ubig_descripcion_distrito"
-                label="Distrito"
-                required
-              ></v-select>
+                  </template>
+                  <v-date-picker
+                    v-model="form.pers_fecha_nacimiento"
+                    locale="es"
+                    @update:modelValue="menuFechaNacimiento = false"
+                  />
+                </v-menu>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="12">
+                <v-select
+                  v-model="form.pers_sexo"
+                  :items="sexOptions"
+                  item-value="value"
+                  item-title="text"
+                  label="Sexo"
+                  required
+                ></v-select>
+              </v-col>
+            </v-row>
+          </template>
+  
+            <!-- Ubigeo: Departamento -->
+            <v-select
+              v-model="form.ubig_codigo_departamento"
+              :items="departments"
+              item-value="ubig_codigo_departamento"
+              item-title="ubig_descripcion_departamento"
+              label="Departamento"
+              required
+            ></v-select>
+  
+            <!-- Ubigeo: Provincia -->
+            <v-select
+              v-model="form.ubig_codigo_provincia"
+              :items="provinces"
+              item-value="ubig_codigo_provincia"
+              item-title="ubig_descripcion_provincia"
+              label="Provincia"
+              required
+            ></v-select>
+  
+            <!-- Ubigeo: Distrito -->
+            <v-select
+              v-model="form.ubig_codigo_distrito"
+              :items="districts"
+              item-value="ubig_codigo_distrito"
+              item-title="ubig_descripcion_distrito"
+              label="Distrito"
+              required
+            ></v-select>
 
 <!-- Nuevo campo: Teléfono Móvil -->
 <v-text-field
-  v-model="form.pers_telefono_movil1"
-  label="Teléfono Móvil"
-  required
+v-model="form.pers_telefono_movil1"
+label="Teléfono Móvil"
+required
 ></v-text-field>
 
 <!-- Nuevo campo: Correo Electrónico -->
 <v-text-field
-  v-model="form.pers_correo_electronico"
-  label="Correo Electrónico"
-  required
+v-model="form.pers_correo_electronico"
+label="Correo Electrónico"
+required
 ></v-text-field>
-    
-              <v-select
-                v-model="form.pers_grupo_sanguineo"
-                :items="grupoSanguineoOptions"
-                label="Grupo Sanguíneo"
-                required
-              ></v-select>
-
-              <v-select
-              v-if="form.pers_id"
-              v-model="form.pers_estado"
-              :items="estadoOptions"
-              label="Estado"
+  
+            <v-select
+              v-model="form.pers_grupo_sanguineo"
+              :items="grupoSanguineoOptions"
+              label="Grupo Sanguíneo"
               required
             ></v-select>
-            </v-form>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="closeDialog">Cancelar</v-btn>
-            <v-btn color="primary" @click="saveAlumno">Guardar</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-    </v-container>
-  </template>
+            <v-select
+            v-if="form.pers_id"
+            v-model="form.pers_estado"
+            :items="estadoOptions"
+            label="Estado"
+            required
+          ></v-select>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="closeDialog">Cancelar</v-btn>
+          <v-btn color="primary" @click="saveAlumno">Guardar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-container>
+</template>
   
   <script>
   import { ref, computed, onMounted, watch } from 'vue'
@@ -262,6 +339,30 @@
   export default {
     name: 'AlumnosPage',
     setup() {
+
+      const filtros = ref({
+        nombre: '',
+        sexo: null,
+        estado: null
+      });
+
+      const alumnosFiltrados = computed(() => {
+      const nombreFiltro = (filtros.value.nombre || '').toLowerCase();
+      const sexoFiltro = filtros.value.sexo || '';
+      const estadoFiltro = filtros.value.estado || '';
+
+      return alumnosConIndice.value.filter(alumno => {
+        const nombreCompleto = `${alumno.pers_nombres} ${alumno.pers_apellido_paterno} ${alumno.pers_apellido_materno}`.toLowerCase();
+
+        return (
+          (!nombreFiltro || nombreCompleto.includes(nombreFiltro)) &&
+          (!sexoFiltro || alumno.pers_sexo === sexoFiltro) &&
+          (!estadoFiltro || alumno.pers_estado === estadoFiltro)
+        );
+      });
+    });
+
+
         
       const requiredRule = v => !!v || 'Este campo es obligatorio';
       const alumnoForm = ref(null);
@@ -378,9 +479,11 @@
       const itemsPerPageMobile = 5;
       const paginatedAlumnos = computed(() => {
         const start = (currentPage.value - 1) * itemsPerPageMobile;
-        return alumnos.value.slice(start, start + itemsPerPageMobile);
+        return alumnosFiltrados.value.slice(start, start + itemsPerPageMobile);
       });
-      const mobilePageCount = computed(() => Math.ceil(alumnos.value.length / itemsPerPageMobile));
+      const mobilePageCount = computed(() =>
+        Math.ceil(alumnosFiltrados.value.length / itemsPerPageMobile)
+      );
       const alumnosConIndice = computed(() =>
         alumnos.value.map((item, index) => ({ ...item, correlativo: index + 1 }))
       );
@@ -615,7 +718,9 @@
         closeDialog,
         saveAlumno,
         requiredRule,
-        alumnoForm
+        alumnoForm,
+        filtros,
+        alumnosFiltrados
       };
     }
   };

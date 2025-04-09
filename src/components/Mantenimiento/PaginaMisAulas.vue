@@ -727,6 +727,7 @@ import { ref, computed, reactive, onMounted, watch, nextTick } from 'vue'
 import { useDisplay } from 'vuetify'
 //import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { safeArray } from '@/utils/global'
 
 const filteredRangos = computed(() => {
   if (filtroNivel.value === '0') {
@@ -843,13 +844,15 @@ const totalAulaPages = computed(() =>
   Math.ceil(allAulas.value.length / itemsPerAulaPage.value)
 )
 const paginatedAulas = computed(() => {
+  const data = safeArray(allAulas.value);
   const start = (currentAulaPage.value - 1) * itemsPerAulaPage.value
-  return allAulas.value.slice(start, start + itemsPerAulaPage.value)
+  return data.slice(start, start + itemsPerAulaPage.value)
 })
 
 const paginatedHorarios = computed(() => {
+  const data = safeArray(horarios.value);
   const start = (currentRangePage.value - 1) * itemsPerRangePage.value;
-  return horarios.value.slice(start, start + itemsPerRangePage.value);
+  return data.slice(start, start + itemsPerRangePage.value);
 });
 
 const totalHorarios = computed(() => 
@@ -861,8 +864,9 @@ const totalRangePages = computed(() =>
 );
 
 const paginatedRangos = computed(() => {
+  const data = safeArray(filteredRangos.value);
   const start = (currentRangePage.value - 1) * itemsPerRangePage.value;
-  return filteredRangos.value.slice(start, start + itemsPerRangePage.value);
+  return data.slice(start, start + itemsPerRangePage.value);
 });
 
 // === EXPAND/COLLAPSE AULA ===
@@ -889,7 +893,7 @@ const detalleHeaders = [
 const itemsPerDetailPage = ref(3)
 const detailPages = reactive({})
 function getDetalles(aulaId) {
-  return allDetalles.value.filter(d => Number(d.aula_id) === Number(aulaId))
+  return safeArray(allDetalles.value).filter(d => Number(d.aula_id) === Number(aulaId))
 }
 function getPaginatedDetalles(aulaId) {
   const detalles = getDetalles(aulaId)
@@ -1488,8 +1492,9 @@ async function fetchDocentes() {
 async function fetchFiltros() {
   try {
     const token = localStorage.getItem("token")
+    const profile = localStorage.getItem("profile")
     const response = await axios.get('https://amsoftsolution.com/amss/ws/wsConsultaFiltrosAlumno.php', {
-      params: { av_profile: 'demo' },
+      params: { av_profile: profile },
       headers: { Authorization: `Bearer ${token}` }
     })
     if(response.data.status) {

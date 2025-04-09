@@ -24,6 +24,7 @@ import Evaluaciones from '../components/Mantenimiento/PaginaEvaluaciones.vue';
 import DocentePlanEstudios from '../components/Estudios/PaginaDocentePlanEstudios.vue';
 import Matricula from '../components/Mantenimiento/PaginaMatricula.vue';
 import Alumnos from '../components/Mantenimiento/PaginaAlumno.vue';
+import Empleados from '../components/Mantenimiento/PaginaEmpleado.vue';
 
 const routes = [
   {
@@ -145,6 +146,11 @@ const routes = [
         path: 'alumnos',
         name: 'Alumnos',
         component: Alumnos
+      },
+      {
+        path: 'empleados',
+        name: 'Empleados',
+        component: Empleados
       }
       
     ]

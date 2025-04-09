@@ -273,7 +273,8 @@ export default {
         "Evaluaciones":"Evaluaciones",
         "Mi plan de estudios":"DocentePlanEstudios",
         "Matrícula":"Matricula",
-        "Alumnos":"Alumnos"      
+        "Alumnos":"Alumnos",
+        "Empleados":"Empleados"
       };
 
       // Verificar si la vista seleccionada existe en la lista
@@ -474,9 +475,9 @@ export default {
   flex: 1;
 }
 .sidebar {
-  width: 250px;
+  width: 200px;
   background: #f0f0f0;
-  padding: 10px;
+  padding: 5px;
   flex: none;
 }
 
@@ -493,7 +494,7 @@ export default {
   cursor: pointer;
   border-bottom: 1px solid #ddd;
   font-weight: bold;
-  font-size: 1.1em;
+  font-size: 1.0em;
   background: #e8e8e8;
   transition: background-color 0.3s ease;
   /* Se elimina el display: flex para que el submenu se muestre en bloque debajo */
@@ -507,7 +508,7 @@ export default {
 .menu .menu-icon {
   display: inline-block;
   vertical-align: middle;
-  width: 20px; /* Asegura un espacio reservado para el ícono */
+  width: 16px; /* Asegura un espacio reservado para el ícono */
   text-align: center;
   margin-right: 8px; /* Espacio entre el ícono y el texto */
 }
@@ -635,20 +636,19 @@ export default {
     height: auto;
     margin-right: 8px; /* separa un poco la imagen del texto */
   }
-
+}
 @media (min-width: 769px) {
   .rightbar {
     position: absolute;
     top: 80px; /* o el alto de tu cabecera */
     right: 0;
-    width: 400px;
+    width: 280px;
     height: calc(100vh - 80px);
     overflow-y: auto;
     background: #e8e8e8;
   }
   .main-content {
-    margin-right: 400px; /* espacio para que no lo tape el rightbar */
+    margin-right: 280px; /* espacio para que no lo tape el rightbar */
   }
-}
 }
 </style>

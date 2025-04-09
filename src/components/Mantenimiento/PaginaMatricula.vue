@@ -304,6 +304,7 @@ export default {
       return this.matriculados.slice(start, start + this.itemsPerPage);
     },
     aulasDetalleFormateadas() {
+      if (!Array.isArray(this.aulasDetalle)) return [];
       return this.aulasDetalle.map(item => ({
         ...item,
         aulaConcatenada: `${item.turn_nombre} - ${item.nive_nombre} - ${item.grad_nombre} - ${item.secc_nombre}`

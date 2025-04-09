@@ -4,7 +4,7 @@ import vuetify from './plugins/vuetify'; // Asegúrate de que el archivo existe 
 import router from './router';  // Importa el router
 import { VueReCaptcha } from 'vue-recaptcha-v3'
 import 'vuetify/styles';
-import '@/assets/global.css'
+import '@/utils/global.css'
 
 const app = createApp(App);
 

@@ -4,7 +4,7 @@
     <v-row class="mb-2">
       <v-col cols="12">
         <v-row class="mb-2" align="center" justify="space-between">
-          <h1 class="mb-2">Alumnos</h1>
+          <h1 class="mb-2">Empleados</h1>
           <v-btn color="primary" @click="openDialog()">
             <v-icon left>mdi-account-plus</v-icon>
             Agregar
@@ -13,7 +13,7 @@
 
         <!-- Filtros desktop -->
         <v-row v-if="!isMobile" class="mb-4" dense align="center">
-          <v-col cols="12" sm="6" md="4">
+          <v-col cols="12" sm="6" md="6">
             <v-text-field
               v-model="filtros.nombre"
               label="Buscar por nombre o apellido"
@@ -23,18 +23,18 @@
             />
           </v-col>
 
-          <v-col cols="6" sm="3" md="2">
+          <v-col cols="6" sm="3" md="3">
             <v-select
-              v-model="filtros.sexo"
-              :items="['M', 'F']"
-              label="Sexo"
+              v-model="filtros.cargo"
+              :items="cargosUnicos"
+              label="Cargo"
               clearable
-              prepend-inner-icon="mdi-gender-male-female"
+              prepend-inner-icon="mdi-briefcase"
               density="comfortable"
             />
           </v-col>
 
-          <v-col cols="6" sm="3" md="2">
+          <v-col cols="6" sm="3" md="3">
             <v-select
               v-model="filtros.estado"
               :items="['Activo', 'Inactivo']"
@@ -59,7 +59,7 @@
     <!-- Listado: Desktop -->
     <div v-if="!isMobile">
       <v-data-table
-        :items="alumnosFiltrados"
+        :items="empleadosFiltrados"
         :headers="tableHeaders"
         :items-per-page="10"
         class="elevation-1"
@@ -80,7 +80,7 @@
     <div v-else>
       <v-row>
         <v-col
-          v-for="(item, index) in paginatedAlumnos"
+          v-for="(item, index) in paginatedEmpleados"
           :key="item.pers_id"
           cols="12"
           sm="6"
@@ -119,7 +119,7 @@
     <!-- Diálogo de filtros en mobile -->
     <v-dialog v-model="dialogFiltros" max-width="400px" persistent>
       <v-card>
-        <v-card-title class="text-h6">Filtrar alumnos</v-card-title>
+        <v-card-title class="text-h6">Filtrar empleados</v-card-title>
         <v-card-text>
           <v-text-field
             v-model="filtros.nombre"
@@ -130,11 +130,11 @@
           />
 
           <v-select
-            v-model="filtros.sexo"
-            :items="['M', 'F']"
-            label="Sexo"
+            v-model="filtros.cargo"
+            :items="cargosUnicos"
+            label="Cargo"
             clearable
-            prepend-inner-icon="mdi-gender-male-female"
+            prepend-inner-icon="mdi-briefcase"
             density="comfortable"
           />
 
@@ -153,15 +153,15 @@
       </v-card>
     </v-dialog>
 
-    <!-- Diálogo para agregar/editar alumno -->
+    <!-- Diálogo para agregar/editar empleado -->
     <v-dialog v-model="dialog" max-width="600px">
       <v-card>
         <v-card-title>
           <span class="text-h6">{{ formTitle }}</span>
         </v-card-title>
         <v-card-text>
-          <v-form ref="alumnoForm" lazy-validation>
-            <!-- Campo fijo para tipo: Alumno -->
+          <v-form ref="empleadoForm" lazy-validation>
+            <!-- Campo fijo para tipo: empleado -->
             <v-text-field v-model="form.pers_nombres" label="Nombres" required></v-text-field>
             <v-text-field v-model="form.pers_apellido_paterno" label="Apellido Paterno" required></v-text-field>
             <v-text-field v-model="form.pers_apellido_materno" label="Apellido Materno"></v-text-field>
@@ -322,7 +322,7 @@ required
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn text @click="closeDialog">Cancelar</v-btn>
-          <v-btn color="primary" @click="saveAlumno">Guardar</v-btn>
+          <v-btn color="primary" @click="saveEmpleado">Guardar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -333,27 +333,27 @@ required
   import { ref, computed, onMounted, watch } from 'vue'
   import axios from 'axios'
   export default {
-    name: 'AlumnosPage',
+    name: 'EmpleadosPage',
     setup() {
 
       const filtros = ref({
         nombre: '',
-        sexo: null,
+        cargo: null,
         estado: null
       });
 
-      const alumnosFiltrados = computed(() => {
+      const empleadosFiltrados = computed(() => {
       const nombreFiltro = (filtros.value.nombre || '').toLowerCase();
-      const sexoFiltro = filtros.value.sexo || '';
+      const cargoFiltro = filtros.value.cargo || '';
       const estadoFiltro = filtros.value.estado || '';
 
-      return alumnosConIndice.value.filter(alumno => {
-        const nombreCompleto = `${alumno.pers_nombres} ${alumno.pers_apellido_paterno} ${alumno.pers_apellido_materno}`.toLowerCase();
+      return empleadosConIndice.value.filter(empleado => {
+        const nombreCompleto = `${empleado.pers_nombres} ${empleado.pers_apellido_paterno} ${empleado.pers_apellido_materno}`.toLowerCase();
 
         return (
           (!nombreFiltro || nombreCompleto.includes(nombreFiltro)) &&
-          (!sexoFiltro || alumno.pers_sexo === sexoFiltro) &&
-          (!estadoFiltro || alumno.pers_estado === estadoFiltro)
+          (!cargoFiltro || empleado.emca_descripcion === cargoFiltro) &&
+          (!estadoFiltro || empleado.pers_estado === estadoFiltro)
         );
       });
     });
@@ -361,7 +361,7 @@ required
 
         
       const requiredRule = v => !!v || 'Este campo es obligatorio';
-      const alumnoForm = ref(null);
+      const empleadoForm = ref(null);
 
       // Obtener token y profile desde localStorage
         const token = localStorage.getItem('token')
@@ -380,7 +380,7 @@ required
         });
 
       // Datos reactivos
-      const alumnos = ref([]);
+      const empleados = ref([]);
       const dialog = ref(false);
       const menuFechaNacimiento = ref(false);
       const currentPage = ref(1);
@@ -444,6 +444,11 @@ required
         return prov ? prov.distritos : [];
       });
   
+      const cargosUnicos = computed(() => {
+        const cargos = empleados.value.map(emp => emp.emca_descripcion).filter(Boolean);
+        return [...new Set(cargos)];
+      });
+
       // Watchers para reiniciar los selects:
       watch(() => form.value.ubig_codigo_departamento, (newVal, oldVal) => {
         // Solo reinicia si oldVal ya tenía un valor (para evitar reinicio al cargar inicialmente)
@@ -467,23 +472,24 @@ required
         { title: 'Tipo doc', value: 'tipo_documento_identidad_abreviacion' },
         { title: 'Documento', value: 'pers_numero_documento_identidad' },
         { title: 'Sexo', value: 'pers_sexo' },
+        { title: 'Cargo', value: 'emca_descripcion' },
         { title: 'Estado', value: 'pers_estado' },
         { title: 'Acciones', value: 'actions', sortable: false }
       ];
   
       const isMobile = computed(() => window.innerWidth < 600);
       const itemsPerPageMobile = 5;
-      const paginatedAlumnos = computed(() => {
+      const paginatedEmpleados = computed(() => {
         const start = (currentPage.value - 1) * itemsPerPageMobile;
-        return alumnosFiltrados.value.slice(start, start + itemsPerPageMobile);
+        return empleadosFiltrados.value.slice(start, start + itemsPerPageMobile);
       });
       const mobilePageCount = computed(() =>
-        Math.ceil(alumnosFiltrados.value.length / itemsPerPageMobile)
+        Math.ceil(empleadosFiltrados.value.length / itemsPerPageMobile)
       );
-      const alumnosConIndice = computed(() =>
-        alumnos.value.map((item, index) => ({ ...item, correlativo: index + 1 }))
+      const empleadosConIndice = computed(() =>
+        empleados.value.map((item, index) => ({ ...item, correlativo: index + 1 }))
       );
-      const formTitle = computed(() => (form.value.pers_id ? 'Editar Alumno' : 'Agregar Alumno'));
+      const formTitle = computed(() => (form.value.pers_id ? 'Editar Empleado' : 'Agregar Empleado'));
   
       // Formateo de la fecha en dd/mm/yyyy
       const formattedFecha = computed({
@@ -501,23 +507,23 @@ required
         }
       });
   
-      // Cargar alumnos
-      const loadAlumnos = async () => {
+      // Cargar Empleados
+      const loadEmpleados = async () => {
         try {
-          const res = await apiClient.get('wsConsultaAlumnos.php', {
+          const res = await apiClient.get('wsConsultaEmpleados.php', {
             params: { av_profile: profile }
           });
           if (res.data.status) {
-            alumnos.value = res.data.data;
+            empleados.value = res.data.data;
           } else {
             console.error('No se obtuvieron resultados');
           }
         } catch (error) {
-          console.error('Error al cargar alumnos', error);
+          console.error('Error al cargar empleados', error);
         }
       };
   
-      // Abrir diálogo para agregar/editar alumno
+      // Abrir diálogo para agregar/editar empleado
       const openDialog = async (item = null) => {
         // Asegurarse de que el calendario esté cerrado
         menuFechaNacimiento.value = false;
@@ -567,8 +573,8 @@ required
         });
       }
   
-      const saveAlumno = async () => {
-        const formValid = await alumnoForm.value.validate();
+      const saveEmpleado = async () => {
+        const formValid = await empleadoForm.value.validate();
         if (!formValid.valid) {
           scrollToFirstInvalidField();
           return; // No guardar si hay errores
@@ -610,12 +616,12 @@ required
                 }
                 };
             // Se realiza la petición POST al API
-            const res = await axios.post('https://amsoftsolution.com/amss/ws/wsActualizaAlumno.php', data, config);
+            const res = await axios.post('https://amsoftsolution.com/amss/ws/wsActualizaEmpleado.php', data, config);
             if (res.data.status) {
-            console.log('Alumno actualizado exitosamente');
-            // Aquí puedes recargar la lista de alumnos o realizar otra acción necesaria.
+            console.log('Empleado actualizado exitosamente');
+            // Aquí puedes recargar la lista de empleados o realizar otra acción necesaria.
             } else {
-            console.error('Error al actualizar alumno:', res.data.message);
+            console.error('Error al actualizar empleado:', res.data.message);
             }
         } catch (error) {
             console.error('Error en la petición de actualización:', error);
@@ -623,7 +629,7 @@ required
         } else {
             try {
                 const data = {
-                    ac_pers_tipo: 'A', //Alumnos
+                    ac_pers_tipo: 'E', //empleados
                     av_pers_apellido_paterno: form.value.pers_apellido_paterno,
                     av_pers_apellido_materno: form.value.pers_apellido_materno,
                     av_pers_nombres: form.value.pers_nombres,
@@ -654,22 +660,22 @@ required
                     }
                 };
 
-                const res = await axios.post('https://amsoftsolution.com/amss/ws/wsRegistraAlumno.php', data, config);
+                const res = await axios.post('https://amsoftsolution.com/amss/ws/wsRegistraEmpleado.php', data, config);
                 if (res.data.status) {
-                    console.log('Alumno registrado exitosamente');
+                    console.log('Empleado registrado exitosamente');
                 } else {
-                    console.error('Error al registrar alumno:', res.data.message);
+                    console.error('Error al registrar Empleado:', res.data.message);
                 }
                 } catch (error) {
                 console.error('Error en la petición de registro:', error);
                 }
             }
-            await loadAlumnos();
+            await loadEmpleados();
             closeDialog();
             };
   
       onMounted(async () => {
-        await loadAlumnos();
+        await loadEmpleados();
         await fetchTidiOptions();
         await fetchUbigeoData();
       });
@@ -690,8 +696,8 @@ required
       };
   
       return {
-        alumnos,
-        alumnosConIndice,
+        empleados,
+        empleadosConIndice,
         dialog,
         form,
         menu: menuFechaNacimiento,
@@ -703,7 +709,7 @@ required
         tableHeaders,
         isMobile,
         currentPage,
-        paginatedAlumnos,
+        paginatedEmpleados,
         mobilePageCount,
         itemsPerPageMobile,
         formTitle,
@@ -712,11 +718,12 @@ required
         estadoOptions,
         openDialog,
         closeDialog,
-        saveAlumno,
+        saveEmpleado,
         requiredRule,
-        alumnoForm,
+        empleadoForm,
         filtros,
-        alumnosFiltrados
+        empleadosFiltrados,
+        cargosUnicos
       };
     }
   };

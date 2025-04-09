@@ -2,7 +2,7 @@
   <div class="login-wrapper">
     <v-app>
       <v-container class="d-flex justify-center align-center" style="min-height: 100vh">
-        <v-card class="pa-6" max-width="420" width="100%" elevation="10" outlined>
+        <v-card class="pa-6" max-width="380" width="100%" elevation="10" outlined>
           <!-- Logo -->
           <v-img src="./logo.webp" height="120" contain class="mx-auto mb-2" />
 
