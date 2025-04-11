@@ -293,28 +293,67 @@
     </v-dialog>
 
     <!-- Diálogo: Agregar CURSO a un docente -->
-    <v-dialog v-model="dialogoAgregarCurso.visible" max-width="500">
-      <v-card>
-        <v-card-title>
-          <span class="text-h6">Agregar Curso a {{ dialogoAgregarCurso.docente?.docente }}</span>
-        </v-card-title>
-        <v-card-text>
-          <v-select
-            v-model="cursosSeleccionados"
-            :items="cursosNoAsignados"
-            item-value="aede_id"
-            item-title="aede_nombre"
-            label="Cursos disponibles"
-            multiple
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="cerrarDialogoAgregarCurso">Cancelar</v-btn>
-          <v-btn color="primary" @click="asignarCursosDocente">Guardar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <v-dialog v-model="dialogoAgregarCurso.visible" max-width="600">
+    <v-card>
+      <v-card-title>
+        <span class="text-h6">Agregar Cursos a {{ dialogoAgregarCurso.docente?.docente }}</span>
+      </v-card-title>
+      <v-card-text>
+        <v-select
+          v-model="cursosSeleccionados"
+          :items="cursosNoAsignados"
+          item-value="aede_id"
+          item-title="aede_nombre"
+          label="Cursos disponibles"
+          multiple
+
+          class="curso-select"
+          chips
+          closable-chips
+          :menu-props="{ maxHeight: '300' }"
+        >
+          <!-- CABECERA CON DOS COLUMNAS -->
+          <template #prepend-item>
+            <v-list-item class="curso-header" title="">
+              <v-row class="w-100" no-gutters>
+                <v-col cols="6" class="curso-area-header">Área Educativa</v-col>
+                <v-col cols="6" class="curso-nombre-header">Curso</v-col>
+              </v-row>
+            </v-list-item>
+            <v-divider />
+          </template>
+
+          <!-- ÍTEMS EN DOS COLUMNAS CON CHECKBOX -->
+          <template #item="{ item, props }">
+            <v-list-item v-bind="props" :title="null">
+              <!-- <template #prepend>
+                <v-checkbox-btn :model-value="props.selected" />
+              </template> -->
+              <v-row class="curso-item-row w-100" no-gutters>
+                <v-col cols="6" class="curso-area">{{ item.raw.ared_nombre }}</v-col>
+                <v-col cols="6" class="curso-nombre">{{ item.raw.aede_nombre }}</v-col>
+              </v-row>
+            </v-list-item>
+          </template>
+
+          <!-- Mostrar seleccionado como resumen de chips -->
+          <template #selection="{ item, index }">
+            <template v-if="index < 3">
+              <v-chip small>{{ item.aede_nombre }}</v-chip>
+            </template>
+            <template v-else-if="index === 3">
+              <v-chip small>+{{ cursosSeleccionados.length - 3 }} más</v-chip>
+            </template>
+          </template>
+        </v-select>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" @click="cerrarDialogoAgregarCurso">Cancelar</v-btn>
+        <v-btn color="primary" @click="asignarCursosDocente">Guardar</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   </v-container>
 </template>
 
@@ -322,15 +361,16 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useDisplay } from 'vuetify'
+import { safeArray } from '@/utils/global.js'
 
 /** DETECTAR BREAKPOINTS */
 const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
 
 /** PARÁMETROS (localstorage) */
-const anioEscolar = localStorage.getItem('ac_anio_escolar') || '2025'
-const profile = localStorage.getItem('av_profile') || 'demo'
-const token = localStorage.getItem('token') || ''
+const anioEscolar = localStorage.getItem('anio_escolar')
+const profile = localStorage.getItem('profile')
+const token = localStorage.getItem('token')
 
 /** DATA REACTIVA */
 const docentesAsignados = ref([])
@@ -405,13 +445,18 @@ async function obtenerDocentesAsignados() {
   try {
     const url = `wsListaAnioEscolarDocentes.php?ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
     const { data } = await axiosInstance.get(url)
-    if (data.status) {
+    if (data.status && Array.isArray(data.data)) {
       docentesAsignados.value = data.data
+    } else {
+      console.warn('La API no retornó un array en docentesAsignados:', data.data)
+      docentesAsignados.value = []
     }
   } catch (err) {
     console.error('Error al obtener docentes asignados:', err)
+    docentesAsignados.value = []
   }
 }
+
 async function obtenerDocentesNoAsignados() {
   try {
     const url = `wsListaAnioEscolarNoDocentes.php?ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
@@ -427,17 +472,17 @@ async function obtenerCursosDocentes() {
   try {
     const url = `wsListaDocenteAreaEducativaDetalle.php?ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
     const resp = await axiosInstance.get(url)
-    if (resp.data.status) {
-      cursosDocentes.value = resp.data.data
-    }
+    cursosDocentes.value = safeArray(resp.data.data)
   } catch (err) {
     console.error('Error al obtener cursos:', err)
+    cursosDocentes.value = []
   }
 }
 
+
 /** FILTRAR CURSOS X DOCENTE (aedo_id) */
 function filtrarCursosDocente(aedoId) {
-  return cursosDocentes.value.filter(c => c.aedo_id === aedoId)
+  return safeArray(cursosDocentes.value).filter(c => c.aedo_id === aedoId)
 }
 
 /** EDITAR ESTADO DEL DOCENTE */
@@ -511,12 +556,13 @@ async function cargarCursosNoAsignadosDocente(aedoId) {
     const url = `wsListaDocenteNoAreaEducativaDetalle.php?ai_aedo_id=${aedoId}&ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
     const resp = await axiosInstance.get(url)
     if (resp.data.status) {
-      cursosNoAsignados.value = resp.data.data
+      cursosNoAsignados.value = safeArray(resp.data.data)
     }
   } catch (err) {
     console.error('Error al cargar cursos no asignados:', err)
   }
 }
+
 async function asignarCursosDocente() {
   try {
     const doc = dialogoAgregarCurso.value.docente
@@ -558,19 +604,52 @@ function cerrarDialogoAgregarDocentes() {
 </script>
 
 <style scoped>
-/* Ajusta los estilos a tu gusto */
-
-/* Ejemplo: Asegurar que los textos se alineen a la izquierda */
 .v-card, .v-list-item {
   text-align: left;
 }
-
-/* Estilos para resaltar la fila/tarjeta expandida */
 .expanded-teacher-row {
   background-color: #e0f7fa;
 }
-
 .expanded-teacher-card {
   background-color: #e0f7fa;
+}
+
+.curso-header {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #444;
+  pointer-events: none;
+  padding: 0 8px;
+  background-color: #f5f5f5;
+}
+.curso-area-header,
+.curso-nombre-header {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.curso-item-row {
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  background-color: white !important;
+  color: #212121 !important;
+}
+.curso-area,
+.curso-nombre {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #212121 !important;
+}
+.curso-area {
+  text-align: left;
+}
+.curso-nombre {
+  text-align: left;
 }
 </style>

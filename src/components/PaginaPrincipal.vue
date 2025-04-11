@@ -93,7 +93,7 @@
       </section>
 
       <aside class="rightbar">
-        <h3 class="text-subtitle-1 font-weight-bold text-center mb-3">📰 Novedades</h3>
+        <!-- <h3 class="text-subtitle-1 font-weight-bold text-center mb-3">📰 Novedades</h3> -->
         <AnunciosPublicados/>
       </aside>
     </div>
@@ -260,6 +260,7 @@ export default {
         "Mi asistencia ": "ConsultaAsistenciaEmpleado",
         "Calendario escolar": "CalendarioEscolar",
         "Registro de asistencia": "RegistroAsistencia",
+        "Registrar asistencia": "TutorRegistroAsistencia",
         "Mis notas": "AlumnoMisNotas",
         "Cursos del docente": "DocenteMisCursos",
         "Cursos": "MisCursos",
@@ -390,7 +391,7 @@ export default {
 </script>
 
 <style scoped>
-/* Diseño Layout 1 */
+/* Layout principal */
 .layout1 {
   display: flex;
   flex-direction: column;
@@ -406,6 +407,7 @@ export default {
   justify-content: space-between;
   padding: 10px;
   position: relative;
+  z-index: 1000;
 }
 
 .logo {
@@ -415,12 +417,14 @@ export default {
 .logo img {
   height: 50px;
   width: 50px;
-  position: center;
 }
 
-.NombreCentroEducativo {
-  flex: 1;
-  text-align: left;
+.NombreCentroEducativo h1 {
+  font-size: 1.2rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user {
@@ -430,7 +434,6 @@ export default {
 
 .user-info {
   position: relative;
-  display: inline-block;
   cursor: pointer;
 }
 
@@ -469,18 +472,87 @@ export default {
   background: #eee;
 }
 
+/* 📐 Contenedor principal con 3 columnas */
 .main-content {
   display: flex;
-  flex-wrap: nowrap;
   flex: 1;
-}
-.sidebar {
-  width: 200px;
-  background: #f0f0f0;
-  padding: 5px;
-  flex: none;
+  flex-wrap: nowrap;
 }
 
+/* 🧭 Menú lateral izquierdo */
+/* 🧭 Menú lateral izquierdo */
+.sidebar {
+  flex: 0 0 16%; /* ancho base proporcional */
+  min-width: 160px;
+  max-width: 220px;
+  background: #f0f0f0;
+  padding: 5px;
+}
+
+/* 📄 Contenido dinámico central */
+.content {
+  flex: 1 1 auto; /* se expande */
+  min-width: 0;
+  padding: 10px;
+  background: white;
+  overflow-x: auto;
+}
+
+/* 📰 Columna derecha (novedades) */
+.rightbar {
+  flex: 0 0 20%;
+  min-width: 200px;
+  max-width: 300px;
+  background: #e8e8e8;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* ✨ Mejora visual del carrusel y banner */
+.rightbar v-sheet {
+  padding: 5px;
+  height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.rightbar v-carousel {
+  max-height: 120px;
+  overflow: hidden;
+}
+
+.rightbar v-carousel-item {
+  height: 120px;
+}
+
+.rightbar v-img {
+  max-height: 120px;
+  object-fit: cover;
+}
+
+.rightbar h3 {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.banner-carousel {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.banner-carousel .v-carousel__controls,
+.banner-carousel .v-carousel__controls button {
+  display: none !important;
+}
+
+/* 📂 Menú y submenús */
 .menu {
   list-style: none;
   padding: 0;
@@ -488,29 +560,18 @@ export default {
 }
 
 .menu > li {
-  
-  align-items: center; /* Asegura que el ícono y el texto estén alineados */
   padding: 12px 10px;
   cursor: pointer;
   border-bottom: 1px solid #ddd;
   font-weight: bold;
-  font-size: 1.0em;
+  font-size: 1em;
   background: #e8e8e8;
   transition: background-color 0.3s ease;
-  /* Se elimina el display: flex para que el submenu se muestre en bloque debajo */
 }
 
 .menu > li.active,
 .menu > li:hover {
   background: #d0d0d0;
-}
-
-.menu .menu-icon {
-  display: inline-block;
-  vertical-align: middle;
-  width: 16px; /* Asegura un espacio reservado para el ícono */
-  text-align: center;
-  margin-right: 8px; /* Espacio entre el ícono y el texto */
 }
 
 .submenu {
@@ -535,71 +596,7 @@ export default {
   border-left: 3px solid #1976D2;
 }
 
-.content {
-  flex: 1;
-  min-width: 0; /* 🔑 Esto permite que respete el ancho del contenedor */
-  padding: 10px;
-  background: white;
-  overflow-x: auto; /* opcional: scroll si hay mucho contenido horizontal */
-}
-
-.rightbar {
-  width: 400px; /* Fijamos el ancho exacto que deseas */
-  flex-shrink: 0; /* 🔑 Evita que se reduzca o desaparezca si no hay espacio */
-  background: #e8e8e8;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* 🔹 Reducir la altura del banner */
-.rightbar v-sheet {
-  padding: 5px; /* Reduce el padding */
-  height: 160px; /* Limita la altura total */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-  overflow: hidden;
-}
-
-/* 🔹 Reducir altura del carrusel */
-.rightbar v-carousel {
-  max-height: 120px; /* Reduce la altura del carrusel */
-  overflow: hidden;
-}
-
-.rightbar v-carousel-item {
-  height: 120px; /* Asegura que los elementos no sean más altos */
-}
-
-/* 🔹 Ajustar las imágenes dentro del carrusel */
-.rightbar v-img {
-  max-height: 120px; /* Limita la altura de la imagen */
-  object-fit: cover; /* Asegura que la imagen se ajuste */
-}
-
-/* 🔹 Ajustar la posición de la sección "Anuncios" */
-.rightbar h3 {
-  margin-top: 20px; /* Reduce el espacio entre el banner y los anuncios */
-  text-align: center;
-}
-
-/* 🔹 Ajuste del carrusel */
-.banner-carousel {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-}
-
-/* 🔹 Ocultar los botones de navegación del carrusel */
-.banner-carousel .v-carousel__controls,
-.banner-carousel .v-carousel__controls button {
-  display: none !important;
-}
-
-/* Transición para el submenu */
+/* 🎬 Transición para submenu */
 .fade-enter-active, .fade-leave-active {
   transition: all 0.3s ease;
 }
@@ -608,15 +605,43 @@ export default {
   transform: translateY(-10px);
 }
 
+/* 📱 Estilos para mobile */
 @media (max-width: 768px) {
   .main-content {
     flex-direction: column;
   }
+
+  .sidebar,
+  .logo,
+  .NombreCentroEducativo {
+    display: none !important;
+  }
+
+  .rightbar {
+    width: 100% !important;
+    max-width: 100%;
+    flex: none;
+    position: static !important;
+    height: auto !important;
+    margin-top: 16px;
+    background: #f5f5f5;
+  }
+
+  .content {
+    width: 100% !important;
+  }
+}
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+  }
+
   .sidebar,
   .logo,
   .NombreCentroEducativo {
     display: none;
   }
+
   .rightbar {
     width: 100%;
     position: static !important;
@@ -624,31 +649,29 @@ export default {
     margin-top: 16px;
     background: #f5f5f5;
   }
+
   .menu-header {
     display: flex;
     align-items: center;
-    /* Opcional: un padding o margin si deseas */
-    /* padding: 8px; */
   }
 
   .menu-logo-mobile {
-    max-width: 40px; /* Ajusta este valor a tu preferencia */
+    max-width: 40px;
     height: auto;
-    margin-right: 8px; /* separa un poco la imagen del texto */
+    margin-right: 8px;
   }
 }
-@media (min-width: 769px) {
-  .rightbar {
-    position: absolute;
-    top: 80px; /* o el alto de tu cabecera */
-    right: 0;
-    width: 280px;
-    height: calc(100vh - 80px);
-    overflow-y: auto;
-    background: #e8e8e8;
+
+/* 💻 Ajuste en pantallas grandes */
+@media (min-width: 1024px) {
+  .NombreCentroEducativo h1 {
+    font-size: 1.3rem;
   }
-  .main-content {
-    margin-right: 280px; /* espacio para que no lo tape el rightbar */
+}
+
+@media (max-width: 1023px) {
+  .NombreCentroEducativo h1 {
+    font-size: 1rem;
   }
 }
 </style>

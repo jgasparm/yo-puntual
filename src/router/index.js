@@ -9,6 +9,7 @@ import MiAsistencia from '../components/Asistencia/PaginaConsultaAsistenciaAlumn
 import ConsultaAsistenciaEmpleado from '../components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue';
 import CalendarioEscolar from '../components/Estudios/PaginaCalendarioEscolar.vue';
 import RegistroAsistencia from '../components/Asistencia/PaginaRegistroAsistencia.vue';
+import TutorRegistroAsistencia from '../components/Asistencia/PaginaTutorRegistroAsistencia.vue';
 import AlumnoMisNotas from '../components/Estudios/PaginaAlumnoMisNotas.vue';
 import DashboardAlumno from '../components/Dashboard/PaginaDashboardAlumno.vue';
 import DocenteMisCursos from '../components/Estudios/PaginaDocenteMisCursos.vue';
@@ -151,8 +152,12 @@ const routes = [
         path: 'empleados',
         name: 'Empleados',
         component: Empleados
+      },
+      {
+        path: 'tutor-registro-asistencia',
+        name: 'TutorRegistroAsistencia',
+        component: TutorRegistroAsistencia
       }
-      
     ]
   }
 ];

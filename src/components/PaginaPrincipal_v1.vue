@@ -93,7 +93,7 @@
       </section>
 
       <aside class="rightbar">
-        <h3 class="text-subtitle-1 font-weight-bold text-center mb-3">📰 Novedades</h3>
+        <!-- <h3 class="text-subtitle-1 font-weight-bold text-center mb-3">📰 Novedades</h3> -->
         <AnunciosPublicados/>
       </aside>
     </div>
@@ -115,23 +115,8 @@
 </template>
 
 <script>
-// Importa tus componentes reales. Aquí se usan nombres de ejemplo.
-// import Inicio from "@/components/PaginaInicio.vue";
-// import RegistroAsistencia from "@/components/Asistencia/PaginaAsistencia.vue";
-// import ConsultaAsistenciaAlumnos from "@/components/Asistencia/PaginaConsultaAsistenciaAlumnos.vue";
-// import ConsultaAsistenciaEmpleados from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleados.vue";
-// import ConsultaAsistenciaAlumno from "@/components/Asistencia/PaginaConsultaAsistenciaAlumno.vue";
-// import ConsultaAsistenciaEmpleado from "@/components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue";
-// import CalendarioEscolar from "@/components/Estudios/PaginaCalendarioEscolar.vue";
-// import MisNotas from "@/components/Estudios/PaginaAlumnoMisNotas.vue";
-// import DocenteMisCursos from "@/components/Estudios/PaginaDocenteMisCursos.vue";
-// import DocenteMisCursosDetalle from "@/components/Estudios/PaginaDocenteMisCursosDetalle.vue";
-// import DashboardAlumno from "@/components/Dashboard/PaginaDashboardAlumno.vue";
-
-
 
 // Para validar si venció el token
-//import jwtDecode from 'jwt-decode';
 import AnunciosPublicados from '@/components/PaginaAnunciosPublicados.vue'
 export default {
   name: "MainLayoutDesign1",
@@ -274,7 +259,7 @@ export default {
         "Mi asistencia": "MiAsistencia",
         "Mi asistencia ": "ConsultaAsistenciaEmpleado",
         "Calendario escolar": "CalendarioEscolar",
-        "Registro de asistencias": "RegistroAsistencia",
+        "Registro de asistencia": "RegistroAsistencia",
         "Mis notas": "AlumnoMisNotas",
         "Cursos del docente": "DocenteMisCursos",
         "Cursos": "MisCursos",
@@ -288,7 +273,8 @@ export default {
         "Evaluaciones":"Evaluaciones",
         "Mi plan de estudios":"DocentePlanEstudios",
         "Matrícula":"Matricula",
-        "Alumnos":"Alumnos"      
+        "Alumnos":"Alumnos",
+        "Empleados":"Empleados"
       };
 
       // Verificar si la vista seleccionada existe en la lista
@@ -404,7 +390,7 @@ export default {
 </script>
 
 <style scoped>
-/* Diseño Layout 1 */
+/* Layout principal */
 .layout1 {
   display: flex;
   flex-direction: column;
@@ -420,6 +406,7 @@ export default {
   justify-content: space-between;
   padding: 10px;
   position: relative;
+  z-index: 1000;
 }
 
 .logo {
@@ -429,12 +416,14 @@ export default {
 .logo img {
   height: 50px;
   width: 50px;
-  position: center;
 }
 
-.NombreCentroEducativo {
-  flex: 1;
-  text-align: left;
+.NombreCentroEducativo h1 {
+  font-size: 1.2rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user {
@@ -444,7 +433,6 @@ export default {
 
 .user-info {
   position: relative;
-  display: inline-block;
   cursor: pointer;
 }
 
@@ -483,19 +471,83 @@ export default {
   background: #eee;
 }
 
+/* 📐 Contenedor principal con 3 columnas */
 .main-content {
   display: flex;
-  flex-wrap: nowrap;
   flex: 1;
-  overflow: hidden; /* Previene que se expanda de más */
-}
-.sidebar {
-  width: 250px;
-  background: #f0f0f0;
-  padding: 10px;
-  flex: none;
+  flex-wrap: nowrap;
 }
 
+/* 🧭 Menú lateral izquierdo */
+.sidebar {
+  width: 200px;
+  background: #f0f0f0;
+  padding: 5px;
+  flex-shrink: 0;
+}
+
+/* 📄 Contenido dinámico central */
+.content {
+  flex-grow: 1;
+  min-width: 0;
+  padding: 10px;
+  background: white;
+  overflow-x: auto;
+}
+
+/* 📰 Columna derecha (novedades) */
+.rightbar {
+  width: 280px;
+  flex-shrink: 0;
+  background: #e8e8e8;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ✨ Mejora visual del carrusel y banner */
+.rightbar v-sheet {
+  padding: 5px;
+  height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.rightbar v-carousel {
+  max-height: 120px;
+  overflow: hidden;
+}
+
+.rightbar v-carousel-item {
+  height: 120px;
+}
+
+.rightbar v-img {
+  max-height: 120px;
+  object-fit: cover;
+}
+
+.rightbar h3 {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.banner-carousel {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.banner-carousel .v-carousel__controls,
+.banner-carousel .v-carousel__controls button {
+  display: none !important;
+}
+
+/* 📂 Menú y submenús */
 .menu {
   list-style: none;
   padding: 0;
@@ -503,29 +555,18 @@ export default {
 }
 
 .menu > li {
-  
-  align-items: center; /* Asegura que el ícono y el texto estén alineados */
   padding: 12px 10px;
   cursor: pointer;
   border-bottom: 1px solid #ddd;
   font-weight: bold;
-  font-size: 1.1em;
+  font-size: 1em;
   background: #e8e8e8;
   transition: background-color 0.3s ease;
-  /* Se elimina el display: flex para que el submenu se muestre en bloque debajo */
 }
 
 .menu > li.active,
 .menu > li:hover {
   background: #d0d0d0;
-}
-
-.menu .menu-icon {
-  display: inline-block;
-  vertical-align: middle;
-  width: 20px; /* Asegura un espacio reservado para el ícono */
-  text-align: center;
-  margin-right: 8px; /* Espacio entre el ícono y el texto */
 }
 
 .submenu {
@@ -550,71 +591,7 @@ export default {
   border-left: 3px solid #1976D2;
 }
 
-.content {
-  flex: 1;
-  min-width: 0; /* 🔑 Esto permite que respete el ancho del contenedor */
-  padding: 10px;
-  background: white;
-  overflow-x: auto; /* opcional: scroll si hay mucho contenido horizontal */
-}
-
-.rightbar {
-  width: 400px; /* Fijamos el ancho exacto que deseas */
-  flex-shrink: 0; /* 🔑 Evita que se reduzca o desaparezca si no hay espacio */
-  background: #e8e8e8;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* 🔹 Reducir la altura del banner */
-.rightbar v-sheet {
-  padding: 5px; /* Reduce el padding */
-  height: 160px; /* Limita la altura total */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-  overflow: hidden;
-}
-
-/* 🔹 Reducir altura del carrusel */
-.rightbar v-carousel {
-  max-height: 120px; /* Reduce la altura del carrusel */
-  overflow: hidden;
-}
-
-.rightbar v-carousel-item {
-  height: 120px; /* Asegura que los elementos no sean más altos */
-}
-
-/* 🔹 Ajustar las imágenes dentro del carrusel */
-.rightbar v-img {
-  max-height: 120px; /* Limita la altura de la imagen */
-  object-fit: cover; /* Asegura que la imagen se ajuste */
-}
-
-/* 🔹 Ajustar la posición de la sección "Anuncios" */
-.rightbar h3 {
-  margin-top: 20px; /* Reduce el espacio entre el banner y los anuncios */
-  text-align: center;
-}
-
-/* 🔹 Ajuste del carrusel */
-.banner-carousel {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-}
-
-/* 🔹 Ocultar los botones de navegación del carrusel */
-.banner-carousel .v-carousel__controls,
-.banner-carousel .v-carousel__controls button {
-  display: none !important;
-}
-
-/* Transición para el submenu */
+/* 🎬 Transición para submenu */
 .fade-enter-active, .fade-leave-active {
   transition: all 0.3s ease;
 }
@@ -623,36 +600,48 @@ export default {
   transform: translateY(-10px);
 }
 
+/* 📱 Estilos para mobile */
 @media (max-width: 768px) {
   .main-content {
     flex-direction: column;
   }
+
   .sidebar,
   .logo,
   .NombreCentroEducativo {
     display: none;
   }
+
   .rightbar {
     width: 100%;
+    position: static !important;
+    height: auto !important;
+    margin-top: 16px;
+    background: #f5f5f5;
   }
+
   .menu-header {
     display: flex;
     align-items: center;
-    /* Opcional: un padding o margin si deseas */
-    /* padding: 8px; */
   }
 
   .menu-logo-mobile {
-    max-width: 40px; /* Ajusta este valor a tu preferencia */
+    max-width: 40px;
     height: auto;
-    margin-right: 8px; /* separa un poco la imagen del texto */
+    margin-right: 8px;
   }
+}
 
-  @media (max-width: 768px) {
-    /* Ajustes extra si deseas que sea aún más pequeño en móviles */
-    .menu-logo-mobile {
-      max-width: 35px;
-    }
+/* 💻 Ajuste en pantallas grandes */
+@media (min-width: 1024px) {
+  .NombreCentroEducativo h1 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .NombreCentroEducativo h1 {
+    font-size: 1rem;
   }
 }
 </style>

@@ -726,11 +726,22 @@ function isEvaluationExpanded(pacuId) {
 
 // Llamadas a WS
 async function obtenerPlanesEstudio() {
-  const { data } = await axiosInstance.get(
-    `wsConsultaPlanEstudios.php?ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
-  )
-  if (data.status) planesEstudio.value = data.data
+  try {
+    const { data } = await axiosInstance.get(
+      `wsConsultaPlanEstudios.php?ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
+    )
+    if (data.status && Array.isArray(data.data)) {
+      planesEstudio.value = data.data
+    } else {
+      console.warn('Respuesta inesperada en planesEstudio:', data.data)
+      planesEstudio.value = [] // fallback vacío
+    }
+  } catch (error) {
+    console.error('Error al obtener planes de estudio:', error)
+    planesEstudio.value = []
+  }
 }
+
 async function obtenerPlanCurricular(id) {
   const { data } = await axiosInstance.get(
     `wsConsultaPlanCurricular.php?ai_ples_id=${id}&av_profile=${profile}`
@@ -793,15 +804,24 @@ async function obtenerPlanCurricularEvaluaciones(pacuId) {
 
 // Obtener Áreas y Niveles/Grados
 async function obtenerAreasEducativas() {
-  const { data } = await axiosInstance.get(
-    `wsListaAreaEducativa.php?ac_indicador_todos=N&av_profile=${profile}`
-  )
-  if (data.status) {
-    areasOptions.value = [{ title: 'TODOS', key: 'TODOS' }].concat(
-      data.data.map(a => ({ title: a.ared_nombre, key: a.ared_id }))
+  try {
+    const { data } = await axiosInstance.get(
+      `wsListaAreaEducativa.php?ac_indicador_todos=N&av_profile=${profile}`
     )
+    if (data.status && Array.isArray(data.data)) {
+      areasOptions.value = [{ title: 'TODOS', key: 'TODOS' }].concat(
+        data.data.map(a => ({ title: a.ared_nombre, key: a.ared_id }))
+      )
+    } else {
+      console.warn('Respuesta inesperada en áreas educativas:', data.data)
+      areasOptions.value = [{ title: 'TODOS', key: 'TODOS' }]
+    }
+  } catch (error) {
+    console.error('Error al obtener áreas educativas:', error)
+    areasOptions.value = [{ title: 'TODOS', key: 'TODOS' }]
   }
 }
+
 async function obtenerNivelesGrados() {
   const { data } = await axiosInstance.get(`wsListaNivelGradoAlumno.php?av_profile=${profile}`)
   if (data.status) {

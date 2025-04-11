@@ -162,19 +162,26 @@
         <v-card-text>
           <v-form ref="empleadoForm" lazy-validation>
             <!-- Campo fijo para tipo: empleado -->
-            <v-text-field v-model="form.pers_nombres" label="Nombres" required></v-text-field>
-            <v-text-field v-model="form.pers_apellido_paterno" label="Apellido Paterno" required></v-text-field>
-            <v-text-field v-model="form.pers_apellido_materno" label="Apellido Materno"></v-text-field>
+            <v-text-field class="campo-obligatorio" v-model="form.pers_nombres" label="Nombres" required></v-text-field>
+            <v-text-field class="campo-obligatorio" v-model="form.pers_apellido_paterno" label="Apellido Paterno" required></v-text-field>
+            <v-text-field class="campo-obligatorio" v-model="form.pers_apellido_materno" label="Apellido Materno" required></v-text-field>
             <!-- Select para Tipo de Documento -->
             <v-select
+              class="campo-obligatorio"
               v-model="form.tidi_id"
               :items="tidiOptions"
               item-value="tidi_id"
               item-title="tidi_descripcion"
               label="Tipo de Documento"
+              :rules="[requiredRule]"
               required
             ></v-select>
-            <v-text-field v-model="form.pers_numero_documento_identidad" label="Número de Documento" required></v-text-field>
+            <v-text-field
+              class="campo-obligatorio"
+              v-model="form.pers_numero_documento_identidad" label="Número de Documento" 
+              :rules="[requiredRule, documentoRule]"
+              required>
+            </v-text-field>
   
             <!-- Sección para Fecha de Nacimiento y Sexo -->
           <template v-if="!isMobile">
@@ -310,6 +317,26 @@ required
               label="Grupo Sanguíneo"
               required
             ></v-select>
+
+            <v-select
+              v-model="form.area_id"
+              :items="areaOptions"
+              item-value="area_id"
+              item-title="area_descripcion"
+              label="Área"
+              required
+            ></v-select>
+
+            <v-select
+              v-model="form.emca_id"
+              :items="cargoOptions"
+              item-value="emca_id"
+              item-title="emca_descripcion"
+              label="Cargo"
+              required
+            ></v-select>
+
+
             <v-select
             v-if="form.pers_id"
             v-model="form.pers_estado"
@@ -317,6 +344,7 @@ required
             label="Estado"
             required
           ></v-select>
+
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -326,15 +354,22 @@ required
         </v-card-actions>
       </v-card>
     </v-dialog>
+      
+      <v-overlay v-model="loadingGuardar" class="d-flex flex-column justify-center align-center" persistent>
+        <v-img src="/logo.webp" height="100" contain class="logo-spin mb-4" />
+        <span class="text-h6 font-weight-medium">Procesando...</span>
+      </v-overlay>
   </v-container>
 </template>
-  
+   
   <script>
   import { ref, computed, onMounted, watch } from 'vue'
   import axios from 'axios'
   export default {
     name: 'EmpleadosPage',
     setup() {
+
+      const loadingGuardar = ref(false);
 
       const filtros = ref({
         nombre: '',
@@ -361,6 +396,7 @@ required
 
         
       const requiredRule = v => !!v || 'Este campo es obligatorio';
+      const documentoRule = v => !!v && /^[0-9]{8,12}$/.test(v) || 'Ingrese un número de documento válido';
       const empleadoForm = ref(null);
 
       // Obtener token y profile desde localStorage
@@ -381,11 +417,14 @@ required
 
       // Datos reactivos
       const empleados = ref([]);
+      const areaOptions = ref([]);
+      const cargoOptions = ref([]);
       const dialog = ref(false);
       const menuFechaNacimiento = ref(false);
       const currentPage = ref(1);
       const form = ref({
         pers_id: null,
+        pers_tipo: 'E',
         pers_nombres: '',
         pers_apellido_paterno: '',
         pers_apellido_materno: '',
@@ -396,7 +435,9 @@ required
         ubig_codigo_departamento: null,
         ubig_codigo_provincia: null,
         ubig_codigo_distrito: null,
-        pers_grupo_sanguineo: ''
+        pers_grupo_sanguineo: '',
+        area_id: null,
+        emca_id: null
       });
   
       // Opciones para selects
@@ -422,6 +463,36 @@ required
           console.error('Error al cargar ubigeo:', error);
         }
       };
+
+      const fetchAreaOptions = async () => {
+      try {
+        const res = await apiClient.get('wsConsultaAreas.php', {
+          params: {
+            ac_indicador_todos: 'N',
+            av_profile: profile
+          }
+        });
+        if (res.data.status) {
+          areaOptions.value = res.data.data;
+        }
+      } catch (error) {
+        console.error('Error al cargar áreas:', error);
+      }
+    };
+
+    const fetchCargoOptions = async () => {
+      try {
+        const res = await apiClient.get('wsListaEmpleadoCargos.php', {
+          params: { av_profile: profile }
+        });
+        if (res.data.status) {
+          cargoOptions.value = res.data.data;
+        }
+      } catch (error) {
+        console.error('Error al cargar cargos:', error);
+      }
+    };
+
   
       // Propiedades computadas para ubigeo
       const departments = computed(() => ubigeoData.value);
@@ -529,6 +600,10 @@ required
         menuFechaNacimiento.value = false;
         if (item) {
           form.value = { ...item };
+          if (form.value.pers_tipo) {
+            form.value.pers_tipo = item.pers_tipo;
+          }
+
           if (form.value.pers_fecha_nacimiento) {
             form.value.pers_fecha_nacimiento = new Date(form.value.pers_fecha_nacimiento);
           }
@@ -538,10 +613,20 @@ required
             } else if (form.value.pers_estado === 'Inactivo') {
             form.value.pers_estado = 'I';
             }
+
+            form.value.area_id = item.area_id
+            ?? areaOptions.value.find(opt => opt.area_descripcion === item.area_descripcion)?.area_id
+            ?? null;
+
+          form.value.emca_id = item.emca_id
+            ?? cargoOptions.value.find(opt => opt.emca_descripcion === item.emca_descripcion)?.emca_id
+            ?? null;
+
           // Al editar, los watchers preservarán los valores actuales si no se cambian
         } else {
           form.value = {
             pers_id: null,
+            pers_tipo: 'E',
             pers_nombres: '',
             pers_apellido_paterno: '',
             pers_apellido_materno: '',
@@ -563,15 +648,17 @@ required
       };
 
       function scrollToFirstInvalidField() {
-        // Esperamos al siguiente tick para que los errores se muestren
         requestAnimationFrame(() => {
-          const firstErrorField = document.querySelector('.campo-obligatorio input:invalid, .campo-obligatorio .v-input--error input, .campo-obligatorio .v-input--error .v-field__input');
+          const firstErrorField = document.querySelector(
+            '.campo-obligatorio input:invalid, .campo-obligatorio .v-input--error input, .campo-obligatorio .v-input--error .v-field__input, .campo-obligatorio .v-select--error'
+          );
           if (firstErrorField) {
             firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
             firstErrorField.focus();
           }
         });
       }
+
   
       const saveEmpleado = async () => {
         const formValid = await empleadoForm.value.validate();
@@ -580,10 +667,12 @@ required
           return; // No guardar si hay errores
         }
         if (form.value.pers_id) {
+            loadingGuardar.value = true;
             try {
             // Construir el objeto de parámetros para la API.
             const data = {
                 ai_pers_id: form.value.pers_id,
+                ac_pers_tipo: form.value.pers_tipo,
                 av_pers_apellido_paterno: form.value.pers_apellido_paterno,
                 av_pers_apellido_materno: form.value.pers_apellido_materno,
                 av_pers_nombres: form.value.pers_nombres,
@@ -606,6 +695,8 @@ required
                 av_pers_foto: form.value.pers_foto,
                 ac_pers_estado: form.value.pers_estado,
                 av_pers_usuario_modificacion: form.value.usuario_modificacion,
+                ai_area_id: form.value.area_id,
+                ai_emca_id: form.value.emca_id,
                 av_profile: profile
                 };
 
@@ -616,7 +707,7 @@ required
                 }
                 };
             // Se realiza la petición POST al API
-            const res = await axios.post('https://amsoftsolution.com/amss/ws/wsActualizaEmpleado.php', data, config);
+            const res = await axios.post('https://amsoftsolution.com/amss/ws/wsActualizaPersona.php', data, config);
             if (res.data.status) {
             console.log('Empleado actualizado exitosamente');
             // Aquí puedes recargar la lista de empleados o realizar otra acción necesaria.
@@ -626,7 +717,11 @@ required
         } catch (error) {
             console.error('Error en la petición de actualización:', error);
         }
+                finally {
+                    loadingGuardar.value = false;
+                }
         } else {
+          loadingGuardar.value = true;
             try {
                 const data = {
                     ac_pers_tipo: 'E', //empleados
@@ -650,6 +745,8 @@ required
                     av_pers_grupo_sanguineo: form.value.pers_grupo_sanguineo,
                     av_pers_comentario: form.value.pers_comentario,
                     av_pers_foto: form.value.pers_foto,
+                    ai_area_id: form.value.area_id,
+                    ai_emca_id: form.value.emca_id,
                     av_profile: profile
                 };
 
@@ -660,7 +757,7 @@ required
                     }
                 };
 
-                const res = await axios.post('https://amsoftsolution.com/amss/ws/wsRegistraEmpleado.php', data, config);
+                const res = await axios.post('https://amsoftsolution.com/amss/ws/wsRegistraPersona.php', data, config);
                 if (res.data.status) {
                     console.log('Empleado registrado exitosamente');
                 } else {
@@ -668,6 +765,9 @@ required
                 }
                 } catch (error) {
                 console.error('Error en la petición de registro:', error);
+                }
+                finally {
+                    loadingGuardar.value = false;
                 }
             }
             await loadEmpleados();
@@ -678,6 +778,8 @@ required
         await loadEmpleados();
         await fetchTidiOptions();
         await fetchUbigeoData();
+        await fetchAreaOptions();
+        await fetchCargoOptions();
       });
   
       // Funciones para cargar TDI (se deja el API existente)
@@ -720,16 +822,27 @@ required
         closeDialog,
         saveEmpleado,
         requiredRule,
+        documentoRule,
         empleadoForm,
         filtros,
         empleadosFiltrados,
-        cargosUnicos
+        cargosUnicos,
+        areaOptions,
+        cargoOptions,
+        loadingGuardar 
       };
     }
   };
   </script>
   
-  <style scoped>
-  /* Estilos para mejorar la experiencia responsiva */
+  <style>
+  @keyframes flash {
+    0% { background-color: #ffeaea; }
+    100% { background-color: transparent; }
+  }
+
+  .v-input.v-input--error {
+    animation: flash 1s ease-in-out;
+  }  
   </style>
   

@@ -12,9 +12,12 @@
 
     <template v-if="!loading && anuncios.length">
       <v-list v-if="!isMobile">
-        <v-list-item v-for="(a, i) in anuncios" :key="i">
+        <v-list-item 
+          v-for="(a, i) in anuncios" 
+          :key="i"
+          :class="{ 'espaciado-anuncio': i > 0 }">
           <v-list-item-content>
-            <v-list-item-title class="font-weight-bold">
+            <v-list-item-title class="font-weight-bold titulo-anuncio">
               {{ a.anun_titulo }}
             </v-list-item-title>
             <div class="full-description">
@@ -92,6 +95,12 @@ onMounted(fetchAnuncios)
 .v-list-item-title {
   font-size: 1rem;
 }
+.titulo-anuncio {
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
+  line-height: 1.3;
+}
 .v-list-item-subtitle {
   font-size: 0.875rem;
 }
@@ -105,5 +114,8 @@ onMounted(fetchAnuncios)
   overflow-wrap: break-word;
   font-size: 0.875rem;
   margin-top: 4px;
+}
+.espaciado-anuncio {
+  margin-top: 16px; /* Puedes ajustar a 12px o 24px según tu diseño */
 }
 </style>

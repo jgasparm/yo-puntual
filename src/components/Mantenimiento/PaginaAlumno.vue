@@ -166,19 +166,36 @@
         <v-card-text>
           <v-form ref="alumnoForm" lazy-validation>
             <!-- Campo fijo para tipo: Alumno -->
-            <v-text-field v-model="form.pers_nombres" label="Nombres" required></v-text-field>
-            <v-text-field v-model="form.pers_apellido_paterno" label="Apellido Paterno" required></v-text-field>
-            <v-text-field v-model="form.pers_apellido_materno" label="Apellido Materno"></v-text-field>
+            <v-text-field 
+              class="campo-obligatorio" 
+              v-model="form.pers_nombres" 
+              label="Nombres" 
+              :rules="[requiredRule]"
+              required
+            />
+            <v-text-field class="campo-obligatorio" v-model="form.pers_apellido_paterno" label="Apellido Paterno"
+            :rules="[requiredRule]"
+            required></v-text-field>
+            <v-text-field class="campo-obligatorio" v-model="form.pers_apellido_materno" label="Apellido Materno" 
+            :rules="[requiredRule]"
+            required></v-text-field>
             <!-- Select para Tipo de Documento -->
             <v-select
+              class="campo-obligatorio"
               v-model="form.tidi_id"
               :items="tidiOptions"
               item-value="tidi_id"
               item-title="tidi_descripcion"
               label="Tipo de Documento"
+              :rules="[requiredRule]"
               required
             ></v-select>
-            <v-text-field v-model="form.pers_numero_documento_identidad" label="Número de Documento" required></v-text-field>
+            <v-text-field
+              class="campo-obligatorio"
+              v-model="form.pers_numero_documento_identidad" label="Número de Documento"
+              :rules="[requiredRule, documentoRule]"
+              required>
+            </v-text-field>
   
             <!-- Sección para Fecha de Nacimiento y Sexo -->
           <template v-if="!isMobile">
@@ -330,6 +347,11 @@ required
         </v-card-actions>
       </v-card>
     </v-dialog>
+      
+      <v-overlay v-model="loadingGuardar" class="d-flex flex-column justify-center align-center" persistent>
+        <v-img src="/logo.webp" height="100" contain class="logo-spin mb-4" />
+        <span class="text-h6 font-weight-medium">Procesando...</span>
+      </v-overlay>
   </v-container>
 </template>
   
@@ -339,6 +361,8 @@ required
   export default {
     name: 'AlumnosPage',
     setup() {
+
+      const loadingGuardar = ref(false);
 
       const filtros = ref({
         nombre: '',
@@ -365,6 +389,7 @@ required
 
         
       const requiredRule = v => !!v || 'Este campo es obligatorio';
+      const documentoRule = v => !!v && /^[0-9]{8,12}$/.test(v) || 'Ingrese un número de documento válido';
       const alumnoForm = ref(null);
 
       // Obtener token y profile desde localStorage
@@ -390,6 +415,7 @@ required
       const currentPage = ref(1);
       const form = ref({
         pers_id: null,
+        pers_tipo: 'A',
         pers_nombres: '',
         pers_apellido_paterno: '',
         pers_apellido_materno: '',
@@ -527,6 +553,9 @@ required
         menuFechaNacimiento.value = false;
         if (item) {
           form.value = { ...item };
+          if (form.value.pers_tipo) {
+            form.value.pers_tipo = item.pers_tipo;
+          }
           if (form.value.pers_fecha_nacimiento) {
             form.value.pers_fecha_nacimiento = new Date(form.value.pers_fecha_nacimiento);
           }
@@ -540,6 +569,7 @@ required
         } else {
           form.value = {
             pers_id: null,
+            pers_tipo: 'A',
             pers_nombres: '',
             pers_apellido_paterno: '',
             pers_apellido_materno: '',
@@ -561,9 +591,10 @@ required
       };
 
       function scrollToFirstInvalidField() {
-        // Esperamos al siguiente tick para que los errores se muestren
         requestAnimationFrame(() => {
-          const firstErrorField = document.querySelector('.campo-obligatorio input:invalid, .campo-obligatorio .v-input--error input, .campo-obligatorio .v-input--error .v-field__input');
+          const firstErrorField = document.querySelector(
+            '.campo-obligatorio input:invalid, .campo-obligatorio .v-input--error input, .campo-obligatorio .v-input--error .v-field__input, .campo-obligatorio .v-select--error'
+          );
           if (firstErrorField) {
             firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
             firstErrorField.focus();
@@ -578,10 +609,12 @@ required
           return; // No guardar si hay errores
         }
         if (form.value.pers_id) {
+            loadingGuardar.value = true;
             try {
             // Construir el objeto de parámetros para la API.
             const data = {
                 ai_pers_id: form.value.pers_id,
+                ac_pers_tipo: form.value.pers_tipo,
                 av_pers_apellido_paterno: form.value.pers_apellido_paterno,
                 av_pers_apellido_materno: form.value.pers_apellido_materno,
                 av_pers_nombres: form.value.pers_nombres,
@@ -604,6 +637,8 @@ required
                 av_pers_foto: form.value.pers_foto,
                 ac_pers_estado: form.value.pers_estado,
                 av_pers_usuario_modificacion: form.value.usuario_modificacion,
+                ai_area_id: null,
+                ai_emca_id: null,
                 av_profile: profile
                 };
 
@@ -614,7 +649,7 @@ required
                 }
                 };
             // Se realiza la petición POST al API
-            const res = await axios.post('https://amsoftsolution.com/amss/ws/wsActualizaAlumno.php', data, config);
+            const res = await axios.post('https://amsoftsolution.com/amss/ws/wsActualizaPersona.php', data, config);
             if (res.data.status) {
             console.log('Alumno actualizado exitosamente');
             // Aquí puedes recargar la lista de alumnos o realizar otra acción necesaria.
@@ -623,8 +658,11 @@ required
             }
         } catch (error) {
             console.error('Error en la petición de actualización:', error);
-        }
-        } else {
+        } finally {
+            loadingGuardar.value = false;
+        } 
+      } else {
+          loadingGuardar.value = true;
             try {
                 const data = {
                     ac_pers_tipo: 'A', //Alumnos
@@ -648,6 +686,8 @@ required
                     av_pers_grupo_sanguineo: form.value.pers_grupo_sanguineo,
                     av_pers_comentario: form.value.pers_comentario,
                     av_pers_foto: form.value.pers_foto,
+                    ai_area_id: null,
+                    ai_emca_id: null,
                     av_profile: profile
                 };
 
@@ -658,14 +698,17 @@ required
                     }
                 };
 
-                const res = await axios.post('https://amsoftsolution.com/amss/ws/wsRegistraAlumno.php', data, config);
+                const res = await axios.post('https://amsoftsolution.com/amss/ws/wsRegistraPersona.php', data, config);
                 if (res.data.status) {
                     console.log('Alumno registrado exitosamente');
                 } else {
                     console.error('Error al registrar alumno:', res.data.message);
                 }
                 } catch (error) {
-                console.error('Error en la petición de registro:', error);
+                    console.error('Error en la petición de registro:', error);
+                }
+                finally {
+                    loadingGuardar.value = false;
                 }
             }
             await loadAlumnos();
@@ -718,15 +761,24 @@ required
         closeDialog,
         saveAlumno,
         requiredRule,
+        documentoRule,
         alumnoForm,
         filtros,
-        alumnosFiltrados
+        alumnosFiltrados,
+        loadingGuardar 
       };
     }
   };
   </script>
   
-  <style scoped>
-  /* Estilos para mejorar la experiencia responsiva */
+  <style>
+    @keyframes flash {
+      0% { background-color: #ffeaea; }
+      100% { background-color: transparent; }
+    }
+
+    .v-input.v-input--error {
+      animation: flash 1s ease-in-out;
+    }
   </style>
   

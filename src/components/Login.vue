@@ -88,12 +88,19 @@
           </v-dialog>
         </v-card>
       </v-container>
+      <v-overlay v-model="loading" class="d-flex flex-column justify-center align-center" persistent>
+        <v-img src="./logo.webp" height="100" contain class="logo-spin mb-4" />
+        <span class="text-h6 font-weight-medium">Procesando...</span>
+      </v-overlay>
+
     </v-app>
   </div>
 </template>
 
 <script>
+
 export default {
+  
   name: 'LoginForm',
   data() {
     return {

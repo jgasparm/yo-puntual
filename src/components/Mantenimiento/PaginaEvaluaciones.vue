@@ -139,9 +139,20 @@ const mobileTotalPages = computed(() => Math.ceil(evaluaciones.value.length / 5)
 const paginatedMobile = computed(() => evaluaciones.value.slice((mobilePage.value - 1) * 5, mobilePage.value * 5))
 
 async function obtenerEvaluaciones() {
-  const { data } = await axiosInstance.get(`wsListaEvaluaciones.php?av_profile=${profile}`)
-  if(data.status) evaluaciones.value = data.data
+  try {
+    const { data } = await axiosInstance.get(`wsListaEvaluaciones.php?av_profile=${profile}`)
+    if (data.status && Array.isArray(data.data)) {
+      evaluaciones.value = data.data
+    } else {
+      console.warn('La API no retornó un array:', data.data)
+      evaluaciones.value = []
+    }
+  } catch (error) {
+    console.error('Error al obtener evaluaciones:', error)
+    evaluaciones.value = []
+  }
 }
+
 
 function abrirDialogoAgregar() {
   newEval.value = { nombre: '', abrev: '' }
