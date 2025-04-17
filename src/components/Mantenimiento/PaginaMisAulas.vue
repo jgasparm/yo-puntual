@@ -1205,7 +1205,7 @@ async function fetchHorarioEscolar(audeId, niveId) {
   const anes_id = localStorage.getItem("anes_id")
 
   try {
-    const { data } = await axios.get('https://amsoftsolution.com/amss/ws/wsConsultaHorarioEscolar.php', {
+    const { data } = await axios.get('https://amsoftsolution.com/amss/ws/wsConsultaHorarioEscolarAlumno.php', {
       params: { ai_anes_id: anes_id, ac_nive_id: niveId, ai_aude_id: audeId, av_profile: profile },
       headers: { Authorization: `Bearer ${token}` }
     })

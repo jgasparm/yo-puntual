@@ -2,7 +2,7 @@
   <div class="pa-4">
     <!-- Título y descripción -->
     <h1 class="text-h5 font-weight-bold mb-1">Registro de Asistencia</h1>
-    <p class="text-subtitle-2 mb-4">Registra la asistencia de los alumnos que están dentro de su tutoría.</p>
+    <p class="text-subtitle-2 mb-4">Registra la asistencia de personas del centro educativo según su tipo.</p>
 
     <!-- Hora actual -->
     <div class="mb-4 text-right hora-container">
@@ -153,8 +153,7 @@ export default {
       try {
         const token = localStorage.getItem("token");
         const profile = localStorage.getItem("profile");
-        const usua_id = localStorage.getItem("usua_id");
-        const response = await fetch(`https://amsoftsolution.com/amss/ws/wsConsultaTutorAlumnos.php?ai_usua_id=${usua_id}&av_profile=${profile}`, {
+        const response = await fetch(`https://amsoftsolution.com/amss/ws/wsConsultaPersonasInformacion.php?av_profile=${profile}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const result = await response.json();

@@ -13,11 +13,11 @@
     </v-row>
 
     <!-- CONTADOR RESULTADOS FILTRADOS -->
-    <v-row class="mb-2">
+   <!--  <v-row class="mb-2">
       <v-col cols="12">
         <p class="text-caption text-grey">Resultados encontrados: {{ filteredPlanes.length }}</p>
       </v-col>
-    </v-row>
+    </v-row> -->
 
     <!-- FILTROS -->
     <v-row class="mb-4" dense>

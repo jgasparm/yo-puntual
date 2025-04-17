@@ -3,9 +3,9 @@
     <!-- TÍTULO PRINCIPAL -->
     <v-row class="py-4 px-4">
       <v-col cols="12">
-        <h1 class="text-h5 font-weight-bold text-primary mb-1">🏠 Página de Inicio</h1>
-        <p class="text-body-2 text-grey-darken-1">
-          Bienvenido a tu panel principal como <strong>{{ roleName }}</strong>.
+        <h2 class="text-h5 font-weight-bold">👋 ¡Hola {{ formattedUserName || 'Usuario' }}!</h2>
+        <p class="text-subtitle-1 text-grey-darken-1">
+          Estás en tu portal de <strong>{{ roleName }}</strong>
         </p>
       </v-col>
     </v-row>
@@ -32,14 +32,7 @@
     </v-row>
 
     <!-- BIENVENIDA -->
-    <v-row class="py-4 px-4">
-      <v-col cols="12">
-        <h2 class="text-h5 font-weight-bold">👋 ¡Hola {{ formattedUserName || 'Usuario' }}!</h2>
-        <p class="text-subtitle-1 text-grey-darken-1">
-          Estás en tu portal de <strong>{{ roleName }}</strong>
-        </p>
-      </v-col>
-    </v-row>
+    
 
     <!-- TARJETAS POR ROL -->
     <v-row class="px-4" dense>
@@ -144,9 +137,16 @@ const adminCards = [
   { title: 'Configuración', icon: 'mdi-cog', cta: 'Configurar', link: '/configuracion', subtitle: 'Gestiona parámetros del sistema.' }
 ]
 
+const SecretaryCards = [
+  { title: 'Registro de asistencia', icon: 'mdi-domain', cta: 'Registrar', link: '/principal/registro-asistencia', subtitle: 'Registra asistencia de docentes.' },
+  { title: 'Asistencia de alumnos', icon: 'mdi-chart-box', cta: 'Ver alumnos', link: '/principal/consulta-asistencia-alumnos', subtitle: 'Visualiza asistencia de alumnos.' },
+  { title: 'Asistencia de empleados', icon: 'mdi-cog', cta: 'Ver empleados', link: '/principal/consulta-asistencia-empleados', subtitle: 'Visualiza asistencia de docentes.' }
+]
+
 const roleCards = computed(() => {
   if (userRole.value === 3) return teacherCards
   if (userRole.value === 2) return studentCards
+  if (userRole.value === 4) return SecretaryCards
   return adminCards
 })
 

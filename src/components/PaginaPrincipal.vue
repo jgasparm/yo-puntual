@@ -89,7 +89,9 @@
       </aside>
 
       <section class="content">
-        <router-view></router-view>
+        <BreadcrumbNavigation v-if="$route.meta.showBreadcrumb !== false" />
+        <router-view>
+        </router-view>
       </section>
 
       <aside class="rightbar">
@@ -115,12 +117,12 @@
 </template>
 
 <script>
-
+import BreadcrumbNavigation from '@/components/BreadcrumbNavigation.vue'
 // Para validar si venció el token
 import AnunciosPublicados from '@/components/PaginaAnunciosPublicados.vue'
 export default {
   name: "MainLayoutDesign1",
-  components: { AnunciosPublicados },
+  components: { AnunciosPublicados, BreadcrumbNavigation},
 
   data() {
     return {
@@ -270,6 +272,7 @@ export default {
         "Docentes del año escolar": "DocentesAnioEscolar",
         "Aulas": "MisAulas",
         "Mi horario escolar":"AlumnoHorarioEscolar",
+        "Horario escolar":"DocenteHorarioEscolar",
         "Plan de estudios":"PlanEstudios",
         "Evaluaciones":"Evaluaciones",
         "Mi plan de estudios":"DocentePlanEstudios",

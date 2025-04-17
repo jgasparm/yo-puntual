@@ -2,7 +2,7 @@
   <div class="pa-4">
     <!-- Título y descripción -->
     <h1 class="text-h5 font-weight-bold mb-1">Registro de Asistencia</h1>
-    <p class="text-subtitle-2 mb-4">Registra la asistencia de personas del centro educativo según su tipo.</p>
+    <p class="text-subtitle-2 mb-4">{{ subtitulo }}</p>
 
     <!-- Hora actual -->
     <div class="mb-4 text-right hora-container">
@@ -124,11 +124,12 @@ export default {
       registrando: false,
       mensajeVisible: false,
       horaActual: "",
-      historialAsistencia: []
+      historialAsistencia: [],
+      subtitulo: ""
     };
   },
   mounted() {
-    this.cargarPersonas();
+    this.cargarDatosSegunPerfil();
     this.cargarHistorialLocal();
     this.actualizarHora();
     setInterval(this.actualizarHora, 1000);
@@ -148,6 +149,47 @@ export default {
       const ahora = new Date();
       this.horaActual = ahora.toLocaleTimeString();
     },
+    async cargarDatosSegunPerfil() {
+      this.loadingPersonas = true;
+      const token = localStorage.getItem("token");
+      const profile = localStorage.getItem("profile");
+      const usua_id = localStorage.getItem("usua_id");
+      const id_perfil = localStorage.getItem("perfil");
+      let url = "";
+      
+      switch (parseInt(id_perfil)) {
+        case 1:
+          this.subtitulo = "Registra la asistencia de personas del centro educativo según su tipo.";
+          url = `https://amsoftsolution.com/amss/ws/wsConsultaPersonasInformacion.php?av_profile=${profile}`;
+          break;
+        case 3:
+          this.subtitulo = "Registra la asistencia de los alumnos que están dentro de su tutoría.";
+          url = `https://amsoftsolution.com/amss/ws/wsConsultaTutorAlumnos.php?ai_usua_id=${usua_id}&av_profile=${profile}`;
+          break;
+        case 4:
+          this.subtitulo = "Registra la asistencia de los empleados.";
+          url = `https://amsoftsolution.com/amss/ws/wsConsultaEmpleadosInformacion.php?av_profile=${profile}`;
+          break;
+        default:
+          console.warn("Perfil no reconocido");
+          this.subtitulo = "Registra la asistencia.";
+          return;
+      }
+
+      try {
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (result.status) {
+          this.personas = result.data;
+        }
+      } catch (error) {
+        console.error("Error al cargar datos según perfil:", error);
+      } finally {
+        this.loadingPersonas = false;
+      }
+    },
     async cargarPersonas() {
       this.loadingPersonas = true;
       try {
@@ -166,19 +208,34 @@ export default {
     },
     cargarHistorialLocal() {
       const hoy = new Date().toISOString().slice(0, 10);
-      const clave = `asistencia_${hoy}`;
+      const id_perfil = localStorage.getItem("id_perfil");
+      const usua_id = localStorage.getItem("usua_id");
+
+      let clave = `asistencia_${hoy}_p${id_perfil}`;
+      if (parseInt(id_perfil) === 3) {
+        clave += `_u${usua_id}`; // más específico para tutoría
+      }
+
       const historial = localStorage.getItem(clave);
       this.historialAsistencia = historial ? JSON.parse(historial) : [];
     },
     guardarEnHistorialLocal(persona) {
       const hoy = new Date().toISOString().slice(0, 10);
-      const clave = `asistencia_${hoy}`;
+      const profile = localStorage.getItem("profile");
+      const usua_id = localStorage.getItem("usua_id");
+
+      let clave = `asistencia_${hoy}_p${profile}`;
+      if (parseInt(profile) === 3) {
+        clave += `_u${usua_id}`;
+      }
+
       const ahora = new Date();
       const nuevo = {
         persona_descripcion: persona.persona_descripcion,
         hora: ahora.toLocaleTimeString(),
         tipo_persona: persona.tipo_persona
       };
+
       this.historialAsistencia.unshift(nuevo);
       localStorage.setItem(clave, JSON.stringify(this.historialAsistencia.slice(0, 10)));
     },

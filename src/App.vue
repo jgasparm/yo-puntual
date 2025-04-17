@@ -5,6 +5,13 @@
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
 
+<!--     Contenedor principal de contenido
+    <v-main>
+      <v-container fluid class="pa-4">
+        Aquí se muestra la vista actual
+      </v-container>
+    </v-main> -->
+
     <router-view />
   </v-app>
 </template>

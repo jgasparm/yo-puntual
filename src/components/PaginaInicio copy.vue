@@ -1,20 +1,18 @@
 <template>
   <v-container fluid class="pa-0">
-    <!-- Título Principal -->
+    <!-- TÍTULO PRINCIPAL -->
     <v-row class="py-4 px-4">
       <v-col cols="12">
-        <div class="text-h5 font-weight-bold text-primary mb-1">
-          🏠 Página de Inicio
-        </div>
-        <div class="text-body-2 text-grey-darken-1">
-          Bienvenido a tu panel principal como {{ roleName }}.
-        </div>
+        <h2 class="text-h5 font-weight-bold">👋 ¡Hola {{ formattedUserName || 'Usuario' }}!</h2>
+        <p class="text-subtitle-1 text-grey-darken-1">
+          Estás en tu portal de <strong>{{ roleName }}</strong>
+        </p>
       </v-col>
     </v-row>
 
-    <!-- Banner Carousel -->
-    <v-row class="pa-0">
-      <v-col cols="12" class="pa-0">
+    <!-- CARRUSEL BANNER -->
+    <v-row>
+      <v-col cols="12">
         <v-carousel
           cycle
           :interval="5000"
@@ -33,72 +31,53 @@
       </v-col>
     </v-row>
 
-    <!-- Bienvenida -->
-    <v-row class="py-4 px-4">
-      <v-col cols="12">
-        <h2 class="text-h5 font-weight-bold">
-          👋 ¡Hola {{ formattedUserName || 'Usuario' }}!
-        </h2>
-        <p class="text-subtitle-1 text-grey-darken-1">
-          Estás en tu portal de <strong>{{ roleName }}</strong>
-        </p>
-      </v-col>
-    </v-row>
+    <!-- BIENVENIDA -->
+    
 
-    <!-- Contenido por perfil -->
-    <v-row v-if="userRole === 3">
-      <v-col cols="12" md="4" v-for="card in teacherCards" :key="card.title">
-        <v-card outlined elevation="1" class="rounded-lg">
-          <v-card-title>
-            <v-icon color="primary" class="me-2">{{ card.icon }}</v-icon>
-            {{ card.title }}
-          </v-card-title>
-          <v-card-text>{{ card.subtitle }}</v-card-text>
-          <v-card-actions>
-            <v-btn :to="card.link" color="primary" variant="flat" block>
-              {{ card.cta }}
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
+    <!-- TARJETAS POR ROL -->
+    <v-row class="px-4" dense>
+  <v-col
+    cols="12"
+    sm="6"
+    md="4"
+    v-for="card in roleCards"
+    :key="card.title"
+  >
+    <v-card
+      outlined
+      elevation="1"
+      class="rounded-lg d-flex flex-column justify-space-between h-100"
+    >
+      <v-card-title class="d-flex align-center text-wrap text-truncate">
+        <v-icon color="primary" class="me-2">{{ card.icon }}</v-icon>
+        <span class="font-weight-bold text-wrap" style="line-height: 1.2;">{{ card.title }}</span>
+      </v-card-title>
 
-    <v-row v-else-if="userRole === 2">
-      <v-col cols="12" md="4" v-for="card in studentCards" :key="card.title">
-        <v-card outlined elevation="1" class="rounded-lg">
-          <v-card-title>
-            <v-icon color="primary" class="me-2">{{ card.icon }}</v-icon>
-            {{ card.title }}
-          </v-card-title>
-          <v-card-actions>
-            <v-btn :to="card.link" color="primary" variant="flat" block>
-              {{ card.cta }}
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
+      <v-card-text class="text-body-2 text-grey-darken-2" style="min-height: 60px;">
+        {{ card.subtitle }}
+      </v-card-text>
 
-    <v-row v-else>
-      <v-col cols="12" md="4" v-for="card in adminCards" :key="card.title">
-        <v-card outlined elevation="1" class="rounded-lg">
-          <v-card-title>
-            <v-icon color="primary" class="me-2">{{ card.icon }}</v-icon>
-            {{ card.title }}
-          </v-card-title>
-          <v-card-actions>
-            <v-btn :to="card.link" color="primary" variant="flat" block>
-              {{ card.cta }}
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
+      <v-card-actions>
+        <v-btn
+          :to="card.link"
+          color="primary"
+          variant="flat"
+          block
+          class="text-truncate"
+          style="white-space: normal;"
+        >
+          {{ card.cta }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-col>
+</v-row>
 
-    <!-- Accesos Directos -->
-    <v-sheet color="#f9f9f9" class="pa-4 rounded-lg mt-8">
+
+    <!-- ACCESOS DIRECTOS -->
+    <v-sheet color="#f9f9f9" class="pa-4 mt-8 mx-4 rounded-lg">
       <h3 class="text-h6 text-center mb-4">Accesos Directos</h3>
-      <v-row>
+      <v-row dense>
         <v-col
           v-for="acceso in accesosDirectos"
           :key="acceso.nombre"
@@ -115,7 +94,7 @@
             hover
           >
             <v-icon size="48">{{ acceso.icon }}</v-icon>
-            <div class="access-title mt-2">{{ acceso.nombre }}</div>
+            <div class="access-title mt-2 text-center">{{ acceso.nombre }}</div>
           </v-card>
         </v-col>
       </v-row>
@@ -139,23 +118,30 @@ const accesosDirectos = [
   { nombre: 'Calendario escolar', icon: 'mdi-calendar', link: '/principal/calendario-escolar' }
 ]
 
+// Tarjetas por rol
 const teacherCards = [
-  { title: 'Mi plan de estudios', icon: 'mdi-domain', cta: 'Ver plan de estudios', link: '/principal/docente-plan-estudios' },
-  { title: 'Mis cursos', icon: 'mdi-book-open-page-variant', cta: 'Ver cursos', link: '/principal/mis-cursos-docente' },
-  { title: 'Mi Asistencia', icon: 'mdi-check-circle-outline', cta: 'Ver mi asistencia', link: '/principal/consulta-asistencia-empleado' },
+  { title: 'Mis planes', icon: 'mdi-domain', cta: 'Ver plan de estudios', link: '/principal/docente-plan-estudios', subtitle: 'Planifica la forma de evaluar los cursos.' },
+  { title: 'Mis cursos', icon: 'mdi-book-open-page-variant', cta: 'Ver cursos', link: '/principal/mis-cursos-docente', subtitle: 'Accede a tus asignaturas activas.' },
+  { title: 'Mi Asistencia', icon: 'mdi-check-circle-outline', cta: 'Ver mi asistencia', link: '/principal/consulta-asistencia-empleado', subtitle: 'Consulta tus registros de asistencia.' }
 ]
 
 const studentCards = [
-  { title: 'Mis Clases', icon: 'mdi-calendar-clock', cta: 'Ver Horario', link: '/principal/mi-horario-escolar' },
-  { title: 'Mi Asistencia', icon: 'mdi-calendar-check', cta: 'Ver mi asistencia', link: '/principal/consulta-asistencia-alumno' },
-  { title: 'Mis notas', icon: 'mdi-school-outline', cta: 'Ver mis notas', link: '/principal/mis-notas' },
+  { title: 'Mis Clases', icon: 'mdi-calendar-clock', cta: 'Ver Horario', link: '/principal/mi-horario-escolar', subtitle: 'Revisa tu horario semanal.' },
+  { title: 'Mi Asistencia', icon: 'mdi-calendar-check', cta: 'Ver mi asistencia', link: '/principal/consulta-asistencia-alumno', subtitle: 'Mira tu historial de asistencias.' },
+  { title: 'Mis notas', icon: 'mdi-school-outline', cta: 'Ver mis notas', link: '/principal/mis-notas', subtitle: 'Consulta tus calificaciones.' }
 ]
 
 const adminCards = [
-  { title: 'Gestión educativa', icon: 'mdi-domain', cta: 'Mis aulas', link: '/principal/mis-aulas' },
-  { title: 'Reportes', icon: 'mdi-chart-box', cta: 'Ver Reportes', link: '/reportes-admin' },
-  { title: 'Configuración del Sistema', icon: 'mdi-cog', cta: 'Configurar', link: '/configuracion' }
+  { title: 'Gestión educativa', icon: 'mdi-domain', cta: 'Mis aulas', link: '/principal/mis-aulas', subtitle: 'Administra la estructura educativa.' },
+  { title: 'Reportes', icon: 'mdi-chart-box', cta: 'Ver Reportes', link: '/reportes-admin', subtitle: 'Visualiza métricas y estadísticas.' },
+  { title: 'Configuración', icon: 'mdi-cog', cta: 'Configurar', link: '/configuracion', subtitle: 'Gestiona parámetros del sistema.' }
 ]
+
+const roleCards = computed(() => {
+  if (userRole.value === 3) return teacherCards
+  if (userRole.value === 2) return studentCards
+  return adminCards
+})
 
 const formattedUserName = computed(() => {
   if (!usuarioNombre.value) return ''
@@ -182,10 +168,18 @@ onMounted(cargarDatosUsuario)
 </script>
 
 <style scoped>
-.v-carousel-item img { object-fit: cover }
+.v-carousel-item img {
+  object-fit: cover;
+}
 .banner-central ::v-deep .v-carousel__controls,
 .banner-central ::v-deep .v-carousel__prev,
 .banner-central ::v-deep .v-carousel__next {
   display: none !important;
+}
+
+.access-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
 }
 </style>

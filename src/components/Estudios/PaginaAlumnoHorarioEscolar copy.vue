@@ -1,32 +1,58 @@
 <template>
   <v-container fluid>
-
+    <v-row>
+      <v-col cols="12">
+        <div class="text-h5 font-weight-bold text-primary mb-2">
+          🕘 Horario Escolar
+        </div>
+        <div class="text-body-2 text-grey-darken-1">
+          Consulta los cursos que tienes cada día. ¡No olvides tus útiles!
+        </div>
+      </v-col>
+    </v-row>
     <!-- ENCABEZADO / CABECERA CON INFO DEL ALUMNO -->
     <v-row class="my-4">
       <v-col cols="12">
-        <v-card>
-          <v-card-text>
-            <div v-if="infoAlumno">
-              <p><strong>Tutor:</strong> {{ infoAlumno.tutor }}</p>
-              <p><strong>Turno:</strong> {{ infoAlumno.turn_nombre }}</p>
-              <p><strong>Nivel:</strong> {{ infoAlumno.nive_nombre }}</p>
-              <p><strong>Grado:</strong> {{ infoAlumno.grad_nombre }}</p>
-              <p><strong>Sección:</strong> {{ infoAlumno.secc_nombre }}</p>
-            </div>
-            <div v-else>
-              <v-alert type="info">No se encontró información del alumno.</v-alert>
-            </div>
-          </v-card-text>
-        </v-card>
+        <v-sheet 
+          v-if="infoAlumno"
+          color="blue-lighten-5" 
+          class="pa-4 mb-4 rounded-lg elevation-1">
+          <v-row>
+            <v-col cols="12">
+              <div class="text-h6 font-weight-bold text-primary mb-2">
+                🧑‍🏫 Información del Alumno
+              </div>
+            </v-col>
+
+            <v-col cols="12" sm="6" md="4">
+              <v-icon color="primary" start>mdi-account</v-icon>
+              <strong>Tutor:</strong> <span>{{ infoAlumno.tutor }}</span>
+            </v-col>
+            <v-col cols="12" sm="6" md="4">
+              <v-icon color="primary" start>mdi-clock-time-eight-outline</v-icon>
+              <strong>Turno:</strong> <span>{{ infoAlumno.turn_nombre }}</span>
+            </v-col>
+            <v-col cols="12" sm="6" md="4">
+              <v-icon color="primary" start>mdi-school</v-icon>
+              <strong>Nivel:</strong> <span>{{ infoAlumno.nive_nombre }}</span>
+            </v-col>
+            <v-col cols="12" sm="6" md="4">
+              <v-icon color="primary" start>mdi-numeric</v-icon>
+              <strong>Grado:</strong> <span>{{ infoAlumno.grad_nombre }}</span>
+            </v-col>
+            <v-col cols="12" sm="6" md="4">
+              <v-icon color="primary" start>mdi-alpha-s-circle-outline</v-icon>
+              <strong>Sección:</strong> <span>{{ infoAlumno.secc_nombre }}</span>
+            </v-col>
+          </v-row>
+        </v-sheet>
+
       </v-col>
     </v-row>
 
     <!-- TABLA DE HORARIO (VERSIÓN DESKTOP) -->
     <div v-if="isDesktop">
       <v-card>
-        <v-card-title>
-          <span class="text-h6">Horario Escolar</span>
-        </v-card-title>
         <v-card-text>
           <!-- Cabecera con días de la semana -->
           <table class="horario-desktop-table">
@@ -34,7 +60,9 @@
               <tr>
                 <th style="min-width: 90px;">Hora</th>
                 <th v-for="dia in diasOrdenados" :key="dia" style="min-width: 120px;">
-                  {{ dia }}
+                  <v-card-title class="text-primary font-weight-bold text-uppercase">
+                    {{ dia }}
+                  </v-card-title>
                 </th>
               </tr>
             </thead>
@@ -43,7 +71,10 @@
               <tr v-for="rango in horario" :key="rango.hesh_id">
                 <!-- Primera celda: Rango de horas -->
                 <td>
-                  <strong>{{ rango.hesh_hora_inicio }} - {{ rango.hesh_hora_fin }}</strong>
+                  <div class="text-body-2">
+                    <v-icon start color="primary">mdi-clock-outline</v-icon>
+                    <strong>{{ rango.hesh_hora_inicio }} - {{ rango.hesh_hora_fin }}</strong>
+                  </div>
                   <div v-if="rango.hesh_indicador_recreo === 'S'" style="color: #F44336; font-weight: bold;">
                     Recreo
                   </div>
@@ -74,9 +105,9 @@
     >
       <v-card outlined>
         <!-- Cabecera que muestra el nombre del día -->
-        <v-card-title>
-          {{ dia }}
-        </v-card-title>
+          <v-card-title class="text-primary font-weight-bold text-uppercase">
+            {{ dia }}
+          </v-card-title>
 
         <v-card-text>
           <!-- Listado de RANGOS donde aparezca este día -->
@@ -86,7 +117,10 @@
           >
             <!-- Preguntamos si el rango es recreo -->
             <div v-if="rango.hesh_indicador_recreo === 'S'">
-              <strong>{{ rango.hesh_hora_inicio }} - {{ rango.hesh_hora_fin }}</strong>
+              <div class="text-body-2">
+                <v-icon start color="primary">mdi-clock-outline</v-icon>
+                <strong>{{ rango.hesh_hora_inicio }} - {{ rango.hesh_hora_fin }}</strong>
+              </div>
               <span style="color: #F44336; font-weight: bold;">
                 (RECREO)
               </span>
@@ -94,7 +128,10 @@
             </div>
             <!-- Si NO es recreo, mostramos el curso si aplica a este día -->
             <div v-else-if="cursoPorDia(rango, dia)">
-              <strong>{{ rango.hesh_hora_inicio }} - {{ rango.hesh_hora_fin }}</strong>
+              <div class="text-body-2">
+                <v-icon start color="primary">mdi-clock-outline</v-icon>
+                <strong>{{ rango.hesh_hora_inicio }} - {{ rango.hesh_hora_fin }}</strong>
+              </div>
               <div>{{ cursoPorDia(rango, dia) }}</div>
               <v-divider class="my-2"></v-divider>
             </div>
@@ -114,9 +151,9 @@ import { useDisplay } from 'vuetify'
 import axios from 'axios'
 
 // EJEMPLO: IDs y perfil obtenidos del localStorage
-const userId = localStorage.getItem('userId') || 1 // 'ai_usua_id'
-const anioEscolar = localStorage.getItem('ac_anio_escolar') || 2025
-const profile = localStorage.getItem('profile') || 'demo'
+const userId = localStorage.getItem('usua_id') 
+const anioEscolar = localStorage.getItem('anio_escolar') 
+const profile = localStorage.getItem('profile') 
 
 // DATA REACTIVA
 const infoAlumno = ref(null) // Tutor, Turno, Nivel, Grado, Seccion, etc.
@@ -212,9 +249,19 @@ onMounted(() => {
   text-align: center;
 }
 
-.horario-desktop-table th,
-.horario-desktop-table td {
-  border: 1px solid #ccc;
-  padding: 8px 6px;
+.horario-desktop-table th {
+  background-color: #E3F2FD;
+  font-weight: bold;
+  color: #1565C0;
 }
+
+.horario-desktop-table td {
+  font-size: 0.95rem;
+}
+
+.recreo-text {
+  color: #F44336;
+  font-weight: bold;
+}
+
 </style>
