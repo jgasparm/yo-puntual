@@ -19,7 +19,9 @@ import MisCursosConsultaNotas from '../components/Estudios/PaginaMisCursosConsul
 import DocentesAnioEscolar from '../components/Mantenimiento/PaginaDocentesAnioEscolar.vue';
 import MisAulas from '../components/Mantenimiento/PaginaMisAulas.vue';
 import AlumnoHorarioEscolar from '../components/Estudios/PaginaAlumnoHorarioEscolar.vue';
-import DocenteHorarioEscolar from '../components/Estudios/PaginaDocenteHorarioEscolar.vue';
+//import DocenteHorarioEscolar from '../components/Estudios/PaginaDocenteHorarioEscolar.vue';
+import DocenteMiHorario from '../components/Estudios/PaginaDocenteMiHorario.vue';
+import DocentesHorarios from '../components/Estudios/PaginaDocentesHorarios.vue';
 import PlanEstudios from '../components/Mantenimiento/PaginaPlanEstudios.vue';
 import Evaluaciones from '../components/Mantenimiento/PaginaEvaluaciones.vue';
 import DocentePlanEstudios from '../components/Estudios/PaginaDocentePlanEstudios.vue';
@@ -51,49 +53,97 @@ const routes = [
         path: 'consulta-asistencia-alumnos',
         name: 'ConsultaAsistenciaAlumnos',
         component: ConsultaAsistenciaAlumnos,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Consulta de asistencia de alumnos' }
+          ]
+        }
       },
       {
         path: 'consulta-asistencia-empleados',
         name: 'ConsultaAsistenciaEmpleados',
         component: ConsultaAsistenciaEmpleados,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Consulta de asistencia de empleados' }
+          ]
+        }
       },
       {
         path: 'consulta-asistencia-alumno',
         name: 'MiAsistencia',
         component: MiAsistencia,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Consulta de asistencia del alumno' }
+          ]
+        }
       },
       {
         path: 'consulta-asistencia-empleado',
         name: 'ConsultaAsistenciaEmpleado',
         component: ConsultaAsistenciaEmpleado,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Consulta de asistencia del empleado' }
+          ]
+        }
       },
       {
         path: 'calendario-escolar',
         name: 'CalendarioEscolar',
         component: CalendarioEscolar,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Calendario escolar' }
+          ]
+        }
       },
       {
         path: 'registro-asistencia',
         name: 'RegistroAsistencia',
         component: RegistroAsistencia,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Registro de asistencia' }
+          ]
+        }
       },
       {
         path: 'mis-notas',
         name: 'AlumnoMisNotas',
         component: AlumnoMisNotas,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Mis notas' }
+          ]
+        }
       },
       {
         path: 'dashboard-alumno',
         name: 'DashboardAlumno',
         component: DashboardAlumno,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Dashboard' }
+          ]
+        }
       },
       {
         path: 'mis-cursos-docente',
@@ -111,7 +161,13 @@ const routes = [
         path: 'mis-cursos',
         name: 'MisCursos',
         component: MisCursos,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Mis cursos' }
+          ]
+        }
       },
       {
         path: 'mis-cursos-registro-notas',
@@ -156,61 +212,142 @@ const routes = [
         path: 'docentes-anio-escolar',
         name: 'DocentesAnioEscolar',
         component: DocentesAnioEscolar,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Docentes' }
+          ]
+        }
       },
       {
         path: 'mis-aulas',
         name: 'MisAulas',
         component: MisAulas,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Mis aulas' }
+          ]
+        }
       },
       {
         path: 'mi-horario-escolar',
         name: 'AlumnoHorarioEscolar',
         component: AlumnoHorarioEscolar,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Horario escolar' }
+          ]
+        }
+      }, 
+      {
+        path: 'docentes-horarios',
+        name: 'DocentesHorarios',
+        component: DocentesHorarios,
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Docentes', to: '/principal/docentes-anio-escolar' },
+            { text: 'Horario escolar' }
+          ]
+        }
       },
       {
-        path: 'horario-escolar',
+        path: 'docente-mi-horario',
+        name: 'DocenteMiHorario',
+        component: DocenteMiHorario,
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Mi horario' }
+          ]
+        }
+      },
+/*       {
+        path: 'docente-horario-escolar',
         name: 'DocenteHorarioEscolar',
         component: DocenteHorarioEscolar,
-        meta: { showBreadcrumb: true }
-      },
+        meta: {
+          showBreadcrumb: true
+        }
+      }, */
       {
         path: 'plan-estudios',
         name: 'PlanEstudios',
         component: PlanEstudios,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Plan de estudios' }
+          ]
+        }
       },
       {
         path: 'evaluaciones',
         name: 'Evaluaciones',
         component: Evaluaciones,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Evaluaciones' }
+          ]
+        }
       },
       {
         path: 'docente-plan-estudios',
         name: 'DocentePlanEstudios',
         component: DocentePlanEstudios,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Mi plan de estudios' }
+          ]
+        }
       },
       {
         path: 'matricula',
         name: 'Matricula',
         component: Matricula,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Matricula' }
+          ]
+        }
       },
       {
         path: 'alumnos',
         name: 'Alumnos',
         component: Alumnos,
-        meta: { showBreadcrumb: true }
-      },
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Alumnos' }
+          ]
+        }
+      },      
       {
         path: 'empleados',
         name: 'Empleados',
         component: Empleados,
-        meta: { showBreadcrumb: true }
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Empleados' }
+          ]
+        }
       }
     ]
   }
@@ -221,15 +358,14 @@ const router = createRouter({
   routes
 });
 
-// Guardia de navegación para proteger rutas
 router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('auth') === 'true';
-
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/'); // Redirige a login si no está autenticado
+    next('/');
   } else {
-    next(); // Permite el acceso a la ruta
+    next();
   }
 });
 
 export default router;
+

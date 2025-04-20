@@ -1,48 +1,63 @@
 <template>
-    <v-breadcrumbs class="mb-4" :items="items" divider=">">
-      <template #prepend>
-        <v-icon color="primary" class="me-2">mdi-home</v-icon>
-      </template>
-    </v-breadcrumbs>
-  </template>
-  
-  <script setup>
-  import { computed } from 'vue'
+  <v-breadcrumbs class="mb-4" :items="items" divider=">">
+    <template #prepend>
+      <v-icon color="primary" class="me-2">mdi-home</v-icon>
+    </template>
+  </v-breadcrumbs>
+</template>
+
+<script setup>
+//import { computed } from 'vue'
+import { ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+const items = ref([])
 
-const items = computed(() => {
-  if (route.meta?.breadcrumb) {
-    return route.meta.breadcrumb.map((crumb, i, arr) => ({
-      title: crumb.text,
-      to: crumb.to || undefined,
-      disabled: i === arr.length - 1
+watchEffect(() => {
+  const metaCrumbs = route.meta?.breadcrumb
+  if (Array.isArray(metaCrumbs)) {
+    items.value = metaCrumbs.map((b, i, arr) => ({
+      title: b.text,
+      disabled: i === arr.length - 1,
+      to: b.to || undefined
     }))
+  } else {
+    items.value = []
   }
-
-  // fallback en caso no haya breadcrumb definido
-  const segments = route.path.split('/').filter(Boolean)
-  const crumbs = []
-  let fullPath = ''
-
-  segments.forEach((segment, i) => {
-    fullPath += `/${segment}`
-    crumbs.push({
-      title: segment.charAt(0).toUpperCase() + segment.slice(1),
-      disabled: i === segments.length - 1,
-      to: i === segments.length - 1 ? undefined : fullPath,
-    })
-  })
-
-  return crumbs
 })
 
-  </script>
-  
-  <style scoped>
-  .v-breadcrumbs {
-    font-size: 0.875rem;
+/* const items = computed(() => {
+  const metaCrumbs = route.meta?.breadcrumb
+  if (metaCrumbs) {
+    return metaCrumbs.map((b, i, arr) => ({
+      title: b.text,
+      disabled: i === arr.length - 1,
+      to: b.to || undefined
+    }))
   }
-  </style>
-  
+  return []
+}) */
+</script>
+
+<style scoped>
+.v-breadcrumbs {
+  font-size: 0.875rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.v-breadcrumbs .v-breadcrumbs-item:last-child {
+  white-space: normal;
+  max-width: 60%;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .v-breadcrumbs {
+    font-size: 0.8rem;
+    padding-inline: 8px;
+  }
+}
+</style>

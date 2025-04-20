@@ -21,9 +21,10 @@
       <v-data-table
         :items="docentesAsignados"
         item-key="aedo_id"
-        :items-per-page="5"
+        :items-per-page="itemsPerPage"
         hide-default-header
         class="elevation-1 mt-4"
+        v-model:page="currentPage"
       >
         <template #body="{ items }">
           <!-- CABECERA MANUAL -->
@@ -37,16 +38,16 @@
             </tr>
           </thead>
           <tbody>
-            <!-- ÚNICO v-for en <template> con key en la etiqueta -->
+            <!-- ÚNICO v-for en un <template> con key en la etiqueta -->
             <template v-for="(doc, dIndex) in items" :key="doc.aedo_id">
-              <!-- FILA PRINCIPAL: Información del docente -->
-              <tr style="text-align: left;">
+              <!-- Fila principal: Información del docente -->
+              <tr :class="{ 'expanded-teacher-row': isExpanded(doc.aedo_id) }" style="text-align: left;">
                 <td>{{ (currentPage - 1) * itemsPerPage + dIndex + 1 }}</td>
                 <td>{{ doc.docente }}</td>
                 <td>{{ doc.fecha_asignacion }}</td>
                 <td>
                   <v-chip v-if="doc.estado === 'A'" color="green">Activo</v-chip>
-                  <v-chip color="red" v-else>Inactivo</v-chip>
+                  <v-chip v-else color="red">Inactivo</v-chip>
                 </td>
                 <td>
                   <!-- Botón editar docente -->
@@ -61,21 +62,21 @@
                   </v-btn>
                 </td>
               </tr>
-              <!-- FILA EXPANDIDA: Sección de cursos asignados -->
+              <!-- Fila expandida: Sección de cursos asignados -->
               <tr v-if="isExpanded(doc.aedo_id)" style="background: #fafafa; text-align: left;">
                 <td :colspan="5" style="padding: 12px;">
-                  <!-- Sub-encabezado para cursos -->
+                  <!-- Subencabezado para cursos -->
                   <div style="font-weight: bold; display: flex; align-items: center; margin-bottom: 8px;">
                     <span style="flex: 1;">Cursos Asignados</span>
                     <v-btn small color="primary" variant="text" @click="abrirDialogoAgregarCurso(doc)">
                       +Agregar
                     </v-btn>
                   </div>
-                  <!-- Si el docente no tiene cursos asignados, se muestra el mensaje -->
+                  <!-- Si el docente no tiene cursos asignados, muestra mensaje -->
                   <div v-if="filtrarCursosDocente(doc.aedo_id).length === 0">
                     <p>No hay cursos asignados</p>
                   </div>
-                  <!-- Si tiene cursos, se muestra la tabla de cursos -->
+                  <!-- Si tiene cursos, muestra tabla manual de cursos -->
                   <div v-else>
                     <table style="width: 100%; border-collapse: collapse; text-align: left;">
                       <thead>
@@ -94,7 +95,7 @@
                           <td>{{ curso.fecha_asignacion }}</td>
                           <td>
                             <v-chip v-if="curso.estado === 'A'" color="green">Activo</v-chip>
-                            <v-chip color="red" v-else>Inactivo</v-chip>
+                            <v-chip v-else color="red">Inactivo</v-chip>
                           </td>
                           <td>
                             <!-- Botón editar curso -->
@@ -114,26 +115,18 @@
       </v-data-table>
     </div>
 
-    <!-- VERSIÓN MOBILE/TABLET: Tarjetas con funcionalidad similar -->
+    <!-- VERSIÓN MOBILE/TABLET -->
     <div v-else>
       <v-row dense>
         <v-col v-for="(doc, dIndex) in paginatedDocentes" :key="doc.aedo_id" cols="12" class="mb-4">
-          <v-card style="position: relative; text-align: left;">
-            <!-- Botones: Editar y Expandir, posicionados en la esquina superior derecha -->
-            <v-btn
-              icon
-              variant="text"
-              @click="abrirDialogoActualizarDocente(doc)"
-              style="position: absolute; top: 8px; right: 48px;"
-            >
+          <v-card :class="{ 'expanded-teacher-card': isExpanded(doc.aedo_id) }" style="position: relative; text-align: left;">
+            <!-- Botones: Editar y Expandir (editar a la izquierda de expandir, ambos en esquina superior derecha) -->
+            <v-btn icon variant="text" @click="abrirDialogoActualizarDocente(doc)"
+              style="position: absolute; top: 8px; right: 48px;">
               <v-icon>mdi-pencil</v-icon>
             </v-btn>
-            <v-btn
-              icon
-              variant="text"
-              @click="toggleExpand(doc.aedo_id)"
-              style="position: absolute; top: 8px; right: 8px;"
-            >
+            <v-btn icon variant="text" @click="toggleExpand(doc.aedo_id)"
+              style="position: absolute; top: 8px; right: 8px;">
               <v-icon>
                 {{ isExpanded(doc.aedo_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
               </v-icon>
@@ -141,17 +134,17 @@
 
             <!-- Información del docente -->
             <v-card-text style="padding-top: 60px;">
-              <div><strong>N°:</strong> {{ (currentPage - 1) * itemsPerPage + dIndex + 1 }}</div>
-              <div><strong>Docente:</strong> {{ doc.docente }}</div>
+              <div><strong>Docente N°:</strong> {{ (currentPage - 1) * itemsPerPage + dIndex + 1 }}</div>
+              <div><strong>Nombre:</strong> {{ doc.docente }}</div>
               <div><strong>Fecha:</strong> {{ doc.fecha_asignacion }}</div>
               <div>
                 <strong>Estado:</strong>
                 <v-chip v-if="doc.estado === 'A'" color="green">Activo</v-chip>
-                <v-chip color="red" v-else>Inactivo</v-chip>
+                <v-chip v-else color="red">Inactivo</v-chip>
               </div>
             </v-card-text>
 
-            <!-- Botón para expandir/collapse en mobile -->
+            <!-- Botón para expandir/collapse (opcional en mobile) -->
             <v-card-actions style="justify-content: flex-start;">
               <v-btn color="primary" variant="text" @click="toggleExpand(doc.aedo_id)">
                 {{ isExpanded(doc.aedo_id) ? 'Ocultar Cursos' : 'Ver Cursos' }}
@@ -167,7 +160,7 @@
                   +Agregar
                 </v-btn>
               </div>
-              <!-- Si no hay cursos asignados, se muestra el mensaje -->
+              <!-- Si no hay cursos asignados, muestra mensaje -->
               <div v-if="filtrarCursosDocente(doc.aedo_id).length === 0" style="text-align: left;">
                 <p>No hay cursos asignados</p>
               </div>
@@ -181,22 +174,18 @@
                 >
                   <v-card style="position: relative; text-align: left;">
                     <!-- Botón editar curso en esquina superior derecha -->
-                    <v-btn
-                      icon
-                      variant="text"
-                      @click.stop="abrirDialogoActualizarCurso(curso)"
-                      style="position: absolute; top: 8px; right: 8px;"
-                    >
+                    <v-btn icon variant="text" @click.stop="abrirDialogoActualizarCurso(curso)"
+                      style="position: absolute; top: 8px; right: 8px;">
                       <v-icon>mdi-pencil</v-icon>
                     </v-btn>
                     <v-card-text style="padding-top: 40px;">
-                      <div><strong>N°:</strong> {{ (currentPage - 1) * itemsPerPage + cIndex + 1 }}</div>
-                      <div><strong>Curso:</strong> {{ curso.area_educativa }}</div>
+                      <div><strong>Curso N°:</strong> {{ ((currentCoursePage[doc.aedo_id] || 1) - 1) * coursesPerPage + cIndex + 1 }}</div>
+                      <div><strong>Nombre:</strong> {{ curso.area_educativa }}</div>
                       <div><strong>Fecha:</strong> {{ curso.fecha_asignacion }}</div>
                       <div>
                         <strong>Estado:</strong>
                         <v-chip v-if="curso.estado === 'A'" color="green">Activo</v-chip>
-                        <v-chip color="red" v-else>Inactivo</v-chip>
+                        <v-chip v-else color="red">Inactivo</v-chip>
                       </div>
                     </v-card-text>
                   </v-card>
@@ -214,11 +203,16 @@
         </v-col>
       </v-row>
       <!-- Paginación para docentes en mobile -->
-      <v-pagination v-if="totalDocentePages > 1" v-model="currentPage" :length="totalDocentePages" class="mt-2" />
+      <v-pagination
+        v-if="totalDocentePages > 1"
+        v-model="currentPage"
+        :length="totalDocentePages"
+        class="mt-2"
+      />
     </div>
 
-    <!-- DIÁLOGOS (se muestran igual en ambas versiones) -->
-    <!-- Diálogo: Agregar NUEVOS Docentes -->
+    <!-- DIÁLOGOS -->
+    <!-- Diálogo: Agregar NUEVOS DOCENTES -->
     <v-dialog v-model="mostrarDialogoAgregarDocentes" max-width="600">
       <v-card>
         <v-card-title>
@@ -299,28 +293,67 @@
     </v-dialog>
 
     <!-- Diálogo: Agregar CURSO a un docente -->
-    <v-dialog v-model="dialogoAgregarCurso.visible" max-width="500">
-      <v-card>
-        <v-card-title>
-          <span class="text-h6">Agregar Curso a {{ dialogoAgregarCurso.docente?.docente }}</span>
-        </v-card-title>
-        <v-card-text>
-          <v-select
-            v-model="cursosSeleccionados"
-            :items="cursosNoAsignados"
-            item-value="aede_id"
-            item-title="aede_nombre"
-            label="Cursos disponibles"
-            multiple
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="cerrarDialogoAgregarCurso">Cancelar</v-btn>
-          <v-btn color="primary" @click="asignarCursosDocente">Guardar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <v-dialog v-model="dialogoAgregarCurso.visible" max-width="600">
+    <v-card>
+      <v-card-title>
+        <span class="text-h6">Agregar Cursos a {{ dialogoAgregarCurso.docente?.docente }}</span>
+      </v-card-title>
+      <v-card-text>
+        <v-select
+          v-model="cursosSeleccionados"
+          :items="cursosNoAsignados"
+          item-value="aede_id"
+          item-title="aede_nombre"
+          label="Cursos disponibles"
+          multiple
+
+          class="curso-select"
+          chips
+          closable-chips
+          :menu-props="{ maxHeight: '300' }"
+        >
+          <!-- CABECERA CON DOS COLUMNAS -->
+          <template #prepend-item>
+            <v-list-item class="curso-header" title="">
+              <v-row class="w-100" no-gutters>
+                <v-col cols="6" class="curso-area-header">Área Educativa</v-col>
+                <v-col cols="6" class="curso-nombre-header">Curso</v-col>
+              </v-row>
+            </v-list-item>
+            <v-divider />
+          </template>
+
+          <!-- ÍTEMS EN DOS COLUMNAS CON CHECKBOX -->
+          <template #item="{ item, props }">
+            <v-list-item v-bind="props" :title="null">
+              <!-- <template #prepend>
+                <v-checkbox-btn :model-value="props.selected" />
+              </template> -->
+              <v-row class="curso-item-row w-100" no-gutters>
+                <v-col cols="6" class="curso-area">{{ item.raw.ared_nombre }}</v-col>
+                <v-col cols="6" class="curso-nombre">{{ item.raw.aede_nombre }}</v-col>
+              </v-row>
+            </v-list-item>
+          </template>
+
+          <!-- Mostrar seleccionado como resumen de chips -->
+          <template #selection="{ item, index }">
+            <template v-if="index < 3">
+              <v-chip small>{{ item.aede_nombre }}</v-chip>
+            </template>
+            <template v-else-if="index === 3">
+              <v-chip small>+{{ cursosSeleccionados.length - 3 }} más</v-chip>
+            </template>
+          </template>
+        </v-select>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" @click="cerrarDialogoAgregarCurso">Cancelar</v-btn>
+        <v-btn color="primary" @click="asignarCursosDocente">Guardar</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   </v-container>
 </template>
 
@@ -328,15 +361,16 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useDisplay } from 'vuetify'
+import { safeArray } from '@/utils/global.js'
 
 /** DETECTAR BREAKPOINTS */
 const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
 
 /** PARÁMETROS (localstorage) */
-const anioEscolar = localStorage.getItem('ac_anio_escolar') || '2025'
-const profile = localStorage.getItem('av_profile') || 'demo'
-const token = localStorage.getItem('token') || ''
+const anioEscolar = localStorage.getItem('anio_escolar')
+const profile = localStorage.getItem('profile')
+const token = localStorage.getItem('token')
 
 /** DATA REACTIVA */
 const docentesAsignados = ref([])
@@ -349,20 +383,9 @@ const cursosNoAsignados = ref([])
 
 /** DIÁLOGOS */
 const mostrarDialogoAgregarDocentes = ref(false)
-const dialogoActualizarDocente = ref({
-  visible: false,
-  docente: null,
-  docenteEstado: '',
-})
-const dialogoActualizarCurso = ref({
-  visible: false,
-  curso: null,
-  cursoEstado: '',
-})
-const dialogoAgregarCurso = ref({
-  visible: false,
-  docente: null,
-})
+const dialogoActualizarDocente = ref({ visible: false, docente: null, docenteEstado: '' })
+const dialogoActualizarCurso = ref({ visible: false, curso: null, cursoEstado: '' })
+const dialogoAgregarCurso = ref({ visible: false, docente: null })
 
 /** AXIOS con token */
 const axiosInstance = axios.create({
@@ -373,7 +396,7 @@ const axiosInstance = axios.create({
   },
 })
 
-/** SINGLE EXPAND: Un docente a la vez */
+/** SINGLE EXPAND: un docente a la vez */
 const expandedAedoId = ref(null)
 function isExpanded(aedoId) {
   return expandedAedoId.value === aedoId
@@ -422,13 +445,18 @@ async function obtenerDocentesAsignados() {
   try {
     const url = `wsListaAnioEscolarDocentes.php?ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
     const { data } = await axiosInstance.get(url)
-    if (data.status) {
+    if (data.status && Array.isArray(data.data)) {
       docentesAsignados.value = data.data
+    } else {
+      console.warn('La API no retornó un array en docentesAsignados:', data.data)
+      docentesAsignados.value = []
     }
   } catch (err) {
     console.error('Error al obtener docentes asignados:', err)
+    docentesAsignados.value = []
   }
 }
+
 async function obtenerDocentesNoAsignados() {
   try {
     const url = `wsListaAnioEscolarNoDocentes.php?ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
@@ -444,17 +472,17 @@ async function obtenerCursosDocentes() {
   try {
     const url = `wsListaDocenteAreaEducativaDetalle.php?ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
     const resp = await axiosInstance.get(url)
-    if (resp.data.status) {
-      cursosDocentes.value = resp.data.data
-    }
+    cursosDocentes.value = safeArray(resp.data.data)
   } catch (err) {
     console.error('Error al obtener cursos:', err)
+    cursosDocentes.value = []
   }
 }
 
+
 /** FILTRAR CURSOS X DOCENTE (aedo_id) */
 function filtrarCursosDocente(aedoId) {
-  return cursosDocentes.value.filter(c => c.aedo_id === aedoId)
+  return safeArray(cursosDocentes.value).filter(c => c.aedo_id === aedoId)
 }
 
 /** EDITAR ESTADO DEL DOCENTE */
@@ -474,7 +502,7 @@ async function guardarEstadoDocente() {
     const nuevoEstado = dialogoActualizarDocente.value.docenteEstado === 'Activo' ? 'A' : 'I'
     await axiosInstance.post('wsActualizaAnioEscolarDocente.php', {
       ai_aedo_id: d.aedo_id,
-      ac_aedo_estado: nuevoEstado,
+      ac_Aulas: nuevoEstado,
       av_profile: profile,
     })
     cerrarDialogoActualizarDocente()
@@ -528,12 +556,13 @@ async function cargarCursosNoAsignadosDocente(aedoId) {
     const url = `wsListaDocenteNoAreaEducativaDetalle.php?ai_aedo_id=${aedoId}&ac_anio_escolar=${anioEscolar}&av_profile=${profile}`
     const resp = await axiosInstance.get(url)
     if (resp.data.status) {
-      cursosNoAsignados.value = resp.data.data
+      cursosNoAsignados.value = safeArray(resp.data.data)
     }
   } catch (err) {
     console.error('Error al cargar cursos no asignados:', err)
   }
 }
+
 async function asignarCursosDocente() {
   try {
     const doc = dialogoAgregarCurso.value.docente
@@ -541,6 +570,7 @@ async function asignarCursosDocente() {
       await axiosInstance.post('wsRegistraDocenteAreaEducativaDetalle.php', {
         ai_aedo_id: doc.aedo_id,
         ai_aede_id: cursoId,
+        av_profile: profile,
       })
     }
     cerrarDialogoAgregarCurso()
@@ -574,10 +604,52 @@ function cerrarDialogoAgregarDocentes() {
 </script>
 
 <style scoped>
-/* Puedes ajustar los estilos a tu gusto */
-/* Por ejemplo, para mobile: */
-.v-card {
-  /* Aseguramos que el contenido se alinee a la izquierda */
+.v-card, .v-list-item {
+  text-align: left;
+}
+.expanded-teacher-row {
+  background-color: #e0f7fa;
+}
+.expanded-teacher-card {
+  background-color: #e0f7fa;
+}
+
+.curso-header {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #444;
+  pointer-events: none;
+  padding: 0 8px;
+  background-color: #f5f5f5;
+}
+.curso-area-header,
+.curso-nombre-header {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.curso-item-row {
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  background-color: white !important;
+  color: #212121 !important;
+}
+.curso-area,
+.curso-nombre {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #212121 !important;
+}
+.curso-area {
+  text-align: left;
+}
+.curso-nombre {
   text-align: left;
 }
 </style>

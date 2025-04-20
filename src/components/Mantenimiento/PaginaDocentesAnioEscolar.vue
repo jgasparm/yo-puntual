@@ -54,6 +54,15 @@
                   <v-btn icon variant="text" @click.stop="abrirDialogoActualizarDocente(doc)">
                     <v-icon>mdi-pencil</v-icon>
                   </v-btn>
+                  <v-btn
+                    icon
+                    variant="text"
+                    color="primary"
+                    @click="verHorarioDocente(doc)"
+                  >
+                    <v-icon>mdi-calendar-clock</v-icon>
+                  </v-btn>
+
                   <!-- Botón expandir/collapse -->
                   <v-btn icon variant="text" @click.stop="toggleExpand(doc.aedo_id)">
                     <v-icon>
@@ -124,6 +133,14 @@
             <v-btn icon variant="text" @click="abrirDialogoActualizarDocente(doc)"
               style="position: absolute; top: 8px; right: 48px;">
               <v-icon>mdi-pencil</v-icon>
+            </v-btn>
+            <v-btn
+              icon
+              variant="text"
+              color="primary"
+              @click="$router.push({ name: 'DocentesHorarios', query: { usua_id: doc.usua_id, nombre_docente: doc.docente } })"
+            >
+              <v-icon>mdi-calendar-clock</v-icon>
             </v-btn>
             <v-btn icon variant="text" @click="toggleExpand(doc.aedo_id)"
               style="position: absolute; top: 8px; right: 8px;">
@@ -362,6 +379,9 @@ import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useDisplay } from 'vuetify'
 import { safeArray } from '@/utils/global.js'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 /** DETECTAR BREAKPOINTS */
 const { mdAndUp } = useDisplay()
@@ -395,6 +415,18 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 })
+
+function verHorarioDocente(doc) {
+  // Navegar a la página con los datos necesarios
+  router.push({
+    name: 'DocentesHorarios',
+    query: {
+      usua_id: doc.usua_id,
+      nombre_docente: doc.docente,
+    }
+  })
+}
+
 
 /** SINGLE EXPAND: un docente a la vez */
 const expandedAedoId = ref(null)

@@ -272,7 +272,7 @@ export default {
         "Docentes del año escolar": "DocentesAnioEscolar",
         "Aulas": "MisAulas",
         "Mi horario escolar":"AlumnoHorarioEscolar",
-        "Horario escolar":"DocenteHorarioEscolar",
+        "Mi horario":"DocenteMiHorario",
         "Plan de estudios":"PlanEstudios",
         "Evaluaciones":"Evaluaciones",
         "Mi plan de estudios":"DocentePlanEstudios",
