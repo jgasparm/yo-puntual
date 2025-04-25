@@ -19,12 +19,17 @@ if (/Mobi|Android/i.test(navigator.userAgent)) {
 }
 
 app.use(VueReCaptcha, {
-  siteKey: '6Ld07gwrAAAAAPQolqEzChfuERxtUSf5OP0d0d9U', // Clave pública de reCAPTCHA v3
+  //siteKey: '6Ld07gwrAAAAAPQolqEzChfuERxtUSf5OP0d0d9U', // Clave pública de reCAPTCHA desa v3
+  siteKey: '6Lc_iiIrAAAAAKXaEHtat0wq6oAylY2pThaFJ65b', // Clave pública de reCAPTCHA prod v3
   loaderOptions: {
-    useRecaptchaNet: true,
+    useRecaptchaNet: false,
     autoHideBadge: true,
   }
 })
+
+window.onRecaptchaLoadCallback = () => {
+  console.log("✅ reCAPTCHA V2 Invisible listo");
+};
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

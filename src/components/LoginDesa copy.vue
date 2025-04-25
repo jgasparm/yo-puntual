@@ -1,0 +1,236 @@
+<template>
+    <div class="login-wrapper">
+      <v-app>
+        <v-container class="d-flex justify-center align-center" style="min-height: 100vh">
+          <v-card class="pa-6" max-width="380" width="100%" elevation="10" outlined>
+            <v-img src="./logo.webp" height="120" contain class="mx-auto mb-2" />
+            <h2 class="text-center text-h5 font-weight-bold mb-4">Ingreso al Sistema</h2>
+  
+            <v-form>
+              <v-select
+                v-model="document_type"
+                :items="tipoDocumentoItems"
+                item-text="title"
+                item-value="key"
+                label="Tipo de Documento"
+                required
+                outlined
+                prepend-icon="mdi-card-account-details"
+                dense
+              />
+  
+              <v-text-field
+                v-model="document_number"
+                label="Número de documento"
+                placeholder="Ej. 12345678"
+                prepend-icon="mdi-account-circle-outline"
+                outlined
+                dense
+                :rules="[v => !!v || 'Campo obligatorio']"
+                ref="docInput"
+              />
+  
+              <v-text-field
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                label="Contraseña"
+                prepend-icon="mdi-lock-outline"
+                :append-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                @click:append="showPassword = !showPassword"
+                outlined
+                dense
+                :rules="[v => !!v || 'Campo obligatorio']"
+              />
+  
+              <v-checkbox v-model="rememberMe" label="Recordarme" dense class="mt-1" />
+  
+              <v-btn
+                color="primary"
+                block
+                class="mt-4"
+                :loading="loading"
+                :disabled="!document_number || !password"
+                @click="login"
+              >
+                {{ loading ? 'Ingresando...' : 'Iniciar sesión' }}
+              </v-btn>
+  
+              <div class="my-4 text-center">
+                <div id="recaptcha-v2-container" :style="{ display: showRecaptchaV2 ? 'inline-block' : 'none' }"></div>
+              </div>
+            </v-form>
+  
+            <DialogMensaje
+              v-model:mostrar="ModalMensajeVisible"
+              :titulo="tituloMensaje"
+              :mensaje="contenidoMensaje"
+              :tipo="tipoMensaje"
+            />
+          </v-card>
+  
+          <v-overlay v-model="loading" class="d-flex flex-column justify-center align-center" persistent>
+            <v-img src="./logo.webp" height="100" contain class="logo-spin mb-4" />
+            <span class="text-h6 font-weight-medium">Procesando...</span>
+          </v-overlay>
+  
+          <RecaptchaInvisible
+            :siteKey="recaptchaV2SiteKey"
+            :trigger="showRecaptchaV2"
+            action="login"
+            @verified="onRecaptchaV2Success"
+            @error="onRecaptchaV2Error"
+            />
+
+        </v-container>
+      </v-app>
+    </div>
+  </template>
+  
+  <script>
+  import DialogMensaje from '@/components/DialogMensaje.vue';
+  import RecaptchaInvisible from '@/components/RecaptchaInvisible.vue';
+  
+  export default {
+    name: 'LoginForm',
+    components: { DialogMensaje, RecaptchaInvisible },
+    data() {
+      return {
+        document_type: '1',
+        tipoDocumentoItems: [
+          { title: 'DNI', key: '1' },
+          { title: 'Carnet de extranjería', key: '4' }
+        ],
+        document_number: '',
+        password: '',
+        showPassword: false,
+        rememberMe: false,
+        loading: false,
+  
+        ModalMensajeVisible: false,
+        tituloMensaje: '',
+        contenidoMensaje: '',
+        tipoMensaje: 'error',
+  
+        recaptchaV2SiteKey: '6Le5kiIrAAAAAOSIrzxc_vQjmJkCrG89qsvv4FbY',
+        recaptchaAttempts: 0,
+        maxAttempts: 2,
+        showRecaptchaV2: false,
+        recaptchaV2Token: '',
+
+        recaptchaV2WidgetId: null
+      };
+    },
+    mounted() {
+      if (localStorage.getItem('auth') === 'true') {
+        this.$router.push('/principal');
+      }
+  
+      const rememberedDoc = localStorage.getItem('remembered_document');
+      if (rememberedDoc) {
+        this.document_number = rememberedDoc;
+        this.rememberMe = true;
+      }
+  
+      this.$nextTick(() => {
+        this.$refs.docInput.focus();
+      });
+  
+      //this.initRecaptchaV2();
+    },
+    methods: {
+      onRecaptchaV2Success(token) {
+        this.recaptchaV2Token = token;
+        this.realizarLogin(token, 'v2');
+      },
+      onRecaptchaV2Error(err) {
+        console.error('Error al ejecutar reCAPTCHA v2:', err);
+        this.tituloMensaje = 'Error de seguridad';
+        this.contenidoMensaje = 'No se pudo validar tu identidad. Intenta nuevamente.';
+        this.tipoMensaje = 'error';
+        this.ModalMensajeVisible = true;
+      },
+      async realizarLogin(token, tipo) {
+    try {
+      const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWebDes.php?ai_tipo_documento=${this.document_type}&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}&recaptcha=${token}&recaptcha_tipo=${tipo}`;
+      const response = await fetch(apiUrl);
+      const result = await response.json();
+
+      if (result.status && result.data.length > 0) {
+        // ... código para guardar data
+        this.$router.push('/principal');
+      } else if (result.usar_recaptcha_v2) {
+        this.recaptchaAttempts++;
+        this.showRecaptchaV2 = true;
+        this.recaptchaV2Token = '';
+        this.tituloMensaje = 'Verificación adicional requerida';
+        this.contenidoMensaje = 'Por favor haz clic nuevamente para verificar tu identidad.';
+        this.tipoMensaje = 'info';
+        this.ModalMensajeVisible = true;
+
+        setTimeout(() => {
+          this.initRecaptchaV2();
+        }, 500);
+      } else {
+        this.tituloMensaje = 'Credenciales incorrectas';
+        this.contenidoMensaje = 'Por favor, revisa tu usuario y contraseña.';
+        this.tipoMensaje = 'info';
+        this.ModalMensajeVisible = true;
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error al conectar con el servidor.');
+    } finally {
+      this.loading = false;
+    }
+  },
+      async login() {
+        if (!this.document_number || !this.password) return;
+        this.loading = true;
+  
+        try {
+            if (this.showRecaptchaV2) {
+                setTimeout(() => {
+                    if (this.recaptchaV2WidgetId !== null && window.grecaptcha) {
+                    window.grecaptcha.execute(this.recaptchaV2WidgetId);
+                    console.log("🧠 Ejecutando reCAPTCHA V2 con widgetId:", this.recaptchaV2WidgetId);
+                    } else {
+                    console.warn("❌ Widget ID de reCAPTCHA V2 no disponible");
+                    }
+                }, 500);
+                return;
+                }
+
+  
+          const tokenV3 = await this.$recaptcha('login');
+          this.realizarLogin(tokenV3, 'v3');
+        } catch (error) {
+          console.error('❌ Error al iniciar sesión:', error);
+          this.loading = false;
+        }
+      },
+      initRecaptchaV2() {
+        this.$nextTick(() => {
+        const el = document.getElementById('recaptcha-v2-container');
+        if (!el || this.recaptchaV2WidgetId !== null) return;
+
+        if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+            this.recaptchaV2WidgetId = window.grecaptcha.render(el, {
+            sitekey: this.recaptchaV2SiteKey,
+            size: 'invisible',
+            callback: (token) => this.onRecaptchaV2Success(token),
+            'expired-callback': () => {
+                this.$emit('error', new Error('Token expirado'));
+            }
+            });
+            console.log('✅ reCAPTCHA V2 renderizado manualmente');
+        } else {
+            console.warn("⚠️ grecaptcha no disponible aún para render");
+        }
+        });
+    },
+      recoverPassword() {
+        alert('Funcionalidad de recuperación aún no implementada.');
+      }
+    }
+  };
+  </script>

@@ -33,6 +33,9 @@ const routes = [
   {
     path: '/',
     name: 'login',
+    //Desa
+    //component: () => import('@/components/LoginDesa.vue'),
+    //Prod
     component: () => import('@/components/Login.vue'),
       meta: {
         showBreadcrumb: false
@@ -358,14 +361,30 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach((to, from, next) => {
+/* router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('auth') === 'true';
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/');
   } else {
     next();
   }
+}); */
+
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem('auth') === 'true';
+
+  console.log('🔄 Navegando hacia:', to.fullPath);
+  console.log('🔐 ¿Está autenticado?', isAuthenticated);
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    console.warn('🚫 Ruta bloqueada. No autenticado.');
+    next('/');
+  } else {
+    console.log('✅ Acceso permitido a:', to.fullPath);
+    next();
+  }
 });
+
 
 export default router;
 
