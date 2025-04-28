@@ -16,13 +16,13 @@ import MisCursos from '../components/Estudios/PaginaMisCursos.vue';
 import DocenteMisCursosRegistroNotas from '../components/Estudios/PaginaDocenteMisCursosRegistroNotas.vue';
 import DocenteMisCursosConsultaNotas from '../components/Estudios/PaginaDocenteMisCursosConsultaNotas.vue';
 import MisCursosConsultaNotas from '../components/Estudios/PaginaMisCursosConsultaNotas.vue';
-import DocentesAnioEscolar from '../components/Mantenimiento/PaginaDocentesAnioEscolar.vue';
+import DocentesAnioEscolar from '../components/Mantenimiento/Docentes/PaginaDocentesAnioEscolar.vue';
 import MisAulas from '../components/Mantenimiento/PaginaMisAulas.vue';
 import AlumnoHorarioEscolar from '../components/Estudios/PaginaAlumnoHorarioEscolar.vue';
 //import DocenteHorarioEscolar from '../components/Estudios/PaginaDocenteHorarioEscolar.vue';
 import DocenteMiHorario from '../components/Estudios/PaginaDocenteMiHorario.vue';
 import DocentesHorarios from '../components/Estudios/PaginaDocentesHorarios.vue';
-import PlanEstudios from '../components/Mantenimiento/PaginaPlanEstudios.vue';
+import PlanEstudios from '../components/Mantenimiento/PlanEstudios/PaginaPlanEstudios.vue';
 import Evaluaciones from '../components/Mantenimiento/PaginaEvaluaciones.vue';
 import DocentePlanEstudios from '../components/Estudios/PaginaDocentePlanEstudios.vue';
 import Matricula from '../components/Mantenimiento/PaginaMatricula.vue';
@@ -34,9 +34,9 @@ const routes = [
     path: '/',
     name: 'login',
     //Desa
-    //component: () => import('@/components/LoginDesa.vue'),
+    component: () => import('@/components/LoginDesa.vue'),
     //Prod
-    component: () => import('@/components/Login.vue'),
+    //component: () => import('@/components/Login.vue'),
       meta: {
         showBreadcrumb: false
       }

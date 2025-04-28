@@ -1,234 +1,248 @@
 <template>
-  <v-container fluid>
-    <!-- Encabezado: Título y botón para Agregar Aula -->
-    <v-row class="mb-2" align="center">
-  <!-- Columna para el título -->
-  <v-col cols="6">
-    <h1 class="mb-2">Mis Aulas</h1>
-  </v-col>
-  <!-- Columna para los botones, alineados a la derecha -->
-  <v-col cols="6" class="d-flex justify-end">
-    <v-btn color="primary" class="mr-2" @click="abrirDialogGestionarHoras">
-      Gestionar horas
-    </v-btn>
-    <v-btn color="primary" @click="abrirDialogAgregar">
-      Agregar Aula
-    </v-btn>
-  </v-col>
-</v-row>
+  <v-container fluid class="pa-4" style="max-width: 1440px; margin: 0 auto; padding-bottom: 64px;">
 
-    <!-- VERSIÓN DESKTOP -->
+    <!-- ENCABEZADO PRINCIPAL -->
+    <v-row class="py-3">
+      <v-col cols="12">
+        <h1 class="text-h5 font-weight-bold mb-1">🏫 Mis Aulas</h1>
+        <p class="text-subtitle-2">Gestiona tus aulas y sus detalles para el año escolar.</p>
+      </v-col>
+    </v-row>
+
+    <!-- BOTONES PRINCIPALES -->
+    <v-row
+      class="mb-4"
+      :class="{ 'flex-column': !isDesktop, 'justify-end': isDesktop }"
+      align="center"
+      dense
+    >
+      <v-col cols="12" md="auto" class="pa-0" style="margin-right: 8px;" v-if="isDesktop">
+        <v-btn
+          color="primary"
+          @click="abrirDialogGestionarHoras"
+          prepend-icon="mdi-calendar-clock"
+        >
+          Gestionar horas
+        </v-btn>
+      </v-col>
+
+      <v-col cols="12" md="auto" class="pa-0">
+        <v-btn
+          color="primary"
+          @click="abrirDialogAgregar"
+          prepend-icon="mdi-plus"
+        >
+          Agregar Aula
+        </v-btn>
+      </v-col>
+    </v-row>
+
+
+
+
+    <!-- VISTA DESKTOP -->
     <div v-if="isDesktop">
-      <v-data-table
-        :items="paginatedAulas"
-        item-key="aula_id"
-        hide-default-header
-        class="elevation-1 mt-4"
-      >
-        <template #body="{ items }">
-          <!-- CABECERA MANUAL -->
-          <thead>
-            <tr>
-              <th style="width: 50px;">N°</th>
-              <th style="min-width: 180px;">Aula</th>
-              <th style="min-width: 100px;">Capacidad</th>
-              <th style="min-width: 150px;">Fecha Registro</th>
-              <th style="width: 90px;">Estado</th>
-              <th style="width: 130px;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Iteramos por cada aula de la página -->
-            <template v-for="(aula, index) in items" :key="aula.aula_id">
-              <!-- Fila principal: Información del aula -->
-              <tr :class="{ 'expanded-row': isExpanded(aula.aula_id) }">
-                <td>{{ (currentAulaPage - 1) * itemsPerAulaPage + index + 1 }}</td>
-                <td>{{ aula.aula_nombre }}</td>
-                <td>{{ aula.aula_capacidad }}</td>
-                <td>{{ aula.aula_fecha_registro }}</td>
-                <td>
-                  <v-chip v-if="aula.aula_estado === 'A'" color="green">Activo</v-chip>
-                  <v-chip v-else color="red">Inactivo</v-chip>
-                </td>
-                <td>
-                  <!-- Botón para editar aula -->
-                  <v-btn icon variant="text" @click.stop="abrirDialogEditar(aula)">
-                    <v-icon>mdi-pencil</v-icon>
-                  </v-btn>
-                  <!-- Botón para expandir/colapsar -->
-                  <v-btn icon variant="text" @click.stop="toggleExpand(aula.aula_id)">
-                    <v-icon>
-                      {{ isExpanded(aula.aula_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
-                    </v-icon>
-                  </v-btn>
-                </td>
+      <v-card class="pa-2 elevation-1">
+        <v-data-table
+          :headers="headers"
+          :items="allAulas"
+          item-key="aula_id"
+          v-model:page="currentAulaPage"
+          :items-per-page="itemsPerPageDesktop"
+          hide-default-header
+          class="elevation-0"
+          :disable-pagination="!isDesktop"
+        >
+          <template #body="{ items }">
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Aula</th>
+                <th>Capacidad</th>
+                <th>Fecha Registro</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
-              <!-- Fila expandida: Detalle del aula -->
-              <tr v-if="isExpanded(aula.aula_id)" style="background: #fafafa;">
-                <td :colspan="6" style="padding: 12px;">
-                  <!-- Encabezado del detalle -->
-                  <div class="d-flex justify-space-between align-center" style="margin-bottom: 8px;">
-                    <span style="font-weight: bold;">Detalles del Aula</span>
-                    <v-btn small color="primary" variant="text" @click="agregarDetalle(aula)">
-                      + Agregar Detalle
+            </thead>
+            <tbody>
+              <template v-for="(aula, index) in items" :key="aula.aula_id">
+                <tr :class="{ 'expanded-row': isExpanded(aula.aula_id) }">
+                  <td>{{ (currentAulaPage - 1) * getItemsPerPage() + index + 1 }}</td>
+                  <td>{{ aula.aula_nombre }}</td>
+                  <td>{{ aula.aula_capacidad }}</td>
+                  <td>{{ aula.aula_fecha_registro }}</td>
+                  <td>
+                    <v-chip :color="aula.aula_estado === 'A' ? 'green' : 'red'" small>
+                      {{ aula.aula_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                    </v-chip>
+                  </td>
+                  <td>
+                    <v-btn icon variant="text" @click.stop="abrirDialogEditar(aula)">
+                      <v-icon>mdi-pencil</v-icon>
                     </v-btn>
-                  </div>
-                  <!-- Tabla de detalles (versión desktop) -->
-                  <v-data-table
-                    :headers="detalleHeaders"
-                    :items="getPaginatedDetalles(aula.aula_id)"
-                    class="elevation-1"
-                    dense
-                  >
-                    <template #item.aude_estado="{ item }">
-                      <v-chip v-if="item.aude_estado === 'A'" color="green">Activo</v-chip>
-                      <v-chip v-else color="red">Inactivo</v-chip>
-                    </template>
-                    <template #item.accion="{ item }">
-                      <div class="table-action">
-                        <v-btn icon variant="text" @click="editarDetalle(item)">
-                          <v-icon>mdi-pencil</v-icon>
-                        </v-btn>
-                        <!-- Botón para abrir la gestión del horario -->
-                        <v-btn
-                          icon
-                          variant="text"
-                          color="primary"
-                          title="Gestionar Horario Escolar"
-                          @click="abrirDialogHorario(item)"
-                        >
-                          <v-icon>mdi-calendar-clock</v-icon>
-                        </v-btn>
-                      </div>
-                    </template>
-                  </v-data-table>
-                  <!-- Paginación interna para detalles -->
-                  <v-pagination
-                    v-if="getPaginatedDetallesTotal(aula.aula_id) > 1"
-                    v-model="detailPages[aula.aula_id]"
-                    :length="getPaginatedDetallesTotal(aula.aula_id)"
-                    class="mt-2"
-                  />
-                  <v-alert v-if="getDetalles(aula.aula_id).length === 0" type="info" class="mt-2">
-                    No hay detalles para este aula.
-                  </v-alert>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </template>
-      </v-data-table>
-      <!-- Paginación para la lista de aulas (desktop) -->
-      <v-pagination
-        v-if="totalAulaPages > 1"
-        v-model="currentAulaPage"
-        :length="totalAulaPages"
-        class="mt-4"
-      />
+                    <v-btn icon variant="text" @click.stop="toggleExpand(aula.aula_id)">
+                      <v-icon>{{ isExpanded(aula.aula_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                    </v-btn>
+                  </td>
+                </tr>
+
+                <tr v-if="isExpanded(aula.aula_id)">
+                  <td :colspan="6" class="pa-4" style="background: #fafafa;">
+                    <div class="d-flex justify-space-between align-center mb-2">
+                      <div class="font-weight-bold">Detalles del Aula</div>
+                      <v-btn small color="primary" variant="text" @click.stop="agregarDetalle(aula)">
+                        + Agregar Detalle
+                      </v-btn>
+                    </div>
+
+                    <v-simple-table dense class="simple-table-detalle">
+                      <thead>
+                        <tr>
+                          <th>Turno</th>
+                          <th>Nivel</th>
+                          <th>Grado</th>
+                          <th>Sección</th>
+                          <th>Tutor</th>
+                          <th>Estado</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="detalle in getPaginatedDetalles(aula.aula_id)" :key="detalle.aude_id">
+                          <td>{{ detalle.turn_nombre }}</td>
+                          <td>{{ detalle.nive_nombre }}</td>
+                          <td>{{ detalle.grad_nombre }}</td>
+                          <td>{{ detalle.secc_nombre }}</td>
+                          <td>{{ detalle.tutor }}</td>
+                          <td>
+                            <v-chip :color="detalle.aude_estado === 'A' ? 'green' : 'red'" small>
+                              {{ detalle.aude_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                            </v-chip>
+                          </td>
+                          <td class="d-flex align-center">
+                            <v-btn icon variant="text" @click.stop="editarDetalle(detalle)">
+                              <v-icon>mdi-pencil</v-icon>
+                            </v-btn>
+                            <v-btn icon variant="text" color="primary" @click.stop="abrirDialogHorario(detalle)">
+                              <v-icon>mdi-calendar-clock</v-icon>
+                            </v-btn>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </v-simple-table>
+
+                    <!-- Paginación interna detalles -->
+                    <v-pagination
+                      v-if="getPaginatedDetallesTotal(aula.aula_id) > 1"
+                      v-model="detailPages[aula.aula_id]"
+                      :length="getPaginatedDetallesTotal(aula.aula_id)"
+                      class="mt-2"
+                    />
+
+                    <v-alert
+                      v-if="getDetalles(aula.aula_id).length === 0"
+                      type="info"
+                      class="mt-2"
+                    >
+                      No hay detalles para este aula.
+                    </v-alert>
+
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </template>
+        </v-data-table>
+
+        <!-- Paginación Aulas -->
+        <v-pagination
+          v-if="!isDesktop && totalAulaPagesMobile > 1"
+          v-model="currentAulaPageMobile"
+          :length="totalAulaPagesMobile"
+          class="mt-4"
+        />
+      </v-card>
     </div>
 
     <!-- VERSIÓN MOBILE/TABLET -->
-    <div v-else>
-      <v-row dense>
-        <v-col
-          v-for="(aula, index) in paginatedAulas"
-          :key="aula.aula_id"
-          cols="12"
-          class="mb-4"
-        >
-          <v-card :class="{ 'expanded-card': isExpanded(aula.aula_id) }" style="position: relative; text-align: left;">
-            <!-- Botones: Editar y Expandir -->
-            <v-btn icon variant="text" @click.stop="abrirDialogEditar(aula)" style="position: absolute; top: 8px; right: 48px;">
-              <v-icon>mdi-pencil</v-icon>
-            </v-btn>
-            <v-btn icon variant="text" @click.stop="toggleExpand(aula.aula_id)" style="position: absolute; top: 8px; right: 8px;">
-              <v-icon>
-                {{ isExpanded(aula.aula_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
-              </v-icon>
-            </v-btn>
-            <v-card-text style="padding-top: 60px;">
-              <div><strong>Aula N°:</strong> {{ (currentAulaPage - 1) * itemsPerAulaPage + index + 1 }}</div>
-              <div><strong>Nombre:</strong> {{ aula.aula_nombre }}</div>
-              <div><strong>Capacidad:</strong> {{ aula.aula_capacidad }}</div>
-              <div>
-                <strong>Estado:</strong>
-                <v-chip v-if="aula.aula_estado === 'A'" color="green">Activo</v-chip>
-                <v-chip v-else color="red">Inactivo</v-chip>
-              </div>
-              <div><strong>Fecha Registro:</strong> {{ aula.aula_fecha_registro }}</div>
-            </v-card-text>
-            <!-- Botón para agregar detalle (visible cuando el aula está expandida) -->
-            <v-card-actions v-if="isExpanded(aula.aula_id)">
-              <v-btn color="primary" variant="text" @click="agregarDetalle(aula)">
-                + Agregar Detalle
-              </v-btn>
-            </v-card-actions>
-            <!-- Sección expandida: Detalles del aula en cards -->
-            <div v-if="isExpanded(aula.aula_id)" style="padding: 12px; background: #fafafa;">
-              <div class="mb-2" style="font-weight: bold; display: flex; align-items: center; justify-content: space-between;">
-                <span>Detalles del Aula</span>
-              </div>
-              <v-row dense>
-                <v-col
-                  v-for="(detalle, dIndex) in getPaginatedDetalles(aula.aula_id)"
-                  :key="detalle.id"
-                  cols="12"
-                  class="mb-2"
-                >
-                  <v-card outlined style="position: relative; text-align: left;">
-                    <!-- Botón para editar detalle -->
-                    <v-btn icon variant="text" @click.stop="editarDetalle(detalle)" style="position: absolute; top: 8px; right: 48px;">
-                      <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
-                    <!-- Botón para gestionar horario -->
-                    <v-btn
-                      icon
-                      variant="text"
-                      color="primary"
-                      title="Gestionar Horario Escolar"
-                      style="position: absolute; top: 8px; right: 8px;"
-                      @click="abrirDialogHorario(detalle)"
-                    >
-                      <v-icon>mdi-calendar-clock</v-icon>
-                    </v-btn>
-                    <v-card-text style="padding-top: 40px;">
-                      <div><strong>Detalle N°:</strong> {{ ((detailPages[aula.aula_id] - 1) * itemsPerDetailPage) + dIndex + 1 }}</div>
-                      <div><strong>Turno:</strong> {{ detalle.turn_nombre }}</div>
-                      <div><strong>Nivel:</strong> {{ detalle.nive_nombre }}</div>
-                      <div><strong>Grado:</strong> {{ detalle.grad_nombre }}</div>
-                      <div><strong>Sección:</strong> {{ detalle.secc_nombre }}</div>
-                      <div>
-                        <strong>Estado:</strong>
-                        <v-chip v-if="detalle.aude_estado === 'A'" color="green">Activo</v-chip>
-                        <v-chip v-else color="red">Inactivo</v-chip>
-                      </div>
-                      <div><strong>Tutor:</strong> {{ detalle.tutor }}</div>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-              <!-- Paginación interna para detalles en mobile -->
-              <v-pagination
-                v-if="getPaginatedDetallesTotal(aula.aula_id) > 1"
-                v-model="detailPages[aula.aula_id]"
-                :length="getPaginatedDetallesTotal(aula.aula_id)"
-                class="mt-2"
-              />
-              <v-alert v-if="getDetalles(aula.aula_id).length === 0" type="info" class="mt-2">
-                No hay detalles para este aula.
-              </v-alert>
-            </div>
-          </v-card>
-        </v-col>
-      </v-row>
-      <!-- Paginación para la lista de aulas (mobile) -->
-      <v-pagination
-        v-if="totalAulaPages > 1"
-        v-model="currentAulaPage"
-        :length="totalAulaPages"
-        class="mt-2"
-      />
-    </div>
+<!-- VISTA MOBILE -->
+<div v-else>
+  <v-row dense>
+    <v-col v-for="(aula) in paginatedAulas" :key="aula.aula_id" cols="12" class="mb-6">
+
+      <v-card class="shadow-mobile" style="position: relative; text-align: left;">
+        <v-btn icon variant="text" @click.stop="abrirDialogEditar(aula)" style="position: absolute; top: 16px; right: 48px;">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn icon variant="text" @click.stop="toggleExpand(aula.aula_id)" style="position: absolute; top: 16px; right: 8px;">
+          <v-icon>{{ isExpanded(aula.aula_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+        </v-btn>
+
+        <v-card-text style="padding-top: 60px;">
+          <div class="text-h6 font-weight-bold text-primary mb-1">{{ aula.aula_nombre }}</div>
+          <div class="text-subtitle-2 mb-1">Capacidad: {{ aula.aula_capacidad }}</div>
+          <div class="text-subtitle-2 mb-1">Estado: 
+            <v-chip v-if="aula.aula_estado === 'A'" color="green" small>Activo</v-chip>
+            <v-chip v-else color="red" small>Inactivo</v-chip>
+          </div>
+          <div class="text-caption grey--text">Fecha Registro: {{ aula.aula_fecha_registro }}</div>
+        </v-card-text>
+
+        <v-card-actions v-if="isExpanded(aula.aula_id)">
+          <v-btn color="primary" variant="text" @click="agregarDetalle(aula)">
+            + Agregar Detalle
+          </v-btn>
+        </v-card-actions>
+
+        <div v-if="isExpanded(aula.aula_id)" style="padding: 12px; background: #fafafa; border-radius: 8px;">
+          <div class="mb-2 font-weight-bold">Detalles del Aula</div>
+          <v-row dense>
+            <v-col
+              v-for="(detalle) in getPaginatedDetalles(aula.aula_id)"
+              :key="detalle.aude_id"
+              cols="12"
+              class="mb-2"
+            >
+              <v-card outlined>
+                <v-card-text>
+                  <div><strong>Turno:</strong> {{ detalle.turn_nombre }}</div>
+                  <div><strong>Nivel:</strong> {{ detalle.nive_nombre }}</div>
+                  <div><strong>Grado:</strong> {{ detalle.grad_nombre }}</div>
+                  <div><strong>Sección:</strong> {{ detalle.secc_nombre }}</div>
+                  <div><strong>Tutor:</strong> {{ detalle.tutor }}</div>
+                  <div><strong>Estado:</strong>
+                    <v-chip v-if="detalle.aude_estado === 'A'" color="green">Activo</v-chip>
+                    <v-chip v-else color="red">Inactivo</v-chip>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+
+          <v-pagination
+            v-if="getPaginatedDetallesTotal(aula.aula_id) > 1"
+            v-model="detailPages[aula.aula_id]"
+            :length="getPaginatedDetallesTotal(aula.aula_id)"
+            class="mt-2"
+          />
+
+          <v-alert v-if="getDetalles(aula.aula_id).length === 0" type="info" class="mt-2">
+            No hay detalles para este aula.
+          </v-alert>
+        </div>
+      </v-card>
+    </v-col>
+  </v-row>
+
+  <!-- Paginación general mobile -->
+  <v-pagination
+    v-if="totalAulaPages > 1"
+    v-model="currentAulaPage"
+    :length="totalAulaPages"
+    class="mt-4"
+  />
+</div>
+
 
     <!-- Diálogo para Agregar Aula -->
     <v-dialog v-model="dialogAgregarAula" max-width="500">
@@ -596,12 +610,17 @@
           </v-col>
         </v-row>
         <!-- Paginación para rangos en mobile -->
-  <v-pagination
-    v-if="totalRangePages > 1"
-    v-model="currentRangePage"
-    :length="totalRangePages"
-    class="mt-2"
-  />
+        <div class="pagination-wrapper">
+          <v-pagination
+            v-if="totalRangePages > 1"
+            v-model="currentRangePage"
+            :length="totalRangePages"
+            :total-visible="3"
+            class="mt-2"
+          />
+        </div>
+
+
       </template>
     </v-card-text>
 
@@ -728,6 +747,9 @@ import { useDisplay } from 'vuetify'
 //import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { safeArray } from '@/utils/global'
+
+const itemsPerPageDesktop = 10
+const getItemsPerPage = () => (isDesktop.value ? 10 : itemsPerAulaPage.value);
 
 const filteredRangos = computed(() => {
   if (filtroNivel.value === '0') {
@@ -879,7 +901,7 @@ function toggleExpand(aulaId) {
 }
 
 // === HEADERS PARA LA TABLA DE DETALLES (DENTRO DEL AULA) ===
-const detalleHeaders = [
+/* const detalleHeaders = [
   { title: 'Turno', key: 'turn_nombre' },
   { title: 'Nivel', key: 'nive_nombre' },
   { title: 'Grado', key: 'grad_nombre' },
@@ -887,7 +909,7 @@ const detalleHeaders = [
   { title: 'Tutor', key: 'tutor' },
   { title: 'Estado', key: 'aude_estado' },
   { title: 'Acción', key: 'accion', sortable: false }
-]
+] */
 
 // === PAGINACIÓN PARA DETALLES (POR AULA) ===
 const itemsPerDetailPage = ref(3)
@@ -1619,4 +1641,40 @@ onMounted(() => {
 .expanded-card {
   background-color: #e0f7fa;
 }
+.v-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-bottom: 64px;
+}
+/* Opcional: ajustar padding y márgenes */
+.v-data-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+.simple-table-detalle td, .simple-table-detalle th {
+  padding: 8px 12px;
+  text-align: center;
+}
+thead {
+  background-color: #f5f5f5;
+}
+
+tbody tr:hover {
+  background-color: #e3f2fd;
+  transition: background-color 0.2s;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  padding: 0 16px;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 </style>
