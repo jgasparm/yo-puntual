@@ -2,12 +2,11 @@
   <div class="layout1">
     <!-- CABECERA -->
     <header class="header">
-      <div class="logo">
-        <img :src="logoSrc" alt="Logo">       
+      <div class="branding">
+        <img :src="logoSrc" alt="Logo" class="logo-img">
+        <h1 class="school-name">{{ centroEducativo }}</h1>
       </div>
-      <div class="NombreCentroEducativo">
-        <h1>{{ centroEducativo }}</h1>
-      </div>
+
       <div class="user">
         <img class="user-img" :src="imagenPerfil" alt="Usuario">
         <div class="user-info" @click="toggleUserMenu">
@@ -22,10 +21,12 @@
           </transition>
         </div>
       </div>
+
       <div class="menu-toggle" v-if="isMobile" @click="toggleMobileMenu">
         <v-icon>mdi-menu</v-icon>
       </div>
     </header>
+
 
     <!-- TÍTULO INICIAL -->
 
@@ -408,9 +409,13 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px;
-  position: relative;
-  z-index: 1000;
+  padding: 0 24px;
+  height: 64px;
+}
+
+.branding {
+  display: flex;
+  align-items: center;
 }
 
 .logo {
@@ -420,6 +425,22 @@ export default {
 .logo img {
   height: 50px;
   width: 50px;
+}
+
+.logo-img {
+  height: 48px;
+  width: 48px;
+  object-fit: contain;
+  margin-right: 16px;
+}
+
+.school-name {
+  font-size: 1.3rem;
+  margin: 0;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .NombreCentroEducativo h1 {
@@ -447,9 +468,10 @@ export default {
 }
 
 .user-img {
-  height: 60px;
-  width: 60px;
+  height: 44px; /* antes 60px */
+  width: 44px;
   border-radius: 50%;
+  object-fit: cover; /* importante para que la imagen nunca se deforme */
   margin-right: 8px;
 }
 
@@ -563,6 +585,7 @@ export default {
 }
 
 .menu > li {
+  text-align: left;
   padding: 12px 10px;
   cursor: pointer;
   border-bottom: 1px solid #ddd;
@@ -610,6 +633,9 @@ export default {
 
 /* 📱 Estilos para mobile */
 @media (max-width: 768px) {
+  .branding {
+    display: none;
+  }
   .main-content {
     flex-direction: column;
   }

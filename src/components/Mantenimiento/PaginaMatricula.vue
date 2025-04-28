@@ -101,6 +101,17 @@
           {{ (currentPage - 1) * itemsPerPage + (index + 1) }}
         </template>
 
+        <template #item.estado="{ item }">
+          <v-chip
+            :color="item.matr_estado === 'A' ? 'green' : 'red'"
+            text-color="white"
+            small
+            label
+          >
+            {{ item.matr_estado === 'A' ? 'Activo' : 'Inactivo' }}
+          </v-chip>
+        </template>
+
         <!-- Columna de acciones (editar) -->
         <template #item.acciones="{ item }">
           <v-btn icon @click="abrirDialogoActualizarMatricula(item)">
@@ -277,6 +288,7 @@ export default {
         { title: "Nivel", value: "nivel_descripcion", align: "center" },
         { title: "Grado", value: "grado_descripcion", align: "center" },
         { title: "Sección", value: "seccion_descripcion", align: "center" },
+        { title: "Estado", value: "estado", align: "center" },
         { title: "Acciones", value: "acciones", align: "center" },
       ],
 
@@ -375,15 +387,18 @@ export default {
         if (resp.data.status) {
           // Mapear la data devuelta
           this.matriculados = resp.data.data.map(item => ({
+            alum_id: item.alum_id,
             alumno: item.nombre_alumno,
             fecha_matricula: item.fecha_matricula 
             ? item.fecha_matricula.split(' ')[0] 
             : '', // Para prevenir errores si fuese null o vacío
+            aude_id: item.aude_id,
             turno_descripcion: item.turno,
             nivel_descripcion: item.nivel,
             grado_descripcion: item.grado,
             seccion_descripcion: item.seccion,
-            matr_id: item.matr_id
+            matr_id: item.matr_id,
+            matr_estado: item.matr_estado
           }));
         } else {
           this.matriculados = [];
@@ -518,15 +533,19 @@ export default {
     abrirDialogoActualizarMatricula(item) {
       this.matriculaSeleccionada = item;
       // Asumir "Activo" si no te llega un estado
-      this.matriculaSeleccionadaEstado = "Activo";
+      this.matriculaSeleccionadaEstado = item.matr_estado === "A" ? "Activo" : "Inactivo";
       this.dialogoActualizar = true;
     },
     async actualizarMatricula() {
+      console.log('this.matriculaSeleccionada.aude_id')
+      console.log(this.matriculaSeleccionada.aude_id)
       try {
         const nuevoEstado = this.matriculaSeleccionadaEstado === "Activo" ? "A" : "I";
         const url = "https://amsoftsolution.com/amss/ws/wsActualizaMatricula.php";
         const data = {
           ai_matr_id: this.matriculaSeleccionada.matr_id,
+          ai_alum_id: this.matriculaSeleccionada.alum_id,
+          ai_aude_id: this.matriculaSeleccionada.aude_id,
           ac_matr_estado: nuevoEstado,
           av_profile: this.profile
         };

@@ -1,5 +1,6 @@
 <template>
-  <v-container fluid class="pa-0">
+  <v-container class="pa-4">
+    <h1 class="sr-only">Página de Inicio</h1>
     <!-- TÍTULO PRINCIPAL -->
     <v-row class="py-4 px-4">
       <v-col cols="12">
@@ -175,6 +176,7 @@ onMounted(cargarDatosUsuario)
 </script>
 
 <style scoped>
+
 .v-carousel-item img {
   object-fit: cover;
 }
@@ -188,5 +190,16 @@ onMounted(cargarDatosUsuario)
   font-size: 0.95rem;
   font-weight: 500;
   text-align: center;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

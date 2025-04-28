@@ -2,12 +2,11 @@
   <div class="layout1">
     <!-- CABECERA -->
     <header class="header">
-      <div class="logo">
-        <img :src="logoSrc" alt="Logo">       
+      <div class="branding">
+        <img :src="logoSrc" alt="Logo" class="logo-img">
+        <h1 class="school-name">{{ centroEducativo }}</h1>
       </div>
-      <div class="NombreCentroEducativo">
-        <h1>{{ centroEducativo }}</h1>
-      </div>
+
       <div class="user">
         <img class="user-img" :src="imagenPerfil" alt="Usuario">
         <div class="user-info" @click="toggleUserMenu">
@@ -22,10 +21,12 @@
           </transition>
         </div>
       </div>
+
       <div class="menu-toggle" v-if="isMobile" @click="toggleMobileMenu">
         <v-icon>mdi-menu</v-icon>
       </div>
     </header>
+
 
     <!-- TÍTULO INICIAL -->
 
@@ -89,7 +90,9 @@
       </aside>
 
       <section class="content">
-        <router-view></router-view>
+        <BreadcrumbNavigation v-if="$route.meta.showBreadcrumb !== false" />
+        <router-view>
+        </router-view>
       </section>
 
       <aside class="rightbar">
@@ -115,12 +118,12 @@
 </template>
 
 <script>
-
+import BreadcrumbNavigation from '@/components/BreadcrumbNavigation.vue'
 // Para validar si venció el token
 import AnunciosPublicados from '@/components/PaginaAnunciosPublicados.vue'
 export default {
   name: "MainLayoutDesign1",
-  components: { AnunciosPublicados },
+  components: { AnunciosPublicados, BreadcrumbNavigation},
 
   data() {
     return {
@@ -260,6 +263,7 @@ export default {
         "Mi asistencia ": "ConsultaAsistenciaEmpleado",
         "Calendario escolar": "CalendarioEscolar",
         "Registro de asistencia": "RegistroAsistencia",
+        "Registrar asistencia": "TutorRegistroAsistencia",
         "Mis notas": "AlumnoMisNotas",
         "Cursos del docente": "DocenteMisCursos",
         "Cursos": "MisCursos",
@@ -269,6 +273,7 @@ export default {
         "Docentes del año escolar": "DocentesAnioEscolar",
         "Aulas": "MisAulas",
         "Mi horario escolar":"AlumnoHorarioEscolar",
+        "Mi horario":"DocenteMiHorario",
         "Plan de estudios":"PlanEstudios",
         "Evaluaciones":"Evaluaciones",
         "Mi plan de estudios":"DocentePlanEstudios",
@@ -404,9 +409,13 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px;
-  position: relative;
-  z-index: 1000;
+  padding: 0 24px;
+  height: 64px;
+}
+
+.branding {
+  display: flex;
+  align-items: center;
 }
 
 .logo {
@@ -416,6 +425,22 @@ export default {
 .logo img {
   height: 50px;
   width: 50px;
+}
+
+.logo-img {
+  height: 48px;
+  width: 48px;
+  object-fit: contain;
+  margin-right: 16px;
+}
+
+.school-name {
+  font-size: 1.3rem;
+  margin: 0;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .NombreCentroEducativo h1 {
@@ -443,9 +468,10 @@ export default {
 }
 
 .user-img {
-  height: 60px;
-  width: 60px;
+  height: 44px; /* antes 60px */
+  width: 44px;
   border-radius: 50%;
+  object-fit: cover; /* importante para que la imagen nunca se deforme */
   margin-right: 8px;
 }
 
@@ -479,16 +505,18 @@ export default {
 }
 
 /* 🧭 Menú lateral izquierdo */
+/* 🧭 Menú lateral izquierdo */
 .sidebar {
-  width: 200px;
+  flex: 0 0 16%; /* ancho base proporcional */
+  min-width: 160px;
+  max-width: 220px;
   background: #f0f0f0;
   padding: 5px;
-  flex-shrink: 0;
 }
 
 /* 📄 Contenido dinámico central */
 .content {
-  flex-grow: 1;
+  flex: 1 1 auto; /* se expande */
   min-width: 0;
   padding: 10px;
   background: white;
@@ -497,14 +525,16 @@ export default {
 
 /* 📰 Columna derecha (novedades) */
 .rightbar {
-  width: 280px;
-  flex-shrink: 0;
+  flex: 0 0 20%;
+  min-width: 200px;
+  max-width: 300px;
   background: #e8e8e8;
   padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+
 
 /* ✨ Mejora visual del carrusel y banner */
 .rightbar v-sheet {
@@ -601,6 +631,34 @@ export default {
 }
 
 /* 📱 Estilos para mobile */
+@media (max-width: 768px) {
+  .branding {
+    display: none;
+  }
+  .main-content {
+    flex-direction: column;
+  }
+
+  .sidebar,
+  .logo,
+  .NombreCentroEducativo {
+    display: none !important;
+  }
+
+  .rightbar {
+    width: 100% !important;
+    max-width: 100%;
+    flex: none;
+    position: static !important;
+    height: auto !important;
+    margin-top: 16px;
+    background: #f5f5f5;
+  }
+
+  .content {
+    width: 100% !important;
+  }
+}
 @media (max-width: 768px) {
   .main-content {
     flex-direction: column;
