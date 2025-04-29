@@ -758,6 +758,10 @@ const filteredRangos = computed(() => {
   return rangosHorarios.value.filter(rango => rango.nive_id === filtroNivel.value);
 });
 
+//const filteredRangosActivos = computed(() => {
+  //return rangosHorarios.value.filter(r => r.hesh_estado === 'A');
+//}); 
+
 // Opciones del filtro Nivel
 const nivelOptions = [
   { text: 'Todos', value: '0' },
