@@ -48,11 +48,10 @@
               color="primary"
               block
               class="mt-4"
-              :loading="loading"
               :disabled="!document_number || !password"
               @click="login"
             >
-              {{ loading ? 'Ingresando...' : 'Iniciar sesión' }}
+              Iniciar sesión
             </v-btn>
 
             <div class="my-4 text-center">
@@ -68,19 +67,13 @@
           />
         </v-card>
 
-        <v-overlay v-model="loading" class="d-flex flex-column justify-center align-center" persistent>
-          <v-img src="./logo.webp" height="100" contain class="logo-spin mb-4" />
-          <span class="text-h6 font-weight-medium">Procesando...</span>
-        </v-overlay>
-
         <RecaptchaInvisible
           :siteKey="recaptchaV2SiteKey"
           :trigger="showRecaptchaV2"
           action="login"
           @verified="onRecaptchaV2Success"
           @error="onRecaptchaV2Error"
-          />
-
+        />
       </v-container>
     </v-app>
   </div>
@@ -89,6 +82,7 @@
 <script>
 import DialogMensaje from '@/components/DialogMensaje.vue';
 import RecaptchaInvisible from '@/components/RecaptchaInvisible.vue';
+import { useLoadingStore } from '@/stores/loadingStore';
 
 export default {
   name: 'LoginForm',
@@ -104,20 +98,19 @@ export default {
       password: '',
       showPassword: false,
       rememberMe: false,
-      loading: false,
 
       ModalMensajeVisible: false,
       tituloMensaje: '',
       contenidoMensaje: '',
       tipoMensaje: 'error',
+
       recaptchaV2SiteKey: '6LfHiiIrAAAAAPd1YIS7Cf1OBtEcY_j0fVT92_Ad',
       recaptchaAttempts: 0,
       maxAttempts: 2,
       showRecaptchaV2: false,
       recaptchaV2Token: '',
-
       recaptchaV2WidgetId: null
-    };
+    }
   },
   mounted() {
     if (localStorage.getItem('auth') === 'true') {
@@ -133,138 +126,139 @@ export default {
     this.$nextTick(() => {
       this.$refs.docInput.focus();
     });
-
-    //this.initRecaptchaV2();
   },
   methods: {
-      async login() {
-          if (!this.document_number || !this.password) return;
-          this.loading = true;
+    async login() {
+      const loadingStore = useLoadingStore();
+      if (!this.document_number || !this.password) return;
+      loadingStore.mostrarLoading();
 
-          try {
-          if (this.showRecaptchaV2) {
-              this.$nextTick(() => {
-              if (window.grecaptcha && this.recaptchaV2WidgetId !== null) {
-                  window.grecaptcha.ready(() => {
-                  window.grecaptcha.execute(this.recaptchaV2WidgetId);
-                  //console.log("🧠 Ejecutando reCAPTCHA V2 con widgetId:", this.recaptchaV2WidgetId);
-                  });
-              } else {
-                  console.warn("❌ Widget ID de reCAPTCHA V2 no disponible");
-              }
-              });
-              return;
-          }
-
-          const tokenV3 = await this.$recaptcha('login');
-          this.realizarLogin(tokenV3, 'v3');
-          } catch (error) {
-          console.error('❌ Error al iniciar sesión:', error);
-          this.loading = false;
-          }
-      },
-
-      async realizarLogin(token, tipo) {
-          try {
-          //const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWebDes.php?ai_tipo_documento=${this.document_type}&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}&recaptcha=${token}&recaptcha_tipo=${tipo}`;
-          const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWeb.php?ai_tipo_documento=${this.document_type}&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}&recaptcha=${token}&recaptcha_tipo=${tipo}`;
-          const response = await fetch(apiUrl);
-          const result = await response.json();
-
-          if (result.status && result.data.length > 0) {
-              const userData = result.data[0];
-
-        if (this.rememberMe) {
-          localStorage.setItem('remembered_document', this.document_number);
-        } else {
-          localStorage.removeItem('remembered_document');
-        }
-
-        localStorage.setItem('auth', 'true');
-        localStorage.setItem('token', userData.token);
-        localStorage.setItem('profile', userData.profile);
-        localStorage.setItem('anes_id', userData.anes_id);
-        localStorage.setItem('anio_escolar', userData.anio_escolar);
-        localStorage.setItem('usua_id', userData.usua_id);
-        localStorage.setItem('pers_id', userData.pers_id);
-        localStorage.setItem('perfil', userData.id_perfil);
-        localStorage.setItem('user', JSON.stringify(userData));
-
-        const submenuUrl = `https://amsoftsolution.com/amss/ws/wsConsultaUsuarioPermisos.php?ai_perf_id=${userData.id_perfil}`;
-        const submenuResponse = await fetch(submenuUrl, {
-          headers: {
-            Authorization: `Bearer ${userData.token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const submenuResult = await submenuResponse.json();
-        if (submenuResult.status) {
-          localStorage.setItem('submenus', JSON.stringify(submenuResult));
-        }
-
-        this.$router.push('/principal');
-          } else if (result.usar_recaptcha_v2) {
-              this.recaptchaAttempts++;
-              this.showRecaptchaV2 = true;
-              this.recaptchaV2Token = '';
-              this.tituloMensaje = 'Verificación adicional requerida';
-              this.contenidoMensaje = 'Por favor haz clic nuevamente para verificar tu identidad.';
-              this.tipoMensaje = 'info';
-              this.ModalMensajeVisible = true;
-
-              setTimeout(() => {
-              this.initRecaptchaV2();
-              }, 300);
-          } else {
-              this.tituloMensaje = 'Credenciales incorrectas';
-              this.contenidoMensaje = 'Por favor, revisa tu usuario y contraseña.';
-              this.tipoMensaje = 'info';
-              this.ModalMensajeVisible = true;
-          }
-          } catch (error) {
-          console.error(error);
-          alert('Error al conectar con el servidor.');
-          } finally {
-          this.loading = false;
-          }
-      },
-
-      onRecaptchaV2Success(token) {
-          //console.log('✅ Token reCAPTCHA V2 recibido:', token);
-          this.recaptchaV2Token = token;
-          this.realizarLogin(token, 'v2');
-      },
-
-      onRecaptchaV2Error(err) {
-          console.error('Error al ejecutar reCAPTCHA v2:', err);
-          this.tituloMensaje = 'Error de seguridad';
-          this.contenidoMensaje = 'No se pudo validar tu identidad. Intenta nuevamente.';
-          this.tipoMensaje = 'error';
-          this.ModalMensajeVisible = true;
-      },
-
-      initRecaptchaV2() {
+      try {
+        if (this.showRecaptchaV2) {
           this.$nextTick(() => {
-          const el = document.getElementById('recaptcha-v2-container');
-          if (!el || this.recaptchaV2WidgetId !== null) return;
-
-          if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
-              this.recaptchaV2WidgetId = window.grecaptcha.render(el, {
-              sitekey: this.recaptchaV2SiteKey,
-              size: 'invisible',
-              callback: (token) => this.onRecaptchaV2Success(token),
-              'expired-callback': () => {
-                  this.$emit('error', new Error('Token expirado'));
+            if (window.grecaptcha && this.recaptchaV2WidgetId !== null) {
+              window.grecaptcha.ready(() => {
+                try {
+                    window.grecaptcha.execute(this.recaptchaV2WidgetId);
+                  } catch (e) {
+                    console.error("⚠️ Error ejecutando reCAPTCHA v2:", e);
+                    this.tituloMensaje = 'Error de verificación';
+                    this.contenidoMensaje = 'Hubo un problema al ejecutar el reCAPTCHA. Intenta nuevamente.';
+                    this.tipoMensaje = 'error';
+                    this.ModalMensajeVisible = true;
+                    useLoadingStore().ocultarLoading();
+                  }
+                });
               }
-              });
-              //console.log('✅ reCAPTCHA V2 renderizado manualmente');
-          } else {
-              console.warn("⚠️ grecaptcha no disponible aún para render");
+            });
+            return;
           }
-          });
-      }
-      }
 
-};
+
+        const tokenV3 = await this.$recaptcha('login');
+        this.realizarLogin(tokenV3, 'v3');
+      } catch (error) {
+        console.error('❌ Error al iniciar sesión:', error);
+        loadingStore.ocultarLoading();
+      }
+    },
+
+    async realizarLogin(token, tipo) {
+      const loadingStore = useLoadingStore();
+      try {
+        const apiUrl = `https://amsoftsolution.com/amss/ws/wsLoginWeb.php?ai_tipo_documento=${this.document_type}&av_numero_documento_identidad=${this.document_number}&av_usua_clave=${this.password}&recaptcha=${token}&recaptcha_tipo=${tipo}`;
+        const response = await fetch(apiUrl);
+        const result = await response.json();
+
+        if (result.status && result.data.length > 0) {
+          const userData = result.data[0];
+
+          if (this.rememberMe) {
+            localStorage.setItem('remembered_document', this.document_number);
+          } else {
+            localStorage.removeItem('remembered_document');
+          }
+
+          localStorage.setItem('auth', 'true');
+          localStorage.setItem('token', userData.token);
+          localStorage.setItem('profile', userData.profile);
+          localStorage.setItem('anes_id', userData.anes_id);
+          localStorage.setItem('anio_escolar', userData.anio_escolar);
+          localStorage.setItem('usua_id', userData.usua_id);
+          localStorage.setItem('pers_id', userData.pers_id);
+          localStorage.setItem('perfil', userData.id_perfil);
+          localStorage.setItem('user', JSON.stringify(userData));
+
+          const submenuUrl = `https://amsoftsolution.com/amss/ws/wsConsultaUsuarioPermisos.php?ai_perf_id=${userData.id_perfil}`;
+          const submenuResponse = await fetch(submenuUrl, {
+            headers: {
+              Authorization: `Bearer ${userData.token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          const submenuResult = await submenuResponse.json();
+          if (submenuResult.status) {
+            localStorage.setItem('submenus', JSON.stringify(submenuResult));
+          }
+
+          this.$router.push('/principal');
+        } else if (result.usar_recaptcha_v2) {
+          this.recaptchaAttempts++;
+          this.showRecaptchaV2 = true;
+          this.recaptchaV2Token = '';
+          this.tituloMensaje = 'Verificación adicional requerida';
+          this.contenidoMensaje = 'Por favor haz clic nuevamente para verificar tu identidad.';
+          this.tipoMensaje = 'info';
+          this.ModalMensajeVisible = true;
+
+          setTimeout(() => {
+            this.initRecaptchaV2();
+          }, 300);
+        } else {
+          this.tituloMensaje = 'Credenciales incorrectas';
+          this.contenidoMensaje = 'Por favor, revisa tu usuario y contraseña.';
+          this.tipoMensaje = 'info';
+          this.ModalMensajeVisible = true;
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Error al conectar con el servidor.');
+      } finally {
+        loadingStore.ocultarLoading();
+      }
+    },
+
+    onRecaptchaV2Success(token) {
+      this.recaptchaV2Token = token;
+      this.realizarLogin(token, 'v2');
+    },
+
+    onRecaptchaV2Error(err) {
+      console.error('Error al ejecutar reCAPTCHA v2:', err);
+      this.tituloMensaje = 'Error de seguridad';
+      this.contenidoMensaje = 'No se pudo validar tu identidad. Intenta nuevamente.';
+      this.tipoMensaje = 'error';
+      this.ModalMensajeVisible = true;
+    },
+
+    initRecaptchaV2() {
+      this.$nextTick(() => {
+        const el = document.getElementById('recaptcha-v2-container');
+        if (!el || this.recaptchaV2WidgetId !== null) return;
+
+        if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+          this.recaptchaV2WidgetId = window.grecaptcha.render(el, {
+            sitekey: this.recaptchaV2SiteKey,
+            size: 'invisible',
+            callback: (token) => this.onRecaptchaV2Success(token),
+            'expired-callback': () => {
+              this.$emit('error', new Error('Token expirado'));
+            }
+          });
+        }
+      });
+    }
+  }
+}
 </script>

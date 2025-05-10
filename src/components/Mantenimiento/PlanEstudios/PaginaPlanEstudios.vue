@@ -128,23 +128,73 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr v-for="(curr, indexCurr) in planCurriculares[item.ples_id]" :key="curr.pacu_id">
-                          <td>{{ indexCurr + 1 }}</td>
-                          <td>{{ curr.peed_nombre }}</td>
-                          <td>{{ curr.aede_nombre }}</td>
-                          <td>{{ curr.docente }}</td>
-                          <td>{{ curr.pacu_horas }}</td>
-                          <td>
-                            <v-chip :color="curr.pacu_estado === 'A' ? 'green' : 'red'" small>
-                              {{ curr.pacu_estado === 'A' ? 'Activo' : 'Inactivo' }}
-                            </v-chip>
-                          </td>
-                          <td>
-                            <v-btn icon variant="text" color="primary" @click.stop="abrirDialogoEditarCurricular(curr, item.ples_id)">
-                              <v-icon>mdi-pencil</v-icon>
-                            </v-btn>
-                          </td>
-                        </tr>
+                        <template v-for="(curr, indexCurr) in planCurriculares[item.ples_id]" :key="curr.pacu_id">
+  <tr>
+    <td>{{ indexCurr + 1 }}</td>
+    <td>{{ curr.peed_nombre }}</td>
+    <td>{{ curr.aede_nombre }}</td>
+    <td>{{ curr.docente }}</td>
+    <td>{{ curr.pacu_horas }}</td>
+    <td>
+      <v-chip :color="curr.pacu_estado === 'A' ? 'green' : 'red'" small>
+        {{ curr.pacu_estado === 'A' ? 'Activo' : 'Inactivo' }}
+      </v-chip>
+    </td>
+    <td class="d-flex align-center">
+  <v-btn icon variant="text" color="primary" @click.stop="abrirDialogoEditarCurricular(curr, item.ples_id)">
+    <v-icon>mdi-pencil</v-icon>
+  </v-btn>
+  <v-btn icon variant="text" color="primary" @click.stop="toggleExpandEvaluaciones(curr.pacu_id)">
+    <v-icon>{{ isExpandedEvaluaciones(curr.pacu_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+  </v-btn>
+</td>
+
+  </tr>
+
+  <tr v-if="isExpandedEvaluaciones(curr.pacu_id)" :key="`evals-${curr.pacu_id}`">
+  <td colspan="7" style="background-color: #fffde7; padding: 12px;">
+    <div class="font-weight-bold mb-2">Evaluaciones</div>
+
+    <div v-if="currEvaluaciones[curr.pacu_id]?.length">
+      <v-simple-table dense class="evaluaciones-table">
+        <thead>
+          <tr>
+            <th>N°</th>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Orden</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(evalItem, eIdx) in currEvaluaciones[curr.pacu_id]"
+            :key="evalItem.pcev_id"
+          >
+            <td>{{ eIdx + 1 }}</td>
+            <td>{{ evalItem.eval_nombre }}</td>
+            <td>{{ evalItem.pcev_cantidad_evaluacion }}</td>
+            <td>{{ evalItem.pcev_orden }}</td>
+            <td>
+              <v-chip :color="evalItem.pcev_estado === 'A' ? 'green' : 'red'" small>
+                {{ evalItem.pcev_estado === 'A' ? 'Activo' : 'Inactivo' }}
+              </v-chip>
+            </td>
+          </tr>
+        </tbody>
+      </v-simple-table>
+    </div>
+
+    <div v-else>
+      <em>No hay evaluaciones registradas.</em>
+    </div>
+  </td>
+</tr>
+
+</template>
+
+
+
                       </tbody>
                     </v-simple-table>
                   </div>
@@ -158,6 +208,7 @@
         </v-data-table>
 
       </v-card>
+
     </div>
 
     <!-- VISTA MOBILE -->
@@ -207,7 +258,47 @@
                       <v-btn icon variant="text" color="primary" @click.stop="abrirDialogoEditarCurricular(curr, plan.ples_id)">
                         <v-icon>mdi-pencil</v-icon>
                       </v-btn>
+                      <v-btn icon variant="text" color="primary" @click.stop="toggleExpandEvaluaciones(curr.pacu_id)">
+                        <v-icon>{{ isExpandedEvaluaciones(curr.pacu_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                      </v-btn>
+
+                      <v-list-item
+  v-if="isExpandedEvaluaciones(curr.pacu_id)"
+  :key="`evals-mobile-${curr.pacu_id}`"
+  class="pl-6"
+>
+  <v-list-item-content>
+    <div class="font-weight-bold mb-1">Evaluaciones</div>
+    
+    <v-list v-if="currEvaluaciones[curr.pacu_id]?.length" density="compact">
+      <v-list-item
+        v-for="(evalItem, eIdx) in currEvaluaciones[curr.pacu_id]"
+        :key="evalItem.pcev_id"
+      >
+        <v-list-item-content>
+          <v-list-item-title>{{ eIdx + 1 }}. {{ evalItem.eval_nombre }}</v-list-item-title>
+          <v-list-item-subtitle>
+            Cantidad: {{ evalItem.pcev_cantidad_evaluacion }} | Orden: {{ evalItem.pcev_orden }}
+          </v-list-item-subtitle>
+        </v-list-item-content>
+        <v-btn icon variant="text" color="primary" @click="abrirDialogoEditarEvaluacion(evalItem)">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+      </v-list-item>
+    </v-list>
+
+    <div v-else>
+      <em>No hay evaluaciones registradas.</em>
+    </div>
+  </v-list-item-content>
+</v-list-item>
+
+
+
                     </v-list-item>
+
+                    
+
                   </v-list>
                   <div v-else>No hay planes curriculares registrados.</div>
                 </div>
@@ -284,6 +375,7 @@ import DialogEditarPlanCurricular from '@/components/Mantenimiento/PlanEstudios/
 const expandedItems = ref([])
 const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
+const expandedCurriculares = ref([])
 
 const anioEscolar = localStorage.getItem('anio_escolar')
 const profile = localStorage.getItem('profile')
@@ -300,6 +392,8 @@ const axiosInstance = axios.create({
 /** DATOS PRINCIPALES */
 const planesEstudio = ref([])
 const planCurriculares = ref({})
+const currEvaluaciones = ref({}) // pacu_id => array de evaluaciones
+
 
 const areaOptions = ref([{ title: 'Todos', key: 'TODOS' }])
 const nivelOptions = ref([{ title: 'Todos', key: 'TODOS' }])
@@ -330,6 +424,24 @@ function toggleExpand(id) {
 function isExpanded(plesId) {
   return expandedItems.value.includes(plesId)
 }
+
+async function toggleExpandEvaluaciones(pacuId) {
+  const idx = expandedCurriculares.value.indexOf(pacuId)
+  if (idx === -1) {
+    if (!currEvaluaciones.value[pacuId] || currEvaluaciones.value[pacuId].length === 0) {
+      await obtenerEvaluaciones(pacuId)
+    }
+    expandedCurriculares.value.push(pacuId)
+  } else {
+    expandedCurriculares.value.splice(idx, 1)
+  }
+}
+
+
+function isExpandedEvaluaciones(pacuId) {
+  return expandedCurriculares.value.includes(pacuId)
+}
+
 
 /** DIÁLOGOS */
 const mostrarDialogoAgregarPlanEstudio = ref(false)
@@ -392,6 +504,16 @@ const filteredPlanesPaginados = computed(() => {
 const totalPaginas = computed(() => Math.ceil(filteredPlanes.value.length / itemsPerPage))
 
 /** LLAMADAS API */
+async function obtenerEvaluaciones(pacu_id) {
+  try {
+    const { data } = await axiosInstance.get(`wsConsultaPlanCurricularEvaluaciones.php?ai_pacu_id=${pacu_id}&av_profile=${profile}`)
+    currEvaluaciones.value[pacu_id] = data.status ? data.data : []
+  } catch (error) {
+    console.error('Error al obtener evaluaciones:', error)
+    currEvaluaciones.value[pacu_id] = []
+  }
+}
+
 async function obtenerPlanes() {
   try {
     const { data } = await axiosInstance.get(`wsConsultaPlanEstudios.php?ac_anio_escolar=${anioEscolar}&av_profile=${profile}`)
@@ -405,11 +527,17 @@ async function obtenerCurriculares(ples_id) {
   try {
     const { data } = await axiosInstance.get(`wsConsultaPlanCurricular.php?ai_ples_id=${ples_id}&av_profile=${profile}`)
     planCurriculares.value[ples_id] = data.status ? data.data : []
+
+    // ⬇️ Obtener evaluaciones de cada plan curricular
+    for (const curr of planCurriculares.value[ples_id]) {
+      await obtenerEvaluaciones(curr.pacu_id)
+    }
   } catch (error) {
     console.error('Error al obtener curriculares:', error)
     planCurriculares.value[ples_id] = []
   }
 }
+
 
 async function obtenerAreasNivelesGrados() {
   try {
@@ -672,7 +800,7 @@ onMounted(async () => {
 }
 
 /* Cabecera de la tabla */
-.v-data-table thead th {
+.v-data-table:not(.evaluaciones-table) thead th {
   background-color: #E3F2FD;
   color: #1565C0;
   font-weight: bold;
@@ -719,8 +847,12 @@ onMounted(async () => {
 /* Ajustes para Large Desktop */
 @media (min-width: 1280px) {
   .v-container {
-    max-width: 1400px;
+    max-width: 100% !important;
   }
+}
+
+.v-container {
+  max-width: 100% !important;
 }
 
 /* Fila expandida */
@@ -732,4 +864,16 @@ onMounted(async () => {
 .v-data-table tbody tr:hover {
   background-color: #f5f5f5;
 }
+
+/* Asegura que la tabla principal ocupe todo el ancho del contenedor */
+.v-data-table {
+  width: 100% !important;
+  table-layout: auto;
+}
+
+/* Asegura que el v-card que la contiene no restrinja el ancho */
+.v-card.pa-2.elevation-1 {
+  width: 100% !important;
+}
+
 </style>

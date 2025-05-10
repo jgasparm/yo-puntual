@@ -1,10 +1,13 @@
 <template>
   <v-container class="py-4">
     <v-row>
-      <v-col>
-        <h1 class="text-h5 mb-4">Mis Cursos</h1>
-      </v-col>
-    </v-row>
+  <v-col>
+    <h2 class="text-h5 font-weight-bold text-primary">📘 Cursos del docente</h2>
+    <p class="text-body-2 text-grey-darken-1 mb-4">
+      Revisa los cursos que tienen asignados los docentes durante el año escolar.
+    </p>
+  </v-col>
+</v-row>
 
     <!-- Vista Desktop: Tabla de cursos -->
     <div v-if="isDesktop">
@@ -17,9 +20,11 @@
         <!-- eslint-disable-next-line vue/valid-v-slot -->
         <template v-slot:item.accion="{ item }">
         <div class="table-action">
-          <v-btn icon color="primary" class="action-btn" @click="verNotas(item)">
-            <v-icon size="24">mdi-eye</v-icon>
+          <v-btn icon variant="text" color="info" @click="verNotas(item)" aria-label="Ver notas">
+            <v-icon>mdi-eye-outline</v-icon>
+            <v-tooltip activator="parent" location="top">Ver notas</v-tooltip>
           </v-btn>
+
           <!-- <v-btn icon color="secondary" class="action-btn" @click="registrarNotas(item)">
             <v-icon size="24">mdi-pencil</v-icon>
           </v-btn> -->

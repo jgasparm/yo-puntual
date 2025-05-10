@@ -1,7 +1,9 @@
 <template>
   <v-app>
     <!-- Overlay global para loading -->
-    <GlobalLoading />
+    <v-overlay :value="loading" fixed class="my-overlay">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
 
 <!--     Contenedor principal de contenido
     <v-main>
@@ -14,8 +16,20 @@
   </v-app>
 </template>
 
-<script setup>
-import GlobalLoading from '@/components/GlobalLoading.vue'
+<script>
+export default {
+  name: "App",
+  data() {
+    return {
+      loading: false,
+    };
+  },
+  created() {
+    // Puedes usar un EventBus, provide/inject o Vuex para actualizar 'loading'
+    // Por ejemplo, si utilizas un EventBus, podrías hacer:
+    // EventBus.$on("toggle-loading", (state) => { this.loading = state; });
+  },
+};
 </script>
 
 <style>
@@ -27,7 +41,11 @@ import GlobalLoading from '@/components/GlobalLoading.vue'
   color: #2c3e50;
   margin-top: 0px;
 }
-
+.my-overlay {
+  z-index: 9999;
+  /* Para pruebas, un fondo semitransparente para verificar su visibilidad */
+  background-color: rgba(255, 0, 0, 0.3);
+}
 .v-data-table__header th {
   color: #26995a !important;
   font-weight: bold;

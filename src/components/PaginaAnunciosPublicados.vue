@@ -56,6 +56,9 @@ const loading = ref(false)
 const error = ref('')
 const { mobile: isMobile } = useDisplay()
 
+// ⬇️ Esto permite emitir eventos en script setup
+const emit = defineEmits(['anuncios-cargados'])
+
 async function fetchAnuncios() {
   loading.value = true
   error.value = ''
@@ -85,11 +88,13 @@ async function fetchAnuncios() {
     error.value = 'Error al cargar los anuncios'
   } finally {
     loading.value = false
+    emit('anuncios-cargados')  // ⬅️ Aquí se notifica al componente padre
   }
 }
 
 onMounted(fetchAnuncios)
 </script>
+
 
 <style scoped>
 .v-list-item-title {

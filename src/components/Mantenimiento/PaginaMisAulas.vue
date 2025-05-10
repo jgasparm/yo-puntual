@@ -43,125 +43,117 @@
     <!-- VISTA DESKTOP -->
     <div v-if="isDesktop">
       <v-card class="pa-2 elevation-1">
-        <v-data-table
-          :headers="headers"
-          :items="allAulas"
-          item-key="aula_id"
-          v-model:page="currentAulaPage"
-          :items-per-page="itemsPerPageDesktop"
-          hide-default-header
-          class="elevation-0"
-          :disable-pagination="!isDesktop"
-        >
-          <template #body="{ items }">
-            <thead>
-              <tr>
-                <th>N°</th>
-                <th>Aula</th>
-                <th>Capacidad</th>
-                <th>Fecha Registro</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-for="(aula, index) in items" :key="aula.aula_id">
-                <tr :class="{ 'expanded-row': isExpanded(aula.aula_id) }">
-                  <td>{{ (currentAulaPage - 1) * getItemsPerPage() + index + 1 }}</td>
-                  <td>{{ aula.aula_nombre }}</td>
-                  <td>{{ aula.aula_capacidad }}</td>
-                  <td>{{ aula.aula_fecha_registro }}</td>
-                  <td>
-                    <v-chip :color="aula.aula_estado === 'A' ? 'green' : 'red'" small>
-                      {{ aula.aula_estado === 'A' ? 'Activo' : 'Inactivo' }}
-                    </v-chip>
-                  </td>
-                  <td>
-                    <v-btn icon variant="text" @click.stop="abrirDialogEditar(aula)">
-                      <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-btn icon variant="text" @click.stop="toggleExpand(aula.aula_id)">
-                      <v-icon>{{ isExpanded(aula.aula_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-                    </v-btn>
-                  </td>
-                </tr>
+  <div class="tabla-aulas-wrapper">
+    <v-data-table
+      :headers="headers"
+      :items="allAulas"
+      item-key="aula_id"
+      v-model:page="currentAulaPage"
+      :items-per-page="itemsPerPageDesktop"
+      class="tabla-aulas elevation-0"
+      :disable-pagination="!isDesktop"
+    >
+    <template #item="{ item, index }">
+  <tr>
+    <td>{{ (currentAulaPage - 1) * getItemsPerPage() + index + 1 }}</td>
+    <td>{{ item.aula_nombre }}</td>
+    <td>{{ item.aula_capacidad }}</td>
+    <td>{{ item.aula_fecha_registro }}</td>
+    <td>
+      <v-chip :color="item.aula_estado === 'A' ? 'green' : 'red'" small>
+        {{ item.aula_estado === 'A' ? 'Activo' : 'Inactivo' }}
+      </v-chip>
+    </td>
+    <td class="text-center">
+      <v-btn icon variant="text" @click.stop="abrirDialogEditar(item)">
+        <v-icon>mdi-pencil</v-icon>
+      </v-btn>
+      <v-btn icon variant="text" @click.stop="toggleExpand(item.aula_id)">
+        <v-icon>{{ isExpanded(item.aula_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+      </v-btn>
+    </td>
+  </tr>
 
-                <tr v-if="isExpanded(aula.aula_id)">
-                  <td :colspan="6" class="pa-4" style="background: #fafafa;">
-                    <div class="d-flex justify-space-between align-center mb-2">
-                      <div class="font-weight-bold">Detalles del Aula</div>
-                      <v-btn small color="primary" variant="text" @click.stop="agregarDetalle(aula)">
-                        + Agregar Detalle
-                      </v-btn>
-                    </div>
+  <!-- Fila expandida -->
+  <tr v-if="isExpanded(item.aula_id)">
+    <td :colspan="6" class="pa-4" style="background: #fafafa;">
+      <div class="d-flex justify-space-between align-center mb-2">
+        <div class="font-weight-bold">Detalles del Aula</div>
+        <v-btn small color="primary" variant="text" @click.stop="agregarDetalle(item)">
+          + Agregar Detalle
+        </v-btn>
+      </div>
 
-                    <v-simple-table dense class="simple-table-detalle">
-                      <thead>
-                        <tr>
-                          <th>Turno</th>
-                          <th>Nivel</th>
-                          <th>Grado</th>
-                          <th>Sección</th>
-                          <th>Tutor</th>
-                          <th>Estado</th>
-                          <th>Acciones</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="detalle in getPaginatedDetalles(aula.aula_id)" :key="detalle.aude_id">
-                          <td>{{ detalle.turn_nombre }}</td>
-                          <td>{{ detalle.nive_nombre }}</td>
-                          <td>{{ detalle.grad_nombre }}</td>
-                          <td>{{ detalle.secc_nombre }}</td>
-                          <td>{{ detalle.tutor }}</td>
-                          <td>
-                            <v-chip :color="detalle.aude_estado === 'A' ? 'green' : 'red'" small>
-                              {{ detalle.aude_estado === 'A' ? 'Activo' : 'Inactivo' }}
-                            </v-chip>
-                          </td>
-                          <td class="d-flex align-center">
-                            <v-btn icon variant="text" @click.stop="editarDetalle(detalle)">
-                              <v-icon>mdi-pencil</v-icon>
-                            </v-btn>
-                            <v-btn icon variant="text" color="primary" @click.stop="abrirDialogHorario(detalle)">
-                              <v-icon>mdi-calendar-clock</v-icon>
-                            </v-btn>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </v-simple-table>
+      <v-simple-table dense class="simple-table-detalle">
+        <thead>
+          <tr>
+            <th>Turno</th>
+            <th>Nivel</th>
+            <th>Grado</th>
+            <th>Sección</th>
+            <th>Tutor</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="detalle in getPaginatedDetalles(item.aula_id)"
+            :key="detalle.aude_id"
+          >
+            <td>{{ detalle.turn_nombre }}</td>
+            <td>{{ detalle.nive_nombre }}</td>
+            <td>{{ detalle.grad_nombre }}</td>
+            <td>{{ detalle.secc_nombre }}</td>
+            <td>{{ detalle.tutor }}</td>
+            <td>
+              <v-chip :color="detalle.aude_estado === 'A' ? 'green' : 'red'" small>
+                {{ detalle.aude_estado === 'A' ? 'Activo' : 'Inactivo' }}
+              </v-chip>
+            </td>
+            <td class="d-flex align-center">
+              <v-btn icon variant="text" @click.stop="editarDetalle(detalle)">
+                <v-icon>mdi-pencil</v-icon>
+              </v-btn>
+              <v-btn icon variant="text" color="primary" @click.stop="abrirDialogHorario(detalle)">
+                <v-icon>mdi-calendar-clock</v-icon>
+              </v-btn>
+              <v-btn icon variant="text" color="info" @click.stop="verHorarioDetalle(detalle)">
+                <v-icon>mdi-eye-outline</v-icon>
+              </v-btn>
+            </td>
+          </tr>
+        </tbody>
+      </v-simple-table>
 
-                    <!-- Paginación interna detalles -->
-                    <v-pagination
-                      v-if="getPaginatedDetallesTotal(aula.aula_id) > 1"
-                      v-model="detailPages[aula.aula_id]"
-                      :length="getPaginatedDetallesTotal(aula.aula_id)"
-                      class="mt-2"
-                    />
+      <v-pagination
+        v-if="getPaginatedDetallesTotal(item.aula_id) > 1"
+        v-model="detailPages[item.aula_id]"
+        :length="getPaginatedDetallesTotal(item.aula_id)"
+        class="mt-2"
+      />
 
-                    <v-alert
-                      v-if="getDetalles(aula.aula_id).length === 0"
-                      type="info"
-                      class="mt-2"
-                    >
-                      No hay detalles para este aula.
-                    </v-alert>
+      <v-alert
+        v-if="getDetalles(item.aula_id).length === 0"
+        type="info"
+        class="mt-2"
+      >
+        No hay detalles para este aula.
+      </v-alert>
+    </td>
+  </tr>
+</template>
+    </v-data-table>
+  </div>
 
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </template>
-        </v-data-table>
-
-        <!-- Paginación Aulas -->
-        <v-pagination
-          v-if="!isDesktop && totalAulaPagesMobile > 1"
-          v-model="currentAulaPageMobile"
-          :length="totalAulaPagesMobile"
-          class="mt-4"
-        />
-      </v-card>
+  <!-- Paginación solo para mobile -->
+  <v-pagination
+    v-if="!isDesktop && totalAulaPagesMobile > 1"
+    v-model="currentAulaPageMobile"
+    :length="totalAulaPagesMobile"
+    class="mt-4"
+  />
+</v-card>
     </div>
 
     <!-- VERSIÓN MOBILE/TABLET -->
@@ -203,19 +195,36 @@
               cols="12"
               class="mb-2"
             >
-              <v-card outlined>
-                <v-card-text>
-                  <div><strong>Turno:</strong> {{ detalle.turn_nombre }}</div>
-                  <div><strong>Nivel:</strong> {{ detalle.nive_nombre }}</div>
-                  <div><strong>Grado:</strong> {{ detalle.grad_nombre }}</div>
-                  <div><strong>Sección:</strong> {{ detalle.secc_nombre }}</div>
-                  <div><strong>Tutor:</strong> {{ detalle.tutor }}</div>
-                  <div><strong>Estado:</strong>
-                    <v-chip v-if="detalle.aude_estado === 'A'" color="green">Activo</v-chip>
-                    <v-chip v-else color="red">Inactivo</v-chip>
-                  </div>
-                </v-card-text>
+            <v-card outlined style="position: relative; text-align: left;">
+              <!-- Íconos de acciones en la parte superior derecha -->
+              <div style="position: absolute; top: 8px; right: 8px; display: flex; gap: 4px;">
+                <v-btn icon variant="text" @click.stop="editarDetalle(detalle)">
+                  <v-icon>mdi-pencil</v-icon>
+                </v-btn>
+                <v-btn icon variant="text" color="primary" @click.stop="abrirDialogHorario(detalle)">
+                  <v-icon>mdi-calendar-clock</v-icon>
+                </v-btn>
+                <v-btn icon variant="text" color="info" @click.stop="verHorarioDetalle(detalle)">
+                  <v-icon>mdi-eye-outline</v-icon>
+                </v-btn>
+              </div>
+
+              <v-card-text style="padding-top: 40px;">
+                <div><strong>Turno:</strong> {{ detalle.turn_nombre }}</div>
+                <div><strong>Nivel:</strong> {{ detalle.nive_nombre }}</div>
+                <div><strong>Grado:</strong> {{ detalle.grad_nombre }}</div>
+                <div><strong>Sección:</strong> {{ detalle.secc_nombre }}</div>
+                <div><strong>Tutor:</strong> {{ detalle.tutor }}</div>
+                <div><strong>Estado:</strong>
+                  <v-chip v-if="detalle.aude_estado === 'A'" color="green">Activo</v-chip>
+                  <v-chip v-else color="red">Inactivo</v-chip>
+                </div>
+              </v-card-text>
+
               </v-card>
+
+
+
             </v-col>
           </v-row>
 
@@ -427,7 +436,7 @@
 
           <!-- VERSIÓN MOBILE: Tarjetas -->
           <!-- VERSIÓN MOBILE: Tarjetas -->
-<template v-else>
+          <template v-else>
   <v-row dense>
     <v-col
       v-for="(rango, index) in paginatedHorarios"
@@ -437,7 +446,7 @@
     >
       <v-card outlined style="position: relative; text-align: left;">
         <!-- Botón para editar el Rango -->
-        <v-btn
+        <!-- <v-btn
           icon
           variant="text"
           color="primary"
@@ -445,29 +454,56 @@
           @click="abrirDialogEditRango(rango)"
         >
           <v-icon>mdi-pencil</v-icon>
-        </v-btn>
+        </v-btn> -->
 
         <v-card-text style="padding-top: 40px;">
-          <div>
-            <strong>N°:</strong>
-            {{ ((currentRangePage - 1) * itemsPerRangePage) + index + 1 }}
-          </div>
+          <div><strong>N°:</strong> {{ ((currentRangePage - 1) * itemsPerRangePage) + index + 1 }}</div>
           <div><strong>Nivel:</strong> {{ rango.nive_nombre }}</div>
           <div><strong>Hora Inicio:</strong> {{ rango.hesh_hora_inicio }}</div>
           <div><strong>Hora Fin:</strong> {{ rango.hesh_hora_fin }}</div>
-          <div>
-            <strong>Recreo:</strong>
-            {{ rango.hesh_indicador_recreo === 'S' ? 'Sí' : 'No' }}
+          <div><strong>Recreo:</strong> {{ rango.hesh_indicador_recreo === 'S' ? 'Sí' : 'No' }}</div>
+          <div><strong>Estado:</strong>
+            <v-chip :color="rango.hesh_estado === 'A' ? 'green' : 'red'">
+              {{ rango.hesh_estado === 'A' ? 'Activo' : 'Inactivo' }}
+            </v-chip>
           </div>
-          <div>
-            <strong>Estado:</strong>
-            <v-chip v-if="rango.hesh_estado === 'A'" color="green">Activo</v-chip>
-            <v-chip v-else color="red">Inactivo</v-chip>
+
+          <!-- DÍAS Y CURSOS -->
+          <div v-for="(dc, i) in rango.dias" :key="i" class="mt-3">
+            <div><strong>{{ dc.dia }}</strong></div>
+            <div>{{ dc.area_educativa }}</div>
+            <div class="caption grey--text">{{ dc.docente }}</div>
+            <v-chip :color="dc.hesc_estado === 'A' ? 'green' : 'red'" small class="my-1">
+              {{ dc.hesc_estado === 'A' ? 'Activo' : 'Inactivo' }}
+            </v-chip>
+            <v-btn
+              icon
+              small
+              variant="text"
+              color="primary"
+              class="ms-2"
+              @click="abrirDialogEditDiaCurso(dc, rango)"
+            >
+              <v-icon>mdi-pencil</v-icon>
+            </v-btn>
           </div>
+
+          <!-- AGREGAR DÍA/CURSO -->
+          <v-btn
+            small
+            color="success"
+            variant="text"
+            class="mt-2"
+            @click="abrirDialogNuevoDiaCurso(rango)"
+          >
+            + Agregar Día/Curso
+          </v-btn>
         </v-card-text>
       </v-card>
     </v-col>
   </v-row>
+
+  <!-- PAGINACIÓN -->
   <v-pagination
     v-if="totalHorarios > 1"
     v-model="currentRangePage"
@@ -475,6 +511,7 @@
     class="mt-2"
   />
 </template>
+
 
         </v-card-text>
 
@@ -747,6 +784,19 @@ import { useDisplay } from 'vuetify'
 //import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { safeArray } from '@/utils/global'
+import { useRouter } from 'vue-router'  // asegúrate de importar esto arriba
+import { useLoadingStore } from '@/stores/loadingStore.js' // Ajusta según tu estructura
+
+const loadingStore = useLoadingStore()
+
+
+const router = useRouter()
+
+function verHorarioDetalle(detalle) {
+  localStorage.setItem('aude_id', detalle.aude_id)
+  router.push({ name: 'AulaHorarioEscolar' }) // Asegúrate que la ruta esté bien nombrada
+}
+
 
 const itemsPerPageDesktop = 10
 const getItemsPerPage = () => (isDesktop.value ? 10 : itemsPerAulaPage.value);
@@ -1149,6 +1199,15 @@ const indicadorRecreoItems = [
 const estadoRangoOptions = [
   { title: 'Activo', key: 'A' },
   { title: 'Inactivo', key: 'I' }
+]
+
+const headers = [
+  { title: 'N°', key: 'numero', sortable: false },
+  { title: 'Aula', key: 'aula_nombre' },
+  { title: 'Capacidad', key: 'aula_capacidad' },
+  { title: 'Fecha Registro', key: 'aula_fecha_registro' },
+  { title: 'Estado', key: 'estado', sortable: false },
+  { title: 'Acciones', key: 'acciones', sortable: false }
 ]
 
 // 6) Columnas para la tabla de horarios
@@ -1621,14 +1680,15 @@ const isDesktop = mdAndUp
 // === ROUTER (SI DESEAS NAVEGAR A OTRA RUTA, SEGUIMOS USANDO useRouter) ===
 //const router = useRouter()
 
-onMounted(() => {
-  fetchAulas()
-  fetchDetalles()
-  fetchDocentes()
-  fetchFiltros()
-  fetchDias()
-  //fetchCursos()
-  fetchHorarioRangos()
+onMounted(async () => {
+  await fetchAulas()
+  await fetchDetalles()
+  await fetchDocentes()
+  await fetchFiltros()
+  await fetchDias()
+  await fetchHorarioRangos()
+
+  loadingStore.ocultarLoading()  // <- importante aquí
 })
 </script>
 
@@ -1681,4 +1741,27 @@ tbody tr {
   margin-right: auto;
 }
 
+thead th,
+tbody td {
+  width: auto;
+
+  padding: 12px;
+}
+.tabla-aulas-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.tabla-aulas {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto; /* importante para que se ajuste al contenido */
+}
+
+/* Remueve el min-width que causa el desborde */
+.tabla-aulas thead th,
+.tabla-aulas tbody td {
+  white-space: nowrap;
+  padding: 10px 8px;
+}
 </style>

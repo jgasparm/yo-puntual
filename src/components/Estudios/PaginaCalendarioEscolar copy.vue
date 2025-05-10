@@ -1,98 +1,91 @@
 <template>
   <v-container fluid>
-    <!-- Encabezado -->
-    <v-row class="py-4">
-      <v-col cols="12" class="text-center">
-        <h1 class="text-h4">Calendario Escolar {{ anioEscolar }}</h1>
+    <!-- Encabezado principal -->
+    <v-row>
+      <v-col cols="12">
+        <div class="text-h5 font-weight-bold text-primary mb-2">
+          📅 Calendario Escolar {{ anioEscolar }}
+        </div>
+        <div class="text-body-2 text-grey-darken-1">
+          Revisa los eventos escolares por mes. Puedes descargar el calendario en PDF.
+        </div>
       </v-col>
     </v-row>
 
-    <!-- Nueva barra de navegación de mes -->
-    <v-row align="center" class="mb-4">
-  <!-- Columna para las flechas y el mes (alineada a la izquierda) -->
-  <v-col
-    cols="12"
-    sm="6"
-    md="6"
-    class="d-flex align-center justify-start"
-  >
-    <!-- Botón mes anterior -->
-    <v-btn variant="text" @click="prevMonth" icon>
-      <v-icon>mdi-chevron-left</v-icon>
-    </v-btn>
+    <!-- Barra de navegación de mes -->
+    <v-row align="center" class="my-4">
+      <v-col cols="12" sm="6" class="d-flex align-center justify-start">
+        <v-btn variant="text" @click="prevMonth" icon :title="'Mes anterior'">
+          <v-icon>mdi-chevron-left</v-icon>
+        </v-btn>
+        <span class="mx-2 month-year-label">
+          {{ currentMonthLabel }}
+        </span>
+        <v-btn variant="text" @click="nextMonth" icon :title="'Mes siguiente'">
+          <v-icon>mdi-chevron-right</v-icon>
+        </v-btn>
+      </v-col>
+      <v-col cols="12" sm="6" class="d-flex align-center justify-end" v-if="filteredEvents.length">
+        <v-btn color="primary" @click="downloadPDF" prepend-icon="mdi-download">
+          Descargar PDF
+        </v-btn>
+      </v-col>
+    </v-row>
 
-    <!-- Texto: MES - AÑO -->
-    <span class="mx-2 month-year-label">
-      {{ currentMonthLabel }}
-    </span>
-
-    <!-- Botón mes siguiente -->
-    <v-btn variant="text" @click="nextMonth" icon>
-      <v-icon>mdi-chevron-right</v-icon>
-    </v-btn>
-  </v-col>
-
-  <!-- Columna para el botón Descargar PDF (alineada a la derecha) -->
-  <v-col
-    cols="12"
-    sm="6"
-    md="6"
-    class="d-flex align-center justify-end"
-    v-if="filteredEvents.length > 0"
-  >
-    <v-btn color="secondary" @click="downloadPDF">
-      Descargar PDF
-    </v-btn>
-  </v-col>
-</v-row>
+    <!-- Loading indicator -->
+    <v-progress-linear
+      v-if="events.length === 0"
+      indeterminate
+      color="primary"
+      class="mb-4"
+    />
 
     <!-- Lista de eventos -->
     <v-row ref="calendarContent">
-      <!-- Iteramos sobre los eventos filtrados -->
       <v-col cols="12" v-for="(event, index) in filteredEvents" :key="index">
-        <v-row class="align-center my-4 py-2 event-row">
-          <!-- Primera columna: Día abreviado y número -->
-          <v-col cols="12" sm="2" class="text-center day-col">
-            <div class="day-abbrev">
-              {{ getDayAbbreviation(event.caes_fecha_inicio) }}
-            </div>
-            <div class="day-number">
-              {{ getDayNumber(event.caes_fecha_inicio) }}
-            </div>
-          </v-col>
+        <v-card class="mb-3 px-3 py-2 elevation-1">
+          <v-row no-gutters align="center">
+            <!-- Día y número -->
+            <v-col cols="3" sm="2" class="text-center day-col">
+              <div class="day-abbrev">
+                {{ getDayAbbreviation(event.caes_fecha_inicio) }}
+              </div>
+              <div class="day-number">
+                {{ getDayNumber(event.caes_fecha_inicio) }}
+              </div>
+            </v-col>
 
-          <!-- Segunda columna: Detalles del evento -->
-          <v-col cols="12" sm="10">
-            <!-- Título alineado a la izquierda -->
-            <div class="event-title text-left">
-              {{ event.caes_titulo }}
-            </div>
-            <!-- Rango de fechas o fecha única -->
-            <div class="d-flex align-center date-range mt-1">
-              <v-icon size="18" class="me-2" color="primary">mdi-calendar</v-icon>
-              {{ getDateRangeText(event.caes_fecha_inicio, event.caes_fecha_fin) }}
-            </div>
-            <!-- Días restantes (solo si la fecha de inicio es futura) -->
-            <div
-              v-if="daysUntilStart(event.caes_fecha_inicio) > 0"
-              class="d-flex align-center mt-1 days-remaining"
-            >
-              <v-icon size="18" class="me-2" color="primary">mdi-timer</v-icon>
-              Quedan {{ daysUntilStart(event.caes_fecha_inicio) }} días
-            </div>
-          </v-col>
-        </v-row>
+            <!-- Detalles -->
+            <v-col cols="9" sm="10">
+              <div class="event-title">
+                {{ event.caes_titulo }}
+              </div>
+              <div class="d-flex align-center date-range mt-1">
+                <v-icon size="18" class="me-2" color="primary">mdi-calendar</v-icon>
+                {{ getDateRangeText(event.caes_fecha_inicio, event.caes_fecha_fin) }}
+              </div>
+              <div
+                v-if="daysUntilStart(event.caes_fecha_inicio) > 0"
+                class="d-flex align-center mt-1 days-remaining"
+              >
+                <v-icon size="18" class="me-2" color="primary">mdi-timer</v-icon>
+                Quedan {{ daysUntilStart(event.caes_fecha_inicio) }} días
+              </div>
+            </v-col>
+          </v-row>
+        </v-card>
       </v-col>
 
-      <!-- Si no hay eventos filtrados -->
+      <!-- Sin eventos -->
       <v-col cols="12" v-if="filteredEvents.length === 0">
-        <v-alert type="info">
+        <v-alert type="info" border="start" border-color="primary">
           No hay eventos para el mes seleccionado.
         </v-alert>
       </v-col>
     </v-row>
   </v-container>
 </template>
+
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
@@ -322,19 +315,17 @@ onMounted(() => {
 .event-row {
   border-bottom: 1px solid #eee;
 }
-
 .day-col {
   background-color: #f9f9f9;
   padding: 1rem 0;
+  border-radius: 8px;
 }
-
 .day-abbrev {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
   color: #666;
 }
-
 .day-number {
   font-size: 2rem;
   font-weight: bold;
@@ -343,24 +334,20 @@ onMounted(() => {
 }
 
 .event-title {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  margin-bottom: 0.25rem;
-  text-align: left;
+  color: #1976D2;
 }
 
-.date-range {
-  font-size: 0.9rem;
+.date-range,
+.days-remaining {
+  font-size: 0.95rem;
   color: #555;
 }
 
-.days-remaining {
-  font-size: 0.9rem;
-  color: #999;
-}
-
 .month-year-label {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
+  color: #1976D2;
 }
 </style>

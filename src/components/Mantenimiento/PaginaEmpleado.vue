@@ -1,50 +1,54 @@
 <template>
   <v-container fluid>
     <!-- Cabecera -->
-    <v-row class="mb-2">
+    <v-row class="mb-1">
       <v-col cols="12">
-        <v-row class="mb-2" align="center" justify="space-between">
-          <h1 class="mb-2">Empleados</h1>
-          <v-btn color="primary" @click="openDialog()">
-            <v-icon left>mdi-account-plus</v-icon>
-            Agregar
-          </v-btn>
-        </v-row>
+        <h1 class="text-h5 font-weight-bold mb-1">👨‍💼 Empleados</h1>
+        <p class="text-subtitle-2 text-grey-darken-1">Gestiona los datos de los empleados registrados en el sistema.</p>
+      </v-col>
+    </v-row>
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex justify-end">
+        <v-btn color="primary" @click="openDialog()">
+          <v-icon left>mdi-account-plus</v-icon>
+          Agregar
+        </v-btn>
+      </v-col>
+    </v-row>
 
-        <!-- Filtros desktop -->
-        <v-row v-if="!isMobile" class="mb-4" dense align="center">
-          <v-col cols="12" sm="6" md="6">
-            <v-text-field
-              v-model="filtros.nombre"
-              label="Buscar por nombre o apellido"
-              clearable
-              prepend-inner-icon="mdi-magnify"
-              density="comfortable"
-            />
-          </v-col>
+    <!-- Filtros desktop -->
+    <v-row v-if="!isMobile" class="mb-4" dense>
+      <v-col cols="12" sm="6" md="6">
+        <v-text-field
+          v-model="filtros.nombre"
+          label="Buscar por nombre o apellido"
+          clearable
+          prepend-inner-icon="mdi-magnify"
+          density="comfortable"
+        />
+      </v-col>
+      <v-col cols="6" sm="3" md="3">
+        <v-select
+          v-model="filtros.cargo"
+          :items="cargosUnicos"
+          label="Cargo"
+          clearable
+          prepend-inner-icon="mdi-briefcase"
+          density="comfortable"
+        />
+      </v-col>
+      <v-col cols="6" sm="3" md="3">
+        <v-select
+          v-model="filtros.estado"
+          :items="['Activo', 'Inactivo']"
+          label="Estado"
+          clearable
+          prepend-inner-icon="mdi-account-check"
+          density="comfortable"
+        />
+      </v-col>
+    </v-row>
 
-          <v-col cols="6" sm="3" md="3">
-            <v-select
-              v-model="filtros.cargo"
-              :items="cargosUnicos"
-              label="Cargo"
-              clearable
-              prepend-inner-icon="mdi-briefcase"
-              density="comfortable"
-            />
-          </v-col>
-
-          <v-col cols="6" sm="3" md="3">
-            <v-select
-              v-model="filtros.estado"
-              :items="['Activo', 'Inactivo']"
-              label="Estado"
-              clearable
-              prepend-inner-icon="mdi-account-check"
-              density="comfortable"
-            />
-          </v-col>
-        </v-row>
 
         <!-- Filtros mobile -->
         <div v-else class="mb-4 text-right">
@@ -53,8 +57,7 @@
             Filtros
           </v-btn>
         </div>
-      </v-col>
-    </v-row>
+
 
     <!-- Listado: Desktop -->
     <div v-if="!isMobile">

@@ -9,19 +9,6 @@
           Visualiza y gestiona los cursos que tienes asignados durante el año escolar.
         </p>
 
-        <!-- Selector de Bimestre -->
-        <!--
-        <v-select
-          v-model="selectedBimestre"
-          :items="bimestres"
-          item-title="peed_nombre"
-          item-value="peed_id"
-          label="Bimestre"
-          class="mb-4"
-          dense
-          outlined
-        />
-        -->
       </v-col>
     </v-row>
 
@@ -36,16 +23,19 @@
         :items="filteredCursos"
         class="elevation-1 mt-4"
       >
-        <template v-slot:item.accion="{ item }">
-          <div class="table-action">
-            <v-btn icon color="primary" class="action-btn" @click="verNotas(item)" aria-label="Ver notas">
-              <v-icon size="24">mdi-eye-outline</v-icon>
-            </v-btn>
-            <v-btn icon color="secondary" class="action-btn" @click="registrarNotas(item)" aria-label="Registrar notas">
-              <v-icon size="24">mdi-notebook-edit-outline</v-icon>
-            </v-btn>
-          </div>
-        </template>
+      <template v-slot:item.accion="{ item }">
+        <div class="table-action">
+          <v-btn icon variant="text" @click="registrarNotas(item)" aria-label="Registrar notas">
+            <v-icon>mdi-pencil</v-icon>
+            <v-tooltip activator="parent" location="top">Registrar notas</v-tooltip>
+          </v-btn>
+          <v-btn icon variant="text" color="info" @click="verNotas(item)" aria-label="Ver notas">
+            <v-icon>mdi-eye-outline</v-icon>            
+            <v-tooltip activator="parent" location="top">Ver notas</v-tooltip>
+          </v-btn>
+        </div>
+      </template>
+
       </v-data-table>
     </div>
 
@@ -63,18 +53,21 @@
           class="mb-2"
         >
           <v-card outlined style="position: relative; text-align: left;">
+            
             <v-btn
               icon
-              color="secondary"
+              variant="text"
               @click="registrarNotas(curso)"
               class="btn-editar"
               aria-label="Registrar notas"
             >
-              <v-icon>mdi-notebook-edit-outline</v-icon>
+              <v-icon>mdi-pencil</v-icon>
             </v-btn>
+
             <v-btn
               icon
-              color="primary"
+              variant="text"
+              color="info"
               @click="verNotas(curso)"
               class="btn-ver"
               aria-label="Ver notas"
@@ -108,20 +101,15 @@
       />
     </div>
 
-    <!-- Modal de no resultados -->
-    <v-dialog v-model="dialogNoResults" max-width="400">
-      <v-card>
-        <v-card-title class="headline">No se encontraron resultados</v-card-title>
-        <v-card-text>
-          La consulta no arrojó resultados.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="dialogNoResults = false">Aceptar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-container>
+
+  <DialogMensaje
+  v-model:mostrar="dialogMensajeVisible"
+  :titulo="dialogMensajeTitulo"
+  :mensaje="dialogMensajeTexto"
+  :tipo="dialogMensajeTipo"
+/>
+
 </template>
 
 <script setup>
@@ -129,12 +117,17 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useDisplay } from 'vuetify'
+import DialogMensaje from '@/components/DialogMensaje.vue'
+
+const dialogMensajeVisible = ref(false)
+const dialogMensajeTitulo = ref('')
+const dialogMensajeTexto = ref('')
+const dialogMensajeTipo = ref('error')
 
 const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
 const router = useRouter()
 
-const dialogNoResults = ref(false)
 const allData = ref([])
 const bimestres = ref([])
 const selectedBimestre = ref(null)
@@ -223,7 +216,7 @@ function verNotas(curso) {
 
   axios.get(baseUrl, configReq).then(response => {
     if (response.data.messageCode === "4") {
-      dialogNoResults.value = true
+      mostrarDialogo("Sin notas registradas", "Aún no se registran notas para este curso.", "info")
     } else {
       router.push({
         name: 'DocenteMisCursosConsultaNotas',
@@ -240,16 +233,68 @@ function verNotas(curso) {
   })
 }
 
-function registrarNotas(curso) {
-  const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
-  router.push({
-    name: 'DocenteMisCursosRegistroNotas',
-    query: {
-      curso: encodeURIComponent(JSON.stringify(curso)),
-      bimestre: encodeURIComponent(JSON.stringify(bimestre)),
-      doad_id: curso.doad_id
+async function registrarNotas(curso) {
+  try {
+    const token = localStorage.getItem("token")
+    const profile = localStorage.getItem("profile")
+    const ai_usua_id = localStorage.getItem("usua_id")
+    const ac_anio_escolar = localStorage.getItem("anio_escolar")
+    const ai_doad_id = curso.doad_id
+
+    // 1. Obtener primero pacu_id y peed_id
+    const periodoRes = await axios.get("https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativoPlanCurricular.php", {
+      params: { ai_doad_id, av_profile: profile },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    const periodos = periodoRes.data.status ? periodoRes.data.data : []
+
+    if (!periodos.length) {
+      mostrarDialogo("Validación fallida", "No se encontró un periodo educativo vinculado al plan curricular.", "warning")
+      return
     }
-  })
+
+    // Tomamos el primero por defecto (ajusta si tienes lógica para elegir uno específico)
+    const { peed_id: ai_peed_id, pacu_id: ai_pacu_id } = periodos[0]
+
+    // 2. Obtener evaluaciones usando los datos obtenidos del paso anterior
+    const evalRes = await axios.get("https://amsoftsolution.com/amss/ws/wsListaEvaluacionesDocentePeriodo.php", {
+      params: { ai_usua_id, ai_peed_id, ai_doad_id, ai_pacu_id, ac_anio_escolar, av_profile: profile },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    const evaluaciones = evalRes.data.status ? evalRes.data.data : []
+
+    if (!evaluaciones.length) {
+      mostrarDialogo(
+        "Sin evaluaciones registradas",
+        "Para continuar con el registro de notas, primero debe agregar las evaluaciones del plan curricular. Diríjase al módulo \"Mi plan de estudios\", seleccione el curso correspondiente y registre las evaluaciones necesarias.",  "warning")      
+        return
+    }
+
+    const bimestre = allData.value.find(b => b.peed_id === ai_peed_id)
+
+    router.push({
+      name: 'DocenteMisCursosRegistroNotas',
+      query: {
+        curso: encodeURIComponent(JSON.stringify(curso)),
+        bimestre: encodeURIComponent(JSON.stringify(bimestre)),
+        doad_id: curso.doad_id,
+        evaluaciones: encodeURIComponent(JSON.stringify(evaluaciones)),
+        periodos: encodeURIComponent(JSON.stringify(periodos))
+      }
+    })
+  } catch (error) {
+    mostrarDialogo("Error", error.message || "Ocurrió un error inesperado.", "error")
+  }
+}
+
+
+function mostrarDialogo(titulo, mensaje, tipo = 'error') {
+  dialogMensajeTitulo.value = titulo
+  dialogMensajeTexto.value = mensaje
+  dialogMensajeTipo.value = tipo
+  dialogMensajeVisible.value = true
 }
 </script>
 
@@ -264,12 +309,12 @@ function registrarNotas(curso) {
   padding: 4px !important;
   min-width: 0 !important;
 }
-.btn-ver {
+.btn-editar {
   position: absolute;
   top: 8px;
   right: 48px;
 }
-.btn-editar {
+.btn-ver {
   position: absolute;
   top: 8px;
   right: 8px;

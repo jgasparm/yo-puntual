@@ -97,7 +97,7 @@
 
       <aside class="rightbar">
         <!-- <h3 class="text-subtitle-1 font-weight-bold text-center mb-3">📰 Novedades</h3> -->
-        <AnunciosPublicados/>
+        <AnunciosPublicados @anuncios-cargados="onAnunciosCargados" />
       </aside>
     </div>
 
@@ -121,6 +121,7 @@
 import BreadcrumbNavigation from '@/components/BreadcrumbNavigation.vue'
 // Para validar si venció el token
 import AnunciosPublicados from '@/components/PaginaAnunciosPublicados.vue'
+import { useLoadingStore } from '@/stores/loadingStore'
 export default {
   name: "MainLayoutDesign1",
   components: { AnunciosPublicados, BreadcrumbNavigation},
@@ -180,6 +181,9 @@ export default {
     }
   },
   methods: {
+    onAnunciosCargados() {
+      this.loadingStore.ocultarLoading()
+    },
     // Llama a esta función cuando el API indique que el token ha expirado
     showSessionExpiredModal() {
       this.sessionExpiredModal = true;
@@ -265,8 +269,8 @@ export default {
         "Registro de asistencia": "RegistroAsistencia",
         "Registrar asistencia": "TutorRegistroAsistencia",
         "Mis notas": "AlumnoMisNotas",
-        "Cursos del docente": "DocenteMisCursos",
-        "Cursos": "MisCursos",
+        "Mis cursos": "DocenteMisCursos",
+        "Cursos del docente": "MisCursos",
         "Cursos del docente detalle": "DocenteMisCursosDetalle",
         "Mis cursos detalle": "MisCursosDetalle",
         "Dashboard del alumno": "DashboardAlumno",
@@ -275,7 +279,7 @@ export default {
         "Mi horario escolar":"AlumnoHorarioEscolar",
         "Mi horario":"DocenteMiHorario",
         "Plan de estudios":"PlanEstudios",
-        "Evaluaciones":"Evaluaciones",
+        "Actividades de evaluación":"ActividadesEvaluacion",
         "Mi plan de estudios":"DocentePlanEstudios",
         "Matrícula":"Matricula",
         "Alumnos":"Alumnos",
@@ -376,6 +380,11 @@ export default {
       }
     }
 
+  },
+  setup() {
+    const loadingStore = useLoadingStore()
+    loadingStore.mostrarLoading("Cargando datos principales...") // Muestra el loading
+    return { loadingStore }
   },
   mounted() {
     //Para mobile

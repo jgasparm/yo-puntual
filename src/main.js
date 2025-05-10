@@ -5,6 +5,7 @@ import router from './router';  // Importa el router
 import { VueReCaptcha } from 'vue-recaptcha-v3'
 import 'vuetify/styles';
 import '@/utils/global.css'
+import { createPinia } from 'pinia'
 
 const app = createApp(App);
 
@@ -46,7 +47,7 @@ if ('serviceWorker' in navigator) {
   console.warn('Service Workers no son soportados en este navegador.');
 }
 
-
+app.use(createPinia())
 app.use(vuetify);
 app.use(router);
 app.mount('#app');

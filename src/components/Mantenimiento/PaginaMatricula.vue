@@ -4,19 +4,25 @@
     <!-- ENCABEZADO -->
     <v-row class="py-3">
       <v-col cols="12">
-        <h1 class="text-h4">Matrícula de Alumnos - Año {{ anioEscolar }}</h1>
+        <v-row class="py-3">
+        <v-col cols="12">
+          <h1 class="text-h5 font-weight-bold mb-1">📋 Matrícula de Alumnos - Año {{ anioEscolar }}</h1>
+          <p class="text-subtitle-2">Gestiona la matrícula de estudiantes por año escolar y aula asignada.</p>
+        </v-col>
+      </v-row>
       </v-col>
     </v-row>
 
     <!-- BOTÓN Agregar Matrícula -->
     <v-card class="mb-2">
-      <v-card-title class="d-flex justify-end">
-        <v-btn color="primary" small @click="abrirDialogoAgregarMatricula">
-          <v-icon left>mdi-account-plus</v-icon>
-          Agregar Matrícula
-        </v-btn>
-      </v-card-title>
-    </v-card>
+  <v-card-actions class="d-flex justify-end">
+    <v-btn color="primary" small @click="abrirDialogoAgregarMatricula">
+      <v-icon left>mdi-account-plus</v-icon> 
+       Agregar Matrícula
+    </v-btn>
+  </v-card-actions>
+</v-card>
+
 
     <!-- FILTROS (Turno, Nivel, Grado, Sección) -->
     <v-card class="pa-2 mb-3">
@@ -89,7 +95,7 @@
         :loading="loading"
         v-model:page="currentPage"
         :items-per-page="itemsPerPage"
-        class="elevation-1"
+        class="elevation-1 rounded-lg"
         no-data-text="No hay alumnos matriculados"
       >
         <template #progress>
@@ -138,7 +144,7 @@
           cols="12"
           class="mb-3"
         >
-          <v-card outlined>
+          <v-card outlined class="elevation-1">
             <v-card-actions>
               <v-btn icon @click="abrirDialogoActualizarMatricula(item)" style="position: absolute; top: 8px; right: 8px;">
                 <v-icon>mdi-pencil</v-icon>
@@ -148,8 +154,10 @@
               N° {{ (currentPage - 1) * itemsPerPage + (index + 1) }}
             </v-card-title>
             <v-card-title class="font-weight-bold">
+              <v-icon left class="mr-2">mdi-account</v-icon>
               {{ item.alumno }}
             </v-card-title>
+
             <v-card-text>
               <div><strong>Fecha Matrícula:</strong> {{ item.fecha_matricula }}</div>
               <div><strong>Turno:</strong> {{ item.turno_descripcion }}</div>
@@ -173,7 +181,7 @@
     <v-dialog v-model="dialogoAgregar" max-width="400">
       <v-card>
         <v-card-title>
-          <span class="text-h6">Agregar Matrícula</span>
+          <span class="text-h6 font-weight-bold">Agregar Matrícula</span>
         </v-card-title>
         <v-card-text>
           <v-select

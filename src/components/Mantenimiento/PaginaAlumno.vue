@@ -3,13 +3,29 @@
     <!-- Cabecera -->
     <v-row class="mb-2">
       <v-col cols="12">
-        <v-row class="mb-2" align="center" justify="space-between">
-          <h1 class="mb-2">Alumnos</h1>
-          <v-btn color="primary" @click="openDialog()">
-            <v-icon left>mdi-account-plus</v-icon>
-            Agregar
-          </v-btn>
+        <!-- Título -->
+        <v-row class="mb-1">
+          <v-col cols="12">
+            <h1 class="text-h5 font-weight-bold mb-1">👥 Alumnos</h1>
+            <p class="text-subtitle-2">Gestiona el registro y edición de los alumnos del centro educativo.</p>
+          </v-col>
         </v-row>
+
+        <!-- Botón Agregar -->
+        <v-row class="mb-2">
+          <v-col cols="12" class="d-flex justify-end">
+            <v-btn color="primary" prepend-icon="mdi-account-plus" class="text-capitalize" @click="openDialog()">
+              Agregar alumno
+            </v-btn>
+          </v-col>
+        </v-row>
+
+        <v-row v-if="!isMobile" class="mb-2">
+          <v-col cols="12">
+            <h2 class="text-subtitle-2 font-weight-medium mb-2">🔍 Filtros de búsqueda</h2>
+          </v-col>
+        </v-row>
+
 
         <!-- Filtros desktop -->
         <v-row v-if="!isMobile" class="mb-4" dense align="center">
@@ -58,6 +74,12 @@
       </v-col>
     </v-row>
 
+    <v-row class="mb-2">
+      <v-col cols="12">
+        <h2 class="text-subtitle-2 font-weight-medium mb-2">📋 Listado de alumnos registrados</h2>
+      </v-col>
+    </v-row>
+
     <!-- Listado: Desktop -->
     <div v-if="!isMobile">
       <v-data-table
@@ -94,7 +116,7 @@
               style="position: absolute; top: 8px; right: 8px;"
               @click="openDialog(item)"
             >
-              <v-icon>mdi-pencil</v-icon>
+            <v-icon aria-label="Editar alumno">mdi-pencil</v-icon>
             </v-btn>
             <v-card-title>
               {{ (currentPage - 1) * itemsPerPageMobile + index + 1 }}
@@ -348,7 +370,12 @@ required
       </v-card>
     </v-dialog>
       
-      <v-overlay v-model="loadingGuardar" class="d-flex flex-column justify-center align-center" persistent>
+    <v-overlay
+      v-model="loadingGuardar"
+      class="d-flex flex-column justify-center align-center"
+      persistent
+      style="background-color: rgba(0, 0, 0, 0.4);"
+    >
         <v-img src="/logo.webp" height="100" contain class="logo-spin mb-4" />
         <span class="text-h6 font-weight-medium">Procesando...</span>
       </v-overlay>

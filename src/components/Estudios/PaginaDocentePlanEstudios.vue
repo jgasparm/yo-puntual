@@ -7,7 +7,7 @@
           📘 Plan de estudios - Año {{ anioEscolar }}
         </h2>
         <p class="text-body-2 text-grey-darken-1">
-          Gestiona los planes de estudio, curriculares y evaluaciones asignadas por nivel, grado y área educativa.
+          Gestiona los planes de estudio, curriculares y competencias asignadas por nivel, grado y área educativa.
         </p>
       </v-col>
     </v-row>
@@ -97,7 +97,7 @@
                 <td>{{ plan.grad_nombre }}</td>
                 <td>{{ plan.ples_horas }}</td>
                 <td>
-                  <v-chip :color="plan.ples_estado === 'A' ? 'green' : 'red'">
+                  <v-chip :color="plan.ples_estado === 'A' ? 'green' : 'red'" class="chip-xs">
                     {{ plan.ples_estado === 'A' ? 'Activo' : 'Inactivo' }}
                   </v-chip>
                 </td>
@@ -140,13 +140,13 @@
                           <td>{{ item.aede_nombre }}</td>
                           <td>{{ item.pacu_horas }}</td>
                           <td>
-                            <v-chip :color="item.pacu_estado === 'A' ? 'green' : 'red'">
+                            <v-chip :color="item.pacu_estado === 'A' ? 'green' : 'red'" class="chip-xs">
                               {{ item.pacu_estado === 'A' ? 'Activo' : 'Inactivo' }}
                             </v-chip>
                           </td>
                           <td>
-                            <!-- Botón para expandir Evaluaciones -->
-                            <v-btn icon variant="text" @click.stop="toggleExpandEvaluations(item.pacu_id)">
+                            <!-- Botón para expandir Competencias -->
+                            <v-btn icon variant="text" @click.stop="toggleExpandCompetencias(item.pacu_id)">
                               <v-icon>
                                 {{ isEvaluationExpanded(item.pacu_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
                               </v-icon>
@@ -154,66 +154,187 @@
                           </td>
                         </tr>
 
-                        <!-- Fila expandida para Evaluaciones de ese pacu_id -->
+                        <!-- Fila expandida para Competencias de ese pacu_id -->
                         <tr v-if="isEvaluationExpanded(item.pacu_id)">
-                          <td colspan="6" class="evaluation-section">
+                          <td colspan="6" class="competencia-section">
                             <div class="d-flex justify-space-between font-weight-bold mb-2">
-                              <span>Evaluaciones</span>
-                              <v-btn small color="primary" variant="text" @click="abrirDialogoAgregarEvaluacion(item)">
+                              <span>Competencias</span>
+                              <v-btn small color="primary" variant="text" @click="abrirDialogoAgregarCompetencia(item, plan.ples_id)">
                                 +Agregar
                               </v-btn>
                             </div>
 
-                            <!-- Tabla de Evaluaciones -->
+                            <!-- Tabla de Competencias -->
                             <table
-                              v-if="(planCurricularEvaluaciones[item.pacu_id] || []).length"
+                              v-if="(planCurricularCompetencias[item.pacu_id] || []).length"
                               class="w-100"
                             >
                               <thead>
                                 <tr>
                                   <th>N°</th>
                                   <th>Nombre</th>
-                                  <th>Cantidad</th>
                                   <th>Orden</th>
                                   <th>Estado</th>
                                   <th>Acciones</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                <tr
-                                  v-for="(evalItem, eIdx) in paginatedEvaluations(item.pacu_id)"
-                                  :key="evalItem.pcev_id"
+                                <template
+                                  v-for="(compItem, eIdx) in paginatedCompetencias(item.pacu_id).map(c => ({ ...c, pacu_id: item.pacu_id }))"
+                                  :key="compItem.pcco_id"
                                 >
-                                  <td>
-                                    {{
-                                      (evaluationPage[item.pacu_id] - 1) * evaluationItemsPerPage +
-                                      eIdx +
-                                      1
-                                    }}
-                                  </td>
-                                  <td>{{ evalItem.eval_nombre }}</td>
-                                  <td>{{ evalItem.pcev_cantidad_evaluacion }}</td>
-                                  <td>{{ evalItem.pcev_orden }}</td>
-                                  <td>
-                                    <v-chip :color="evalItem.pcev_estado === 'A' ? 'green' : 'red'">
-                                      {{ evalItem.pcev_estado === 'A' ? 'Activo' : 'Inactivo' }}
-                                    </v-chip>
-                                  </td>
-                                  <td>
-                                    <v-btn icon variant="text" @click.stop="abrirDialogoEditarEvaluacion(evalItem)">
-                                      <v-icon>mdi-pencil</v-icon>
-                                    </v-btn>
+                                  <tr>
+                                    <td>
+                                      {{
+                                        (competenciaPage[item.pacu_id] - 1) * competenciaItemsPerPage +
+                                        eIdx +
+                                        1
+                                      }}
+                                    </td>
+                                    <td>{{ compItem.comp_nombre }}</td>
+                                    <td>{{ compItem.pcco_orden }}</td>
+                                    <td>
+                                      <v-chip :color="compItem.pcco_estado === 'A' ? 'green' : 'red'" class="chip-xs">
+                                        {{ compItem.pcco_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                                      </v-chip>
+                                    </td>
+                                    <td>
+                                      <v-btn icon variant="text" @click.stop="abrirDialogoEditarCompetencia(compItem)">
+                                        <v-icon>mdi-pencil</v-icon>
+                                      </v-btn>
+                                      <v-btn
+                                        icon
+                                        variant="text"
+                                        @click.stop="toggleExpandActividades(compItem.pcco_id)"
+                                        :title="isActividadesExpanded(compItem.pcco_id) ? 'Ocultar actividades' : 'Ver actividades'"
+                                      >
+                                        <v-icon>
+                                          {{ isActividadesExpanded(compItem.pcco_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                                        </v-icon>
+                                      </v-btn>
+                                    </td>
+                                  </tr>
+
+                                <!-- Fila de Actividades -->
+                                <tr
+                                  v-if="isActividadesExpanded(compItem.pcco_id)"
+                                  :key="'actividades-' + compItem.pcco_id"
+                                >
+                                  <td colspan="5">
+                                    <div class="actividades-section mt-2">
+                                      <div class="d-flex justify-space-between align-center mb-2">
+                                        <h4 class="text-subtitle-2 font-weight-bold">Actividades</h4>
+                                        <v-btn small color="primary" variant="text" @click="abrirDialogoAgregarActividad(compItem.pcco_id)">
+                                          +Agregar
+                                        </v-btn>
+                                      </div>
+
+                                      <table v-if="(planCompetenciaActividades[compItem.pcco_id] || []).length" class="w-100">
+                                        <thead>
+                                          <tr>
+                                            <th>N°</th>
+                                            <th>Nombre</th>
+                                            <th>Orden</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          <tr
+                                            v-for="(act, idx) in planCompetenciaActividades[compItem.pcco_id]"
+                                            :key="act.pcca_id"
+                                          >
+                                            <td>{{ idx + 1 }}</td>
+                                            <td>{{ act.acti_nombre }}</td>
+                                            <td>{{ act.pcca_orden }}</td>
+                                            <td>
+                                              <v-chip :color="act.pcca_estado === 'A' ? 'green' : 'red'" class="chip-xs">
+                                                {{ act.pcca_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                                              </v-chip>
+                                            </td>
+                                            <td>
+                                              <v-btn icon variant="text" @click.stop="abrirDialogoEditarActividad(act)">
+                                                <v-icon>mdi-pencil</v-icon>
+                                              </v-btn>
+                                            </td>
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                      <p v-else>No hay actividades registradas</p>
+                                    </div>
                                   </td>
                                 </tr>
+
+                                <!-- Fila de Capacidades debajo de Actividades -->
+                                <tr
+                                  v-if="isActividadesExpanded(compItem.pcco_id)"
+                                  :key="'capacidades-' + compItem.pcco_id"
+                                >
+                                  <td colspan="5">
+                                    <div class="capacidades-section mt-2">
+                                      <div class="d-flex justify-space-between align-center mb-2">
+                                        <h4 class="text-subtitle-2 font-weight-bold">Capacidades</h4>
+                                          <v-btn small color="primary" variant="text" @click="abrirDialogoAgregarCapacidad(compItem.pcco_id)">
+                                            +Agregar
+                                          </v-btn>
+                                      </div>
+
+                                      <table
+                                        v-if="(planCompetenciaCapacidades[compItem.pcco_id]?.filter(c => c && c.pccc_id).length > 0)"
+                                        class="w-100"
+                                      >
+
+                                        <thead>
+                                          <tr>
+                                            <th>N°</th>
+                                            <th>Nombre</th>
+                                            <th>Orden</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          <tr
+                                            v-for="(cap, idx) in (planCompetenciaCapacidades[compItem.pcco_id] || []).filter(c => c && c.pccc_id)"
+                                            :key="cap.pccc_id"
+                                          >
+                                            <td>{{ idx + 1 }}</td>
+                                            <td>{{ cap.capa_nombre }}</td>
+                                            <td>{{ cap.pccc_orden }}</td>
+                                            <td>
+                                              <v-chip :color="cap.pccc_estado === 'A' ? 'green' : 'red'" class="chip-xs">
+                                                {{ cap.pccc_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                                              </v-chip>
+                                            </td>
+                                            <td>
+                                              <v-btn icon variant="text" @click.stop="abrirDialogoEditarCapacidad(cap)">
+                                                <v-icon>mdi-pencil</v-icon>
+                                              </v-btn>
+                                            </td>
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                      <p v-else>No hay capacidades registradas</p>
+                                    </div>
+                                  </td>
+                                </tr>
+
+                              </template>
                               </tbody>
                             </table>
-                            <p v-else>No hay evaluaciones registradas</p>
 
-                            <!-- Paginación de Evaluaciones -->
+                            
+
+
+
+                            <p v-else>No hay competencias registradas</p>
+                            
+
+                            <!-- Paginación de Competencias -->
                             <v-pagination
-                              v-if="evaluationTotalPages(item.pacu_id) > 1"
-                              v-model="evaluationPage[item.pacu_id]"
-                              :length="evaluationTotalPages(item.pacu_id)"
+                              v-if="competenciaTotalPages(item.pacu_id) > 1"
+                              v-model="competenciaPage[item.pacu_id]"
+                              :length="competenciaTotalPages(item.pacu_id)"
                               small
                               class="mt-2"
                             />
@@ -267,7 +388,7 @@
 
             <v-card-subtitle class="px-4 pb-0">
               Horas: {{ plan.ples_horas }} |
-              <v-chip x-small :color="plan.ples_estado === 'A' ? 'green' : 'red'">
+              <v-chip x-small :color="plan.ples_estado === 'A' ? 'green' : 'red'" class="chip-xs">
                 {{ plan.ples_estado === 'A' ? 'Activo' : 'Inactivo' }}
               </v-chip>
             </v-card-subtitle>
@@ -286,66 +407,65 @@
                         {{ item.peed_nombre }} — {{ item.aede_nombre }}
                         <div class="text-caption">
                           Horas: {{ item.pacu_horas }}
-                          <v-chip x-small :color="item.pacu_estado === 'A' ? 'green' : 'red'">
+                          <v-chip x-small :color="item.pacu_estado === 'A' ? 'green' : 'red'" class="chip-xs">
                             {{ item.pacu_estado === 'A' ? 'Activo' : 'Inactivo' }}
                           </v-chip>
                         </div>
                       </div>
 
-                      <!-- Botón para expandir Evaluaciones Mobile -->
-                      <v-btn icon variant="text" @click.stop="toggleExpandEvaluations(item.pacu_id)">
+                      <!-- Botón para expandir Competencias Mobile -->
+                      <v-btn icon variant="text" @click.stop="toggleExpandCompetencias(item.pacu_id)">
                         <v-icon>{{ isEvaluationExpanded(item.pacu_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
                       </v-btn>
                     </div>
 
-                    <!-- Expansión Mobile de Evaluaciones -->
+                    <!-- Expansión Mobile de Competencias -->
                     <v-expand-transition>
-                      <div v-if="isEvaluationExpanded(item.pacu_id)" class="evaluation-section pa-4">
+                      <div v-if="isEvaluationExpanded(item.pacu_id)" class="competencia-section pa-4">
                         <v-list dense>
                           <v-btn
                             small
                             color="primary"
                             variant="text"
                             class="mb-2"
-                            @click="abrirDialogoAgregarEvaluacion(item)"
+                            @click="abrirDialogoAgregarCompetencia(item, plan.ples_id)"
                           >
                             +Agregar
                           </v-btn>
 
-                          <!-- Iteración de Evaluaciones mobile -->
+                          <!-- Iteración de Competencias mobile -->
                           <div
-                            v-for="(evalItem) in paginatedEvaluations(item.pacu_id)"
-                            :key="evalItem.pcev_id"
+                            v-for="(compItem) in paginatedCompetencias(item.pacu_id).map(c => ({ ...c, pacu_id: item.pacu_id }))"
+                            :key="compItem.pcco_id"
                             class="mb-2"
                           >
                             <div class="d-flex justify-space-between align-center">
-                              <span class="font-weight-medium">{{ evalItem.eval_nombre }}</span>
-                              <v-btn icon variant="text" @click.stop="abrirDialogoEditarEvaluacion(evalItem)">
+                              <span class="font-weight-medium">{{ compItem.comp_nombre }}</span>
+                              <v-btn icon variant="text" @click.stop="abrirDialogoEditarCompetencia(compItem)">
                                 <v-icon>mdi-pencil</v-icon>
                               </v-btn>
                             </div>
                             <div class="text-caption">
-                              Cant: {{ evalItem.pcev_cantidad_evaluacion }} |
-                              Orden: {{ evalItem.pcev_orden }}
+                              Orden: {{ compItem.pcco_orden }}
                               <td>
-                                <v-chip :color="evalItem.pcev_estado === 'A' ? 'green' : 'red'">
-                                  {{ evalItem.pcev_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                                <v-chip :color="compItem.pcco_estado === 'A' ? 'green' : 'red'" class="chip-xs">
+                                  {{ compItem.pcco_estado === 'A' ? 'Activo' : 'Inactivo' }}
                                 </v-chip>
                               </td>
                             </div>
                           </div>
 
-                          <!-- Mensaje si no hay evaluaciones -->
-                          <div v-if="!(planCurricularEvaluaciones[item.pacu_id]?.length)">
-                            No hay evaluaciones registradas
+                          <!-- Mensaje si no hay competencias -->
+                          <div v-if="!(planCurricularCompetencias[item.pacu_id]?.length)">
+                            No hay competencias registradas
                           </div>
                         </v-list>
 
-                        <!-- Paginación Evaluaciones Mobile -->
+                        <!-- Paginación Competencias Mobile -->
                         <v-pagination
-                          v-if="evaluationTotalPages(item.pacu_id) > 1"
-                          v-model="evaluationPage[item.pacu_id]"
-                          :length="evaluationTotalPages(item.pacu_id)"
+                          v-if="competenciaTotalPages(item.pacu_id) > 1"
+                          v-model="competenciaPage[item.pacu_id]"
+                          :length="competenciaTotalPages(item.pacu_id)"
                           small
                           class="mt-2"
                         />
@@ -465,73 +585,59 @@
       </v-card>
     </v-dialog>
 
-    <!-- DIÁLOGO: Agregar Evaluación de Plan Curricular -->
-    <v-dialog v-model="mostrarDialogoAgregarEvaluacion" max-width="400">
+    <!-- DIÁLOGO: Agregar Competencia de Plan Curricular -->
+    <v-dialog v-model="mostrarDialogoAgregarCompetencia" max-width="400">
       <v-card>
-        <v-card-title>Agregar Evaluación</v-card-title>
+        <v-card-title>Agregar Competencia</v-card-title>
         <v-card-text>
           <v-row>
             <v-col cols="12">
               <v-select
-                label="Tipo de Evaluación"
-                :items="evaluacionesOptions"
+                label="Tipo de Competencia"
+                :items="competenciasOptions"
                 item-text="title"
                 item-value="key"
-                v-model="newEvaluacion.eval_id"
-              />
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                label="Cantidad Eval."
-                type="number"
-                v-model="newEvaluacion.pcev_cantidad_evaluacion"
+                v-model="newEvaluacion.comp_id"
               />
             </v-col>
             <v-col cols="12">
               <v-text-field
                 label="Orden"
                 type="number"
-                v-model="newEvaluacion.pcev_orden"
+                v-model="newEvaluacion.pcco_orden"
               />
             </v-col>
           </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn text @click="mostrarDialogoAgregarEvaluacion = false">Cancelar</v-btn>
+          <v-btn text @click="mostrarDialogoAgregarCompetencia = false">Cancelar</v-btn>
           <v-btn color="primary" @click="guardarNuevaEvaluacion">Guardar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- DIÁLOGO: Editar Evaluación de Plan Curricular -->
-    <v-dialog v-model="mostrarDialogoEditarEvaluacion" max-width="400">
+    <!-- DIÁLOGO: Editar Competencia de Plan Curricular -->
+    <v-dialog v-model="mostrarDialogoEditarCompetencia" max-width="400">
       <v-card>
-        <v-card-title>Editar Evaluación</v-card-title>
+        <v-card-title>Editar Competencia</v-card-title>
         <v-card-text>
           <v-row>
             <v-col cols="12">
-              <strong>Evaluación:</strong> {{ evaluacionSeleccionada?.eval_nombre }}
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                label="Cantidad Eval."
-                type="number"
-                v-model="evaluacionSeleccionada.pcev_cantidad_evaluacion"
-              />
+              <strong>Competencia:</strong> {{ competenciaSeleccionada?.comp_nombre }}
             </v-col>
             <v-col cols="12">
               <v-text-field
                 label="Orden"
                 type="number"
-                v-model="evaluacionSeleccionada.pcev_orden"
+                v-model="competenciaSeleccionada.pcco_orden"
               />
             </v-col>
             <v-col cols="12">
               <v-select
                 label="Estado"
                 :items="['Activo','Inactivo']"
-                v-model="evaluacionSeleccionadaEstado"
+                v-model="competenciaSeleccionadaEstado"
               />
             </v-col>
           </v-row>
@@ -539,10 +645,113 @@
         <v-card-actions>
           <v-spacer />
           <v-btn text @click="cerrarDialogoEditarEvaluacion">Cancelar</v-btn>
-          <v-btn color="primary" @click="guardarEvaluacionActualizada">Guardar</v-btn>
+          <v-btn color="primary" @click="guardarCompetenciaActualizada">Guardar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- DIÁLOGO: Agregar Actividad -->
+<v-dialog v-model="mostrarDialogoAgregarActividad" max-width="400">
+  <v-card>
+    <v-card-title>Agregar Actividad</v-card-title>
+    <v-card-text>
+      <v-select
+        label="Actividad"
+        :items="actividadesDisponibles"
+        item-text="title"
+        item-value="key"
+        v-model="nuevaActividad.acti_id"
+      />
+      <v-text-field
+        label="Orden"
+        type="number"
+        v-model="nuevaActividad.pcca_orden"
+      />
+    </v-card-text>
+    <v-card-actions>
+      <v-btn text @click="mostrarDialogoAgregarActividad = false">Cancelar</v-btn>
+      <v-btn color="primary" :disabled="!nuevaActividad.acti_id || !nuevaActividad.pcca_orden" @click="guardarNuevaActividad">
+        Guardar
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+
+<!-- DIÁLOGO: Editar Actividad -->
+<v-dialog v-model="mostrarDialogoEditarActividad" max-width="400">
+  <v-card>
+    <v-card-title>Editar Actividad</v-card-title>
+    <v-card-text>
+      <div><strong>Actividad:</strong> {{ actividadSeleccionada?.acti_nombre }}</div>
+      <v-text-field
+        label="Orden"
+        type="number"
+        v-model="actividadSeleccionada.pcca_orden"
+      />
+      <v-select
+        label="Estado"
+        :items="['Activo','Inactivo']"
+        v-model="actividadSeleccionadaEstado"
+      />
+    </v-card-text>
+    <v-card-actions>
+      <v-btn text @click="mostrarDialogoEditarActividad = false">Cancelar</v-btn>
+      <v-btn color="primary" @click="guardarActividadEditada">Guardar</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+
+<!-- DIÁLOGO: Agregar Capacidad -->
+<v-dialog v-model="mostrarDialogoAgregarCapacidad" max-width="400">
+  <v-card>
+    <v-card-title>Agregar Capacidad</v-card-title>
+    <v-card-text>
+      <v-select
+        label="Capacidad"
+        :items="capacidadesDisponibles"
+        item-text="title"
+        item-value="key"
+        v-model="nuevaCapacidad.capa_id"
+      />
+      <v-text-field
+        label="Orden"
+        type="number"
+        v-model="nuevaCapacidad.pccc_orden"
+      />
+    </v-card-text>
+    <v-card-actions>
+      <v-btn text @click="mostrarDialogoAgregarCapacidad = false">Cancelar</v-btn>
+      <v-btn color="primary" :disabled="!nuevaCapacidad.capa_id || !nuevaCapacidad.pccc_orden" @click="guardarNuevaCapacidad">
+        Guardar
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+
+<!-- DIÁLOGO: Editar Capacidad -->
+<v-dialog v-model="mostrarDialogoEditarCapacidad" max-width="400">
+  <v-card>
+    <v-card-title>Editar Capacidad</v-card-title>
+    <v-card-text>
+      <div><strong>Capacidad:</strong> {{ capacidadSeleccionada?.capa_nombre }}</div>
+      <v-text-field
+        label="Orden"
+        type="number"
+        v-model="capacidadSeleccionada.pccc_orden"
+      />
+      <v-select
+        label="Estado"
+        :items="['Activo','Inactivo']"
+        v-model="capacidadSeleccionadaEstado"
+      />
+    </v-card-text>
+    <v-card-actions>
+      <v-btn text @click="mostrarDialogoEditarCapacidad = false">Cancelar</v-btn>
+      <v-btn color="primary" @click="guardarCapacidadEditada">Guardar</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+
   </v-container>
 </template>
 
@@ -550,6 +759,32 @@
 import { ref, computed, onMounted, watch, reactive } from 'vue'
 import axios from 'axios'
 import { useDisplay } from 'vuetify'
+
+const capacidadesDisponibles = ref([])
+const mostrarDialogoAgregarCapacidad = ref(false)
+const mostrarDialogoEditarCapacidad = ref(false)
+const nuevaCapacidad = ref({ pcco_id: null, capa_id: null, pccc_orden: null })
+const capacidadSeleccionada = ref(null)
+const capacidadSeleccionadaEstado = ref('Activo')
+
+
+const expandedActividadId = ref(null)
+
+const toggleExpandActividades = async (pcco_id) => {
+  if (expandedActividadId.value === pcco_id) {
+    expandedActividadId.value = null
+  } else {
+    expandedActividadId.value = pcco_id
+    await obtenerActividadesPorCompetencia(pcco_id)
+    await obtenerCapacidadesPorCompetencia(pcco_id) // <-- AGREGAR ESTA LÍNEA
+  }
+}
+
+
+
+const isActividadesExpanded = (pcco_id) => {
+  return expandedActividadId.value === pcco_id
+}
 
 const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
@@ -568,7 +803,7 @@ const axiosInstance = axios.create({
 // --- VARIABLES PRINCIPALES ---
 const planesEstudio = ref([])           // Lista de planes de estudio
 const planCurriculares = ref({})        // planCurriculares[ples_id] => array de planes curr
-const planCurricularEvaluaciones = ref({})  // planCurricularEvaluaciones[pacu_id] => array
+const planCurricularCompetencias = ref({})  // planCurricularCompetencias[pacu_id] => array
 
 // --- PAGINACIÓN (Planes) ---
 const currentPage = ref(1)
@@ -578,13 +813,13 @@ const itemsPerPage = computed(() => (isDesktop.value ? 10 : 5))
 const planCurrPage = ref({})
 const currItemsPerPage = computed(() => (isDesktop.value ? 10 : 5))
 
-// --- PAGINACIÓN (Evaluaciones) ---
-const evaluationPage = ref({})
-const evaluationItemsPerPage = computed(() => (isDesktop.value ? 10 : 5))
+// --- PAGINACIÓN (Competencias) ---
+const competenciaPage = ref({})
+const competenciaItemsPerPage = computed(() => (isDesktop.value ? 10 : 5))
 
 // --- EXPANSIÓN de filas ---
 const expandedId = ref(null)             // Para planes
-const expandedEvaluationId = ref(null)   // Para evaluaciones
+const expandedCompetenciaId = ref(null)   // Para competencias
 
 // --- FILTROS ---
 const areasOptions = ref([{ title: 'TODOS', key: 'TODOS' }])
@@ -617,26 +852,17 @@ const planSeleccionado = ref(null)
 const planSeleccionadoHrs = ref(null)
 const planSeleccionadoEstado = ref('')
 
-// --- DIALOGOS Evaluaciones ---
-const evaluacionesOptions = ref([
-  { key: 1, title: 'Participaciones' },
-  { key: 2, title: 'Prácticas' },
-  { key: 3, title: 'Tareas' },
-  { key: 4, title: 'Revisión de cuadernos' },
-  { key: 5, title: 'Examen mensual' },
-  { key: 6, title: 'Examen bimestral' }
-])
-const mostrarDialogoAgregarEvaluacion = ref(false)
-const mostrarDialogoEditarEvaluacion = ref(false)
+// --- DIALOGOS Competencias ---
+const competenciasOptions = ref([])
+const mostrarDialogoAgregarCompetencia = ref(false)
+const mostrarDialogoEditarCompetencia = ref(false)
 const newEvaluacion = reactive({
   pacu_id: null,
-  eval_id: null,
-  pcev_peso_porcentaje: null,
-  pcev_cantidad_evaluacion: null,
-  pcev_orden: null
+  comp_id: null,
+  pcco_orden: null
 })
-const evaluacionSeleccionada = ref(null)
-const evaluacionSeleccionadaEstado = ref('Activo')
+const competenciaSeleccionada = ref(null)
+const competenciaSeleccionadaEstado = ref('Activo')
 
 // --- COMPUTED para FILTROS ---
 const gradoOptions = computed(() => {
@@ -684,6 +910,14 @@ const nivelDelPlan = computed(() => {
   return nivelObj ? nivelObj.title : ''
 })
 
+const planCompetenciaActividades = ref({}) // pcco_id => actividades
+const actividadesDisponibles = ref([])
+const mostrarDialogoAgregarActividad = ref(false)
+const mostrarDialogoEditarActividad = ref(false)
+const nuevaActividad = ref({ pcco_id: null, acti_id: null, pcca_orden: null })
+const actividadSeleccionada = ref(null)
+const actividadSeleccionadaEstado = ref('Activo')
+
 // --- PAGINACIÓN secundaria (Plan Curricular) ---
 function paginatedCurr(plesId) {
   const list = planCurriculares.value[plesId] || []
@@ -696,19 +930,19 @@ function currTotalPages(plesId) {
   return Math.ceil(list.length / currItemsPerPage.value)
 }
 
-// --- PAGINACIÓN Evaluaciones ---
-function paginatedEvaluations(pacuId) {
-  if (!evaluationPage.value[pacuId]) {
-    evaluationPage.value[pacuId] = 1
+// --- PAGINACIÓN Competencias ---
+function paginatedCompetencias(pacuId) {
+  if (!competenciaPage.value[pacuId]) {
+    competenciaPage.value[pacuId] = 1
   }
-  const list = planCurricularEvaluaciones.value[pacuId] || []
-  const page = evaluationPage.value[pacuId]
-  const start = (page - 1) * evaluationItemsPerPage.value
-  return list.slice(start, start + evaluationItemsPerPage.value)
+  const list = planCurricularCompetencias.value[pacuId] || []
+  const page = competenciaPage.value[pacuId]
+  const start = (page - 1) * competenciaItemsPerPage.value
+  return list.slice(start, start + competenciaItemsPerPage.value)
 }
-function evaluationTotalPages(pacuId) {
-  const list = planCurricularEvaluaciones.value[pacuId] || []
-  return Math.ceil(list.length / evaluationItemsPerPage.value)
+function competenciaTotalPages(pacuId) {
+  const list = planCurricularCompetencias.value[pacuId] || []
+  return Math.ceil(list.length / competenciaItemsPerPage.value)
 }
 
 // --- OBTENER DATOS PRINCIPALES ---
@@ -731,22 +965,22 @@ async function obtenerPlanCurricular(plesId) {
     planCurriculares.value[plesId] = []
   }
 }
-async function obtenerPlanCurricularEvaluaciones(pacuId) {
+async function obtenerPlanCurricularCompetencias(pacuId) {
   try {
     const { data } = await axiosInstance.get(
-      `wsConsultaPlanCurricularEvaluaciones.php?ai_pacu_id=${pacuId}&av_profile=${profile}`
+      `wsConsultaPlanCurricularCompetencias.php?ai_pacu_id=${pacuId}&av_profile=${profile}`
     )
     if (data.status) {
-      planCurricularEvaluaciones.value = {
-        ...planCurricularEvaluaciones.value,
+      planCurricularCompetencias.value = {
+        ...planCurricularCompetencias.value,
         [pacuId]: data.data
       }
     } else {
-      planCurricularEvaluaciones.value[pacuId] = []
+      planCurricularCompetencias.value[pacuId] = []
     }
   } catch (err) {
-    console.error('Error al obtener evaluaciones:', err)
-    planCurricularEvaluaciones.value[pacuId] = []
+    console.error('Error al obtener competencias:', err)
+    planCurricularCompetencias.value[pacuId] = []
   }
 }
 
@@ -763,89 +997,112 @@ function toggleExpand(plesId) {
 function isExpanded(plesId) {
   return expandedId.value === plesId
 }
-function toggleExpandEvaluations(pacuId) {
-  if (expandedEvaluationId.value === pacuId) {
-    expandedEvaluationId.value = null
+
+async function toggleExpandCompetencias(pacuId) {
+  if (expandedCompetenciaId.value === pacuId) {
+    expandedCompetenciaId.value = null
   } else {
-    expandedEvaluationId.value = pacuId
-    // Cargamos evaluaciones
-    obtenerPlanCurricularEvaluaciones(pacuId)
-    // Forzamos página a 1 si no está definida
-    if (!evaluationPage.value[pacuId]) {
-      evaluationPage.value[pacuId] = 1
+    expandedCompetenciaId.value = pacuId
+
+    await obtenerPlanCurricularCompetencias(pacuId)
+
+    if (!competenciaPage.value[pacuId]) {
+      competenciaPage.value[pacuId] = 1
+    }
+
+    const competencias = planCurricularCompetencias.value[pacuId] || []
+    for (const c of competencias) {
+      if (c && c.pcco_id) {
+        await obtenerActividadesPorCompetencia(c.pcco_id)
+        await obtenerCapacidadesPorCompetencia(c.pcco_id)
+      }
     }
   }
 }
+
+
+
+
 function isEvaluationExpanded(pacuId) {
-  return expandedEvaluationId.value === pacuId
+  return expandedCompetenciaId.value === pacuId
 }
 
 // --- EVALUACIONES: Agregar / Editar ---
-function abrirDialogoAgregarEvaluacion(planCurr) {
+function abrirDialogoAgregarCompetencia(planCurr, ples_id) {
   newEvaluacion.pacu_id = planCurr.pacu_id
-  newEvaluacion.eval_id = null
-  newEvaluacion.pcev_peso_porcentaje = null
-  newEvaluacion.pcev_cantidad_evaluacion = null
-  newEvaluacion.pcev_orden = null
-  mostrarDialogoAgregarEvaluacion.value = true
+  newEvaluacion.comp_id = null
+  newEvaluacion.pcco_orden = null
+
+  const planPadre = planesEstudio.value.find(p => p.ples_id === ples_id)
+  if (planPadre) {
+    const ared_id = planPadre.ared_id
+    const nive_id = planPadre.nive_id
+    obtenerCompetenciasDisponibles(planCurr.pacu_id, ared_id, nive_id)
+  } else {
+    console.warn(`No se encontró el plan padre con ples_id=${ples_id}`)
+    competenciasOptions.value = []
+  }
+
+  mostrarDialogoAgregarCompetencia.value = true
 }
+
+
 async function guardarNuevaEvaluacion() {
   try {
     const params = new URLSearchParams()
     params.append('ai_pacu_id', newEvaluacion.pacu_id)
-    params.append('ai_eval_id', newEvaluacion.eval_id)
-    //params.append('adc_pcev_peso_porcentaje', evaluacionSeleccionada.value.pcev_peso_porcentaje)
-    params.append('adc_pcev_cantidad_evaluacion', newEvaluacion.pcev_cantidad_evaluacion)
-    params.append('adc_pcev_orden', newEvaluacion.pcev_orden)
+    params.append('ai_comp_id', newEvaluacion.comp_id)
+    //params.append('adc_pcev_peso_porcentaje', competenciaSeleccionada.value.pcev_peso_porcentaje)
+    params.append('adc_pcco_orden', newEvaluacion.pcco_orden)
     params.append('av_profile', profile)
 
-    const { data } = await axiosInstance.post('wsRegistraPlanCurricularEvaluaciones.php', params)
+    const { data } = await axiosInstance.post('wsRegistraPlanCurricularCompetencia.php', params)
     if (data.status) {
-      mostrarDialogoAgregarEvaluacion.value = false
-      // Refrescamos las evaluaciones
-      await obtenerPlanCurricularEvaluaciones(newEvaluacion.pacu_id)
+      mostrarDialogoAgregarCompetencia.value = false
+      // Refrescamos las competencias
+      await obtenerPlanCurricularCompetencias(newEvaluacion.pacu_id)
     } else {
-      console.error('Error al guardar nueva evaluación:', data.message)
+      console.error('Error al guardar nueva competencia:', data.message)
     }
   } catch (err) {
-    console.error('Error al guardar nueva evaluación:', err)
+    console.error('Error al guardar nueva competencia:', err)
   }
 }
 
-function abrirDialogoEditarEvaluacion(evalItem) {
-  evaluacionSeleccionada.value = { ...evalItem }
-  // Ajustamos su estado a 'Activo' o 'Inactivo' (si pcev_estado viene null, ajusta tu lógica)
-  evaluacionSeleccionadaEstado.value = evalItem.pcev_estado === 'I' ? 'Inactivo' : 'Activo'
-  mostrarDialogoEditarEvaluacion.value = true
+function abrirDialogoEditarCompetencia(compItem) {
+  competenciaSeleccionada.value = { ...compItem }
+  // Ajustamos su estado a 'Activo' o 'Inactivo' (si pcco_estado viene null, ajusta tu lógica)
+  competenciaSeleccionadaEstado.value = compItem.pcco_estado === 'I' ? 'Inactivo' : 'Activo'
+  mostrarDialogoEditarCompetencia.value = true
 }
-async function guardarEvaluacionActualizada() {
+async function guardarCompetenciaActualizada() {
   try {
     const params = new URLSearchParams()
-    params.append('ai_pcev_id', evaluacionSeleccionada.value.pcev_id)
-    params.append('ai_pacu_id', evaluacionSeleccionada.value.pacu_id)
-    params.append('ai_eval_id', evaluacionSeleccionada.value.eval_id)
-    params.append('adc_pcev_peso_porcentaje', evaluacionSeleccionada.value.pcev_peso_porcentaje)
-    params.append('adc_pcev_cantidad_evaluacion', evaluacionSeleccionada.value.pcev_cantidad_evaluacion)
-    params.append('adc_pcev_orden', evaluacionSeleccionada.value.pcev_orden)
+    params.append('ai_pcco_id', competenciaSeleccionada.value.pcco_id)
+    params.append('adc_pcco_orden', competenciaSeleccionada.value.pcco_orden)
 
-    const estadoWS = evaluacionSeleccionadaEstado.value === 'Activo' ? 'A' : 'I'
-    params.append('ac_pcev_estado', estadoWS)
+    const estadoWS = competenciaSeleccionadaEstado.value === 'Activo' ? 'A' : 'I'
+    params.append('ac_pcco_estado', estadoWS)
     params.append('av_profile', profile)
 
-    const { data } = await axiosInstance.post('wsActualizaPlanCurricularEvaluaciones.php', params)
+    const { data } = await axiosInstance.post('wsActualizaPlanCurricularCompetencia.php', params)
     if (data.status) {
-      mostrarDialogoEditarEvaluacion.value = false
-      // Recargamos evaluaciones
-      await obtenerPlanCurricularEvaluaciones(evaluacionSeleccionada.value.pacu_id)
+      mostrarDialogoEditarCompetencia.value = false
+      if (competenciaSeleccionada.value) {
+        await obtenerPlanCurricularCompetencias(competenciaSeleccionada.value.pacu_id)
+      } else {
+        console.warn('No se encontró pacu_id al actualizar competencia')
+      }
     } else {
-      console.error('Error al actualizar evaluación:', data.message)
+      console.error('Error al actualizar competencia:', data.message)
     }
   } catch (err) {
-    console.error('Error al actualizar evaluación:', err)
+    console.error('Error al actualizar competencia:', err)
   }
 }
+
 function cerrarDialogoEditarEvaluacion() {
-  mostrarDialogoEditarEvaluacion.value = false
+  mostrarDialogoEditarCompetencia.value = false
 }
 
 // --- PLAN CURRICULAR: Agregar / Editar ---
@@ -872,6 +1129,92 @@ function guardarPlanEstudio() {
   // ...
   mostrarDialogoActualizarPlan.value = false
 }
+
+async function obtenerCompetenciasDisponibles(pacu_id, ared_id, nive_id) {
+  try {
+    const { data } = await axiosInstance.get(
+      `wsListaCompetenciasDisponiblesPlanCurricular.php?ai_pacu_id=${pacu_id}&ai_ared_id=${ared_id}&ac_nive_id=${nive_id}&av_profile=${profile}`
+    )
+    if (data.status) {
+      competenciasOptions.value = data.data.map(c => ({
+        key: c.comp_id,
+        title: c.comp_nombre
+      }))
+    } else {
+      competenciasOptions.value = []
+    }
+  } catch (err) {
+    console.error('Error al obtener competencias disponibles:', err)
+    competenciasOptions.value = []
+  }
+}
+
+
+function abrirDialogoAgregarCapacidad(pcco_id) {
+  nuevaCapacidad.value = { pcco_id, capa_id: null, pccc_orden: null }
+  obtenerCapacidadesDisponibles(pcco_id)
+  mostrarDialogoAgregarCapacidad.value = true
+}
+
+async function guardarNuevaCapacidad() {
+  const { pcco_id, capa_id, pccc_orden } = nuevaCapacidad.value
+  const params = new URLSearchParams()
+  params.append('ai_pcco_id', pcco_id)
+  params.append('ai_capa_id', capa_id)
+  params.append('adc_pccc_orden', pccc_orden)
+  params.append('av_profile', profile)
+
+  try {
+    const { data } = await axiosInstance.post('wsRegistraPCCompetenciaCapacidad.php', params)
+    if (data.status) {
+      mostrarDialogoAgregarCapacidad.value = false
+      await obtenerCapacidadesPorCompetencia(pcco_id)
+    }
+  } catch (err) {
+    console.error('Error al guardar capacidad:', err)
+  }
+}
+
+function abrirDialogoEditarCapacidad(capacidad) {
+  capacidadSeleccionada.value = { ...capacidad }
+  capacidadSeleccionadaEstado.value = capacidad.pccc_estado === 'I' ? 'Inactivo' : 'Activo'
+  mostrarDialogoEditarCapacidad.value = true
+}
+
+async function guardarCapacidadEditada() {
+  const { pccc_id, pcco_id, pccc_orden } = capacidadSeleccionada.value
+  const estado = capacidadSeleccionadaEstado.value === 'Activo' ? 'A' : 'I'
+  const params = new URLSearchParams()
+  params.append('ai_pccc_id', pccc_id)
+  params.append('adc_pccc_orden', pccc_orden)
+  params.append('ac_pccc_estado', estado)
+  params.append('av_profile', profile)
+
+  try {
+    const { data } = await axiosInstance.post('wsActualizaPCCompetenciaCapacidad.php', params)
+    if (data.status) {
+      mostrarDialogoEditarCapacidad.value = false
+      await obtenerCapacidadesPorCompetencia(pcco_id)
+    }
+  } catch (err) {
+    console.error('Error al actualizar capacidad:', err)
+  }
+}
+
+async function obtenerCapacidadesDisponibles(pcco_id) {
+  try {
+    const { data } = await axiosInstance.get(`wsListaCapacidadesDisponiblesCompetencias.php?ai_pcco_id=${pcco_id}&av_profile=${profile}`)
+    if (data.status) {
+      capacidadesDisponibles.value = data.data.map(c => ({ key: c.capa_id, title: c.capa_nombre }))
+    } else {
+      capacidadesDisponibles.value = []
+    }
+  } catch (error) {
+    console.error('Error al obtener capacidades disponibles:', error)
+  }
+}
+
+
 
 // --- PAGINACIÓN (MOBILE) ---
 const mobilePage = ref(1)
@@ -935,12 +1278,128 @@ const snackbar = reactive({
 //  snackbar.color = tipo
 //  snackbar.show = true
 //}
+
+const planCompetenciaCapacidades = ref({}) // pcco_id => capacidades
+
+async function obtenerCapacidadesPorCompetencia(pcco_id) {
+  try {
+    const { data } = await axiosInstance.get(
+      `wsConsultaPCCompetenciasCapacidades.php?ai_pcco_id=${pcco_id}&av_profile=${profile}`
+    )
+    if (data.status) {
+      planCompetenciaCapacidades.value[pcco_id] = data.data
+    } else {
+      planCompetenciaCapacidades.value[pcco_id] = []
+    }
+  } catch (error) {
+    console.error('Error al obtener capacidades:', error)
+    planCompetenciaCapacidades.value[pcco_id] = []
+  }
+}
+
+
+async function obtenerActividadesPorCompetencia(pcco_id) {
+  try {
+    const { data } = await axiosInstance.get(
+      `wsConsultaPCCompetenciasActividades.php?ai_pcco_id=${pcco_id}&av_profile=${profile}`
+    )
+    if (data.status) {
+      planCompetenciaActividades.value[pcco_id] = data.data
+    } else {
+      planCompetenciaActividades.value[pcco_id] = []
+    }
+  } catch (error) {
+    console.error('Error al obtener actividades:', error)
+    planCompetenciaActividades.value[pcco_id] = []
+  }
+}
+
+async function obtenerActividadesDisponibles(pcco_id) {
+  try {
+    const { data } = await axiosInstance.get(
+      `wsListaActividadesDisponiblesCompetencias.php?ai_pcco_id=${pcco_id}&av_profile=${profile}`
+    )
+    if (data.status) {
+      actividadesDisponibles.value = data.data.map(a => ({ key: a.acti_id, title: a.acti_nombre }))
+    } else {
+      actividadesDisponibles.value = []
+    }
+  } catch (error) {
+    console.error('Error al obtener actividades disponibles:', error)
+    actividadesDisponibles.value = []
+  }
+}
+
+function abrirDialogoAgregarActividad(pcco_id) {
+  nuevaActividad.value = { pcco_id, acti_id: null, pcca_orden: null }
+  obtenerActividadesDisponibles(pcco_id)
+  mostrarDialogoAgregarActividad.value = true
+}
+
+async function guardarNuevaActividad() {
+  const { pcco_id, acti_id, pcca_orden } = nuevaActividad.value
+  if (!pcco_id || !acti_id || !pcca_orden) return
+
+  const params = new URLSearchParams()
+  params.append('ai_pcco_id', pcco_id)
+  params.append('ai_acti_id', acti_id)
+  params.append('adc_pcca_orden', pcca_orden)
+  params.append('av_profile', profile)
+
+  try {
+    const { data } = await axiosInstance.post('wsRegistraPCCompetenciaActividad.php', params)
+    if (data.status) {
+      mostrarDialogoAgregarActividad.value = false
+      await obtenerActividadesPorCompetencia(pcco_id)
+    } else {
+      console.error('Error al guardar actividad:', data.message)
+    }
+  } catch (error) {
+    console.error('Error al guardar actividad:', error)
+  }
+}
+
+function abrirDialogoEditarActividad(actividad) {
+  actividadSeleccionada.value = {
+    ...actividad,
+    pcco_id: actividad.pcco_id // asegúrate de incluirlo explícitamente
+  }
+  actividadSeleccionadaEstado.value = actividad.pcca_estado === 'I' ? 'Inactivo' : 'Activo'
+  mostrarDialogoEditarActividad.value = true
+}
+
+
+async function guardarActividadEditada() {
+  const { pcca_id, pcco_id, pcca_orden } = actividadSeleccionada.value
+  const estado = actividadSeleccionadaEstado.value === 'Activo' ? 'A' : 'I'
+
+  const params = new URLSearchParams()
+  params.append('ai_pcca_id', pcca_id)
+  params.append('adc_pcca_orden', pcca_orden)
+  params.append('ac_pcca_estado', estado)
+  params.append('av_profile', profile)
+
+  try {
+    const { data } = await axiosInstance.post('wsActualizaPCCompetenciaActividad.php', params)
+    if (data.status) {
+      mostrarDialogoEditarActividad.value = false
+      await obtenerActividadesPorCompetencia(pcco_id)
+    } else {
+      console.error('Error al actualizar actividad:', data.message)
+    }
+  } catch (error) {
+    console.error('Error al actualizar actividad:', error)
+  }
+}
+
 </script>
 
 <style scoped>
 th,
 td {
-  padding: 12px 24px;
+  padding: 6px 12px;
+  font-size: 0.875rem; /* opcional: reduce el tamaño de fuente */
+  line-height: 1.2;
 }
 .expanded-row {
   background-color: #e0f7fa;
@@ -949,13 +1408,27 @@ td {
   background: #fafafa;
   padding: 12px;
 }
-.evaluation-section {
+.competencia-section {
   background-color: #fff9c4; /* amarillo pastel */
-  padding: 12px;
+  padding: 8px;
 }
 ::v-deep .v-list,
 ::v-deep .v-list-item,
 ::v-deep .v-list-item__content {
   background-color: transparent !important;
+}
+.actividades-section {
+  background-color: #e3f2fd; /* celeste pastel */
+  padding: 8px;
+  border-radius: 4px;
+}
+.chip-xs {
+  font-size: 0.75rem;
+  height: 24px;
+}
+.capacidades-section {
+  background-color: #f3e5f5; /* lila pastel */
+  padding: 8px;
+  border-radius: 4px;
 }
 </style>

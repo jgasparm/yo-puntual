@@ -19,11 +19,12 @@ import MisCursosConsultaNotas from '../components/Estudios/PaginaMisCursosConsul
 import DocentesAnioEscolar from '../components/Mantenimiento/Docentes/PaginaDocentesAnioEscolar.vue';
 import MisAulas from '../components/Mantenimiento/PaginaMisAulas.vue';
 import AlumnoHorarioEscolar from '../components/Estudios/PaginaAlumnoHorarioEscolar.vue';
+import AulaHorarioEscolar from '../components/Estudios/PaginaAulaHorarioEscolar.vue';
 //import DocenteHorarioEscolar from '../components/Estudios/PaginaDocenteHorarioEscolar.vue';
 import DocenteMiHorario from '../components/Estudios/PaginaDocenteMiHorario.vue';
 import DocentesHorarios from '../components/Estudios/PaginaDocentesHorarios.vue';
 import PlanEstudios from '../components/Mantenimiento/PlanEstudios/PaginaPlanEstudios.vue';
-import Evaluaciones from '../components/Mantenimiento/PaginaEvaluaciones.vue';
+import ActividadesEvaluacion from '../components/Mantenimiento/PaginaActividadesEvaluacion.vue';
 import DocentePlanEstudios from '../components/Estudios/PaginaDocentePlanEstudios.vue';
 import Matricula from '../components/Mantenimiento/PaginaMatricula.vue';
 import Alumnos from '../components/Mantenimiento/PaginaAlumno.vue';
@@ -36,7 +37,7 @@ const routes = [
     //Desa
     component: () => import('@/components/LoginDesa.vue'),
     //Prod
-    //component: () => import('@/components/Login.vue'),
+    //  component: () => import('@/components/Login.vue'),
       meta: {
         showBreadcrumb: false
       }
@@ -161,14 +162,14 @@ const routes = [
         }
       },
       {
-        path: 'mis-cursos',
+        path: 'cursos-docente',
         name: 'MisCursos',
         component: MisCursos,
         meta: {
           showBreadcrumb: true,
           breadcrumb: [
             { text: 'Principal', to: '/principal' },
-            { text: 'Mis cursos' }
+            { text: 'Cursos del docente' }
           ]
         }
       },
@@ -193,7 +194,7 @@ const routes = [
           showBreadcrumb: true,
           breadcrumb: [
             { text: 'Principal', to: '/principal' },
-            { text: 'Mis cursos', to: '/principal/mis-cursos-docente' },
+            { text: 'Mis Cursos', to: '/principal/mis-cursos-docente' },
             { text: 'Consulta de notas' }
           ]
         }
@@ -206,7 +207,7 @@ const routes = [
           showBreadcrumb: true,
           breadcrumb: [
             { text: 'Principal', to: '/principal' },
-            { text: 'Mis cursos', to: '/principal/mis-cursos' },
+            { text: 'Cursos del docente', to: '/principal/cursos-docente' },
             { text: 'Consulta de notas' }
           ]
         }
@@ -244,6 +245,19 @@ const routes = [
           breadcrumb: [
             { text: 'Principal', to: '/principal' },
             { text: 'Horario escolar' }
+          ]
+        }
+      }, 
+      {
+        path: 'aula-horario-escolar',
+        name: 'AulaHorarioEscolar',
+        component: AulaHorarioEscolar,
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Mis aulas', to: '/principal/mis-aulas' },
+            { text: 'Horario escolar del aula' }
           ]
         }
       }, 
@@ -294,13 +308,13 @@ const routes = [
       },
       {
         path: 'evaluaciones',
-        name: 'Evaluaciones',
-        component: Evaluaciones,
+        name: 'ActividadesEvaluacion',
+        component: ActividadesEvaluacion,
         meta: {
           showBreadcrumb: true,
           breadcrumb: [
             { text: 'Principal', to: '/principal' },
-            { text: 'Evaluaciones' }
+            { text: 'Actividades de evaluación' }
           ]
         }
       },

@@ -3,9 +3,21 @@
     <!-- ENCABEZADO -->
     <v-row class="py-3">
       <v-col cols="12">
-        <h1 class="text-h4">Plan de estudios - Año {{ anioEscolar }}</h1>
+        <h2 class="text-h5 font-weight-bold text-primary">
+          📘 Plan de estudios - Año {{ anioEscolar }}
+        </h2>
+        <p class="text-body-2 text-grey-darken-1">
+          Gestiona los planes de estudio, curriculares y evaluaciones asignadas por nivel, grado y área educativa.
+        </p>
       </v-col>
     </v-row>
+
+    <!-- CONTADOR RESULTADOS FILTRADOS -->
+   <!--  <v-row class="mb-2">
+      <v-col cols="12">
+        <p class="text-caption text-grey">Resultados encontrados: {{ filteredPlanes.length }}</p>
+      </v-col>
+    </v-row> -->
 
     <!-- FILTROS -->
     <v-row class="mb-4" dense>
@@ -43,6 +55,14 @@
         />
       </v-col>
     </v-row>
+
+    <!-- SNACKBAR MENSAJES -->
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="4000">
+      {{ snackbar.text }}
+      <template #actions>
+        <v-btn text @click="snackbar.show = false">Cerrar</v-btn>
+      </template>
+    </v-snackbar>
 
     <!-- TABLA DESKTOP -->
     <div v-if="isDesktop">
@@ -898,10 +918,23 @@ async function obtenerNivelesGrados() {
   }
 }
 
+
 // (Opcional) si necesitabas cargar docentes y periodos para
 // Agregar Plan Curricular, descomenta y ajusta tu lógica:
 // async function obtenerDocentesCursos(aredId) { ... }
 // async function obtenerPeriodos() { ... }
+// Snackbar global para mensajes
+const snackbar = reactive({
+  show: false,
+  text: '',
+  color: 'success'
+})
+
+//function mostrarMensaje(texto, tipo = 'success') {
+//  snackbar.text = texto
+//  snackbar.color = tipo
+//  snackbar.show = true
+//}
 </script>
 
 <style scoped>

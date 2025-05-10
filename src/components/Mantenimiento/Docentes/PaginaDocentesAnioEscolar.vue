@@ -52,11 +52,11 @@
                       <v-btn icon variant="text" color="primary" @click="verHorarioDocente(doc)">
                         <v-icon>mdi-calendar-clock</v-icon>
                       </v-btn>
-                      <v-btn icon variant="text" @click.stop="toggleExpand(doc.aedo_id)">
-                        <v-icon>{{ isExpanded(doc.aedo_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-                      </v-btn>
                       <v-btn icon variant="text" @click.stop="abrirDialogoActualizarDocente(doc)">
                         <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="text" @click.stop="toggleExpand(doc.aedo_id)">
+                        <v-icon>{{ isExpanded(doc.aedo_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
                       </v-btn>
                     </td>
                   </tr>
@@ -121,11 +121,11 @@
               <v-btn icon variant="text" color="primary" @click="verHorarioDocente(doc)">
                 <v-icon>mdi-calendar-clock</v-icon>
               </v-btn>
-              <v-btn icon variant="text" @click.stop="toggleExpand(doc.aedo_id)">
-                <v-icon>{{ isExpanded(doc.aedo_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-              </v-btn>
               <v-btn icon variant="text" @click.stop="abrirDialogoActualizarDocente(doc)">
                 <v-icon>mdi-pencil</v-icon>
+              </v-btn>
+              <v-btn icon variant="text" @click.stop="toggleExpand(doc.aedo_id)">
+                <v-icon>{{ isExpanded(doc.aedo_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
               </v-btn>
             </div>
 

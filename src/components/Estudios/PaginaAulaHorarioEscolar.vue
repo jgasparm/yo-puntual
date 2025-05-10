@@ -6,47 +6,52 @@
       🕘 Horario Escolar
     </div>
     <div class="text-body-2 text-grey-darken-1">
-      Consulta los cursos que tienes cada día. ¡No olvides tus útiles!
+      Consulta los cursos y docentes asignados al aula
     </div>
   </v-col>
 </v-row>
 
+<v-btn
+  color="primary"
+  variant="outlined"
+  class="mb-4"
+  @click="volverAMisAulas"
+>
+  <v-icon start>mdi-arrow-left</v-icon>
+  Volver a Mis Aulas
+</v-btn>
+
+
         <v-sheet 
-          v-if="infoAlumno"
+          v-if="infoAula"
           color="blue-lighten-5" 
           class="pa-4 mb-2 rounded-lg elevation-1 section-space"
         >
 
         <v-row>
-          <!-- Fila 1: Título -->
-<!--           <v-col cols="12">
-            <div class="text-h6 font-weight-bold text-primary mb-2">
-              🧑‍🏫 Información del Alumno
-            </div>
-          </v-col> -->
 
           <!-- Fila 2: Tutor -->
           <v-col cols="12">
             <v-icon color="primary" start>mdi-account</v-icon>
-            <strong>Tutor:</strong> <span>{{ infoAlumno.tutor }}</span>
+            <strong>Tutor:</strong> <span>{{ infoAula.tutor }}</span>
           </v-col>
 
           <!-- Fila 3: Turno, Nivel, Grado y Sección -->
           <v-col cols="12" sm="6" md="3">
             <v-icon color="primary" start>mdi-clock-time-eight-outline</v-icon>
-            <strong>Turno:</strong> <span>{{ infoAlumno.turn_nombre }}</span>
+            <strong>Turno:</strong> <span>{{ infoAula.turn_nombre }}</span>
           </v-col>
           <v-col cols="12" sm="6" md="3">
             <v-icon color="primary" start>mdi-school</v-icon>
-            <strong>Nivel:</strong> <span>{{ infoAlumno.nive_nombre }}</span>
+            <strong>Nivel:</strong> <span>{{ infoAula.nive_nombre }}</span>
           </v-col>
           <v-col cols="12" sm="6" md="3">
             <v-icon color="primary" start>mdi-numeric</v-icon>
-            <strong>Grado:</strong> <span>{{ infoAlumno.grad_nombre }}</span>
+            <strong>Grado:</strong> <span>{{ infoAula.grad_nombre }}</span>
           </v-col>
           <v-col cols="12" sm="6" md="3">
             <v-icon color="primary" start>mdi-alpha-s-circle-outline</v-icon>
-            <strong>Sección:</strong> <span>{{ infoAlumno.secc_nombre }}</span>
+            <strong>Sección:</strong> <span>{{ infoAula.secc_nombre }}</span>
           </v-col>
         </v-row>
       </v-sheet>
@@ -90,10 +95,11 @@
                   <!-- Buscamos si existe un objeto en rango.dias con .dia == el "dia actual" -->
                   <template v-if="cursoPorDia(rango, dia)">
                     <div>
-                      {{ cursoPorDia(rango, dia).docente }}
+                        {{ cursoPorDia(rango, dia).docente }}
                     </div>
                     <div><strong>{{ cursoPorDia(rango, dia).curso }}</strong></div>
                   </template>
+
                 </td>
               </tr>
             </tbody>
@@ -141,7 +147,6 @@
                 <v-icon start color="primary">mdi-clock-outline</v-icon>
                 <strong>{{ rango.hesh_hora_inicio }} - {{ rango.hesh_hora_fin }}</strong>
               </div>
-              
               <template v-if="cursoPorDia(rango, dia)">
                 <div>{{ cursoPorDia(rango, dia).docente }}</div>
                 <div><strong>{{ cursoPorDia(rango, dia).curso }}</strong></div>
@@ -164,23 +169,32 @@ import { ref, onMounted } from 'vue'
 import { useDisplay } from 'vuetify'
 import axios from 'axios'
 
+import { useRouter } from 'vue-router'
+//import { useLoadingStore } from '@/stores/loadingStore.js' // Ajusta según tu estructura
+
+const router = useRouter()
+//const loadingStore = useLoadingStore()
+
+function volverAMisAulas() {
+  //loadingStore.mostrarLoading() 
+  router.back()
+}
+
 // EJEMPLO: IDs y perfil obtenidos del localStorage
-const userId = localStorage.getItem('usua_id') 
-const anioEscolar = localStorage.getItem('anio_escolar') 
+const aulaId = localStorage.getItem('aude_id') 
 const profile = localStorage.getItem('profile') 
 
 // DATA REACTIVA
-const infoAlumno = ref(null) // Tutor, Turno, Nivel, Grado, Seccion, etc.
+const infoAula = ref(null) // Tutor, Turno, Nivel, Grado, Seccion, etc.
 const horario = ref([])      // Array de rangos con subarray 'dias'
 
 // LLAMADAS API
 async function fetchInformacionAlumno() {
   try {
     const token = localStorage.getItem('token')
-    const baseUrl = 'https://amsoftsolution.com/amss/ws/wsConsultaInformacionAlumno.php'
+    const baseUrl = 'https://amsoftsolution.com/amss/ws/wsConsultaInformacionAula.php'
     const params = {
-      ai_usua_id: userId,
-      ac_anio_escolar: anioEscolar,
+      ai_aude_id: aulaId,
       av_profile: profile
     }
     const config = {
@@ -189,10 +203,10 @@ async function fetchInformacionAlumno() {
     }
     const response = await axios.get(baseUrl, config)
     if (response.data.status && response.data.data.length > 0) {
-      infoAlumno.value = response.data.data[0]
+      infoAula.value = response.data.data[0]
       // Y con ese aude_id, llamas a fetchHorarioEscolar
-      if (infoAlumno.value.aude_id) {
-        fetchHorarioEscolar(infoAlumno.value.aude_id, infoAlumno.value.nive_id)
+      if (infoAula.value.aude_id) {
+        fetchHorarioEscolar(infoAula.value.aude_id, infoAula.value.nive_id)
       }
     }
   } catch (error) {
@@ -241,15 +255,9 @@ const diasOrdenados = [
 ]
 
 // Función para retornar el nombre del curso (o lo que sea) de un rango en un día específico
-/* function cursoPorDia(rango, dia) {
-  const diaObj = rango.dias.find(d => d.dia === dia)
-  return diaObj ? diaObj.curso : null
-} */
-
 function cursoPorDia(rango, dia) {
   return rango.dias.find(d => d.dia === dia) || null
 }
-
 
 // DETECTAR DESKTOP/MOBILE
 const { mdAndUp } = useDisplay()
