@@ -193,45 +193,55 @@ async function fetchAllData() {
 
 const filteredCursos = computed(() => allData.value)
 
-function verNotas(curso) {
-  const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
-  const token = localStorage.getItem("token")
-  const profile = localStorage.getItem("profile")
-  const ai_usua_id = localStorage.getItem("usua_id")
-  const ac_anio_escolar = localStorage.getItem("anio_escolar")
-  const { doad_id, aude_id } = curso
+async function verNotas(curso) {
+  try {
+    const token = localStorage.getItem("token")
+    const profile = localStorage.getItem("profile")
+    const ai_doad_id = curso.doad_id
+    const ai_aude_id = curso.aude_id
 
-  const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"
-  const params = {
-    ai_usua_id,
-    ai_doad_id: doad_id,
-    ai_aude_id: aude_id,
-    ac_anio_escolar,
-    av_profile: profile
-  }
-  const configReq = {
-    params,
-    headers: { Authorization: `Bearer ${token}` },
-  }
+    // Obtener periodo (bimestre actual del curso)
+    const periodoRes = await axios.get("https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativoPlanCurricular.php", {
+      params: { ai_doad_id, av_profile: profile },
+      headers: { Authorization: `Bearer ${token}` }
+    })
 
-  axios.get(baseUrl, configReq).then(response => {
-    if (response.data.messageCode === "4") {
-      mostrarDialogo("Sin notas registradas", "Aún no se registran notas para este curso.", "info")
-    } else {
-      router.push({
-        name: 'DocenteMisCursosConsultaNotas',
-        query: {
-          curso: encodeURIComponent(JSON.stringify(curso)),
-          bimestre: encodeURIComponent(JSON.stringify(bimestre)),
-          detalle: encodeURIComponent(JSON.stringify(response.data)),
-          doad_id: curso.doad_id
-        }
-      })
+    const periodos = periodoRes.data.status ? periodoRes.data.data : []
+    if (!periodos.length) {
+      mostrarDialogo("Sin periodo encontrado", "No se encontraron periodos educativos asociados.", "warning")
+      return
     }
-  }).catch(error => {
-    console.error('Error al obtener detalle de notas:', error)
-  })
+
+    const bimestre = periodos.find(b => b.aepe_estado === "A") || periodos[0]
+    const ai_peed_id = bimestre.peed_id
+
+    const detalleRes = await axios.get("https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliar.php", {
+      params: { ai_doad_id, ai_aude_id, ai_peed_id, av_profile: profile }, // <-- AQUI SE AGREGA ai_peed_id
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    if (!detalleRes.data.status || !detalleRes.data.data.length) {
+      mostrarDialogo("Sin notas registradas", "Aún no se registran notas para este curso.", "info")
+      return
+    }
+
+    // Redirige pasando los datos obtenidos
+    router.push({
+      name: 'DocenteMisCursosConsultaNotas',
+      query: {
+        curso: encodeURIComponent(JSON.stringify(curso)),
+        bimestre: encodeURIComponent(JSON.stringify(bimestre)),
+        detalle: encodeURIComponent(JSON.stringify(detalleRes.data)),
+        doad_id: curso.doad_id,
+        periodos: encodeURIComponent(JSON.stringify(periodos)) 
+      }
+    })
+  } catch (error) {
+    console.error("Error al consultar notas:", error)
+    mostrarDialogo("Error", "No se pudo consultar las notas. Inténtalo nuevamente.", "error")
+  }
 }
+
 
 async function registrarNotas(curso) {
   try {

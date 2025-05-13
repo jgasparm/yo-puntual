@@ -280,7 +280,7 @@
                                       </div>
 
                                       <table
-                                        v-if="(planCompetenciaCapacidades[compItem.pcco_id]?.filter(c => c && c.pccc_id).length > 0)"
+                                        v-if="Array.isArray(planCompetenciaCapacidades[compItem.pcco_id]) && planCompetenciaCapacidades[compItem.pcco_id].some(c => c && c.pccc_id)"
                                         class="w-100"
                                       >
 
@@ -1176,7 +1176,8 @@ async function guardarNuevaCapacidad() {
 }
 
 function abrirDialogoEditarCapacidad(capacidad) {
-  capacidadSeleccionada.value = { ...capacidad }
+  capacidadSeleccionada.value = { ...capacidad,
+  pcco_id: capacidad.pcco_id }
   capacidadSeleccionadaEstado.value = capacidad.pccc_estado === 'I' ? 'Inactivo' : 'Activo'
   mostrarDialogoEditarCapacidad.value = true
 }
@@ -1287,7 +1288,7 @@ async function obtenerCapacidadesPorCompetencia(pcco_id) {
       `wsConsultaPCCompetenciasCapacidades.php?ai_pcco_id=${pcco_id}&av_profile=${profile}`
     )
     if (data.status) {
-      planCompetenciaCapacidades.value[pcco_id] = data.data
+      planCompetenciaCapacidades.value[pcco_id] = Array.isArray(data.data) ? data.data : []
     } else {
       planCompetenciaCapacidades.value[pcco_id] = []
     }
