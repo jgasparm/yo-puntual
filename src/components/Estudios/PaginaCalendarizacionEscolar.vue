@@ -4,7 +4,7 @@
     <v-row>
       <v-col cols="12">
         <div class="text-h5 font-weight-bold text-primary mb-2">
-          📅 Calendario Escolar {{ anioEscolar }}
+          📅 Calendarización Escolar {{ anioEscolar }}
         </div>
         <div class="text-body-2 text-grey-darken-1">
           Revisa los eventos escolares por mes. Puedes descargar el calendario en PDF.

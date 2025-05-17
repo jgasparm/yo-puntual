@@ -9,19 +9,6 @@
           Visualiza y gestiona los cursos que tienes asignados durante el año escolar.
         </p>
 
-        <!-- Selector de Bimestre -->
-        <!--
-        <v-select
-          v-model="selectedBimestre"
-          :items="bimestres"
-          item-title="peed_nombre"
-          item-value="peed_id"
-          label="Bimestre"
-          class="mb-4"
-          dense
-          outlined
-        />
-        -->
       </v-col>
     </v-row>
 
@@ -36,16 +23,19 @@
         :items="filteredCursos"
         class="elevation-1 mt-4"
       >
-        <template v-slot:item.accion="{ item }">
-          <div class="table-action">
-            <v-btn icon color="primary" class="action-btn" @click="verNotas(item)" aria-label="Ver notas">
-              <v-icon size="24">mdi-eye-outline</v-icon>
-            </v-btn>
-            <v-btn icon color="secondary" class="action-btn" @click="registrarNotas(item)" aria-label="Registrar notas">
-              <v-icon size="24">mdi-notebook-edit-outline</v-icon>
-            </v-btn>
-          </div>
-        </template>
+      <template v-slot:item.accion="{ item }">
+        <div class="table-action">
+          <v-btn icon variant="text" @click="registrarNotas(item)" aria-label="Registrar notas">
+            <v-icon>mdi-pencil</v-icon>
+            <v-tooltip activator="parent" location="top">Registrar notas</v-tooltip>
+          </v-btn>
+          <v-btn icon variant="text" color="info" @click="verNotas(item)" aria-label="Ver notas">
+            <v-icon>mdi-eye-outline</v-icon>            
+            <v-tooltip activator="parent" location="top">Ver notas</v-tooltip>
+          </v-btn>
+        </div>
+      </template>
+
       </v-data-table>
     </div>
 
@@ -63,18 +53,21 @@
           class="mb-2"
         >
           <v-card outlined style="position: relative; text-align: left;">
+            
             <v-btn
               icon
-              color="secondary"
+              variant="text"
               @click="registrarNotas(curso)"
               class="btn-editar"
               aria-label="Registrar notas"
             >
-              <v-icon>mdi-notebook-edit-outline</v-icon>
+              <v-icon>mdi-pencil</v-icon>
             </v-btn>
+
             <v-btn
               icon
-              color="primary"
+              variant="text"
+              color="info"
               @click="verNotas(curso)"
               class="btn-ver"
               aria-label="Ver notas"
@@ -108,20 +101,15 @@
       />
     </div>
 
-    <!-- Modal de no resultados -->
-    <v-dialog v-model="dialogNoResults" max-width="400">
-      <v-card>
-        <v-card-title class="headline">No se encontraron resultados</v-card-title>
-        <v-card-text>
-          La consulta no arrojó resultados.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="dialogNoResults = false">Aceptar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-container>
+
+  <DialogMensaje
+  v-model:mostrar="dialogMensajeVisible"
+  :titulo="dialogMensajeTitulo"
+  :mensaje="dialogMensajeTexto"
+  :tipo="dialogMensajeTipo"
+/>
+
 </template>
 
 <script setup>
@@ -129,12 +117,17 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useDisplay } from 'vuetify'
+import DialogMensaje from '@/components/DialogMensaje.vue'
+
+const dialogMensajeVisible = ref(false)
+const dialogMensajeTitulo = ref('')
+const dialogMensajeTexto = ref('')
+const dialogMensajeTipo = ref('error')
 
 const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
 const router = useRouter()
 
-const dialogNoResults = ref(false)
 const allData = ref([])
 const bimestres = ref([])
 const selectedBimestre = ref(null)
@@ -200,56 +193,121 @@ async function fetchAllData() {
 
 const filteredCursos = computed(() => allData.value)
 
-function verNotas(curso) {
-  const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
-  const token = localStorage.getItem("token")
-  const profile = localStorage.getItem("profile")
-  const ai_usua_id = localStorage.getItem("usua_id")
-  const ac_anio_escolar = localStorage.getItem("anio_escolar")
-  const { doad_id, aude_id } = curso
+async function verNotas(curso) {
+  try {
+    const token = localStorage.getItem("token")
+    const profile = localStorage.getItem("profile")
+    const ai_doad_id = curso.doad_id
+    const ai_aude_id = curso.aude_id
 
-  const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"
-  const params = {
-    ai_usua_id,
-    ai_doad_id: doad_id,
-    ai_aude_id: aude_id,
-    ac_anio_escolar,
-    av_profile: profile
-  }
-  const configReq = {
-    params,
-    headers: { Authorization: `Bearer ${token}` },
-  }
+    // Obtener periodo (bimestre actual del curso)
+    const periodoRes = await axios.get("https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativoPlanCurricular.php", {
+      params: { ai_doad_id, av_profile: profile },
+      headers: { Authorization: `Bearer ${token}` }
+    })
 
-  axios.get(baseUrl, configReq).then(response => {
-    if (response.data.messageCode === "4") {
-      dialogNoResults.value = true
-    } else {
-      router.push({
-        name: 'DocenteMisCursosConsultaNotas',
-        query: {
-          curso: encodeURIComponent(JSON.stringify(curso)),
-          bimestre: encodeURIComponent(JSON.stringify(bimestre)),
-          detalle: encodeURIComponent(JSON.stringify(response.data)),
-          doad_id: curso.doad_id
-        }
-      })
+    const periodos = periodoRes.data.status ? periodoRes.data.data : []
+    if (!periodos.length) {
+      mostrarDialogo("Sin periodo encontrado", "No se encontraron periodos educativos asociados.", "warning")
+      return
     }
-  }).catch(error => {
-    console.error('Error al obtener detalle de notas:', error)
-  })
+
+    const bimestre = periodos.find(b => b.aepe_estado === "A") || periodos[0]
+    const ai_peed_id = bimestre.peed_id
+    const ai_grad_id = curso.grad_id
+
+    const detalleRes = await axios.get("https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliar.php", {
+      params: { ai_doad_id, ai_aude_id, ai_peed_id, ai_grad_id, av_profile: profile }, // <-- AQUI SE AGREGA ai_peed_id
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    if (!detalleRes.data.status || !detalleRes.data.data.length) {
+      mostrarDialogo("Sin actividades asignadas", "El curso no tiene actividades asignadas", "info")
+      return
+    }
+
+    // Redirige pasando los datos obtenidos
+    router.push({
+      name: 'DocenteMisCursosConsultaNotas',
+      query: {
+        curso: encodeURIComponent(JSON.stringify(curso)),
+        bimestre: encodeURIComponent(JSON.stringify(bimestre)),
+        detalle: encodeURIComponent(JSON.stringify(detalleRes.data)),
+        doad_id: curso.doad_id,
+        periodos: encodeURIComponent(JSON.stringify(periodos)) 
+      }
+    })
+  } catch (error) {
+    console.error("Error al consultar notas:", error)
+    mostrarDialogo("Error", "No se pudo consultar las notas. Inténtalo nuevamente.", "error")
+  }
 }
 
-function registrarNotas(curso) {
-  const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
-  router.push({
-    name: 'DocenteMisCursosRegistroNotas',
-    query: {
-      curso: encodeURIComponent(JSON.stringify(curso)),
-      bimestre: encodeURIComponent(JSON.stringify(bimestre)),
-      doad_id: curso.doad_id
+
+async function registrarNotas(curso) {
+  try {
+    const token = localStorage.getItem("token")
+    const profile = localStorage.getItem("profile")
+    const ai_doad_id = curso.doad_id
+    const ai_aude_id = curso.aude_id
+
+    // Obtener periodo (bimestre actual del curso)
+    const periodoRes = await axios.get("https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativoPlanCurricular.php", {
+      params: { ai_doad_id, av_profile: profile },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    const periodos = periodoRes.data.status ? periodoRes.data.data : []
+    if (!periodos.length) {
+      mostrarDialogo("Sin periodo encontrado", "No se encontraron periodos educativos asociados.", "warning")
+      return
     }
-  })
+
+    const bimestre = periodos.find(b => b.aepe_estado === "A")
+    if (!bimestre) {
+      mostrarDialogo("Sin periodo activo", "Debe estar ACTIVO el periodo educativo al cual desea registrar notas", "warning")
+      return
+    }
+
+    const pacu_id = bimestre.pacu_id // 👈 Ahora sí, después de definir bimestre
+    const ai_peed_id = bimestre.peed_id
+
+    const detalleRes = await axios.get("https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliar.php", {
+      params: { ai_doad_id, ai_aude_id, ai_peed_id, av_profile: profile },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    
+
+    if (!detalleRes.data.status || !detalleRes.data.data.length) {
+      mostrarDialogo("Sin actividades asignadas", "El curso no tiene actividades asignadas", "info")
+      return
+    }
+
+    router.push({
+      name: 'DocenteMisCursosRegistroNotas',
+      query: {
+        curso: encodeURIComponent(JSON.stringify(curso)),
+        bimestre: encodeURIComponent(JSON.stringify({
+          peed_id: bimestre.peed_id,
+          peed_nombre: bimestre.peed_nombre
+        })),
+        detalle: encodeURIComponent(JSON.stringify(detalleRes.data)),
+        doad_id: curso.doad_id,
+        pacu_id // 👈 Este valor ya es válido ahora
+      }
+    })
+  } catch (error) {
+    mostrarDialogo("Error", error.message || "Ocurrió un error inesperado.", "error")
+  }
+}
+
+
+
+function mostrarDialogo(titulo, mensaje, tipo = 'error') {
+  dialogMensajeTitulo.value = titulo
+  dialogMensajeTexto.value = mensaje
+  dialogMensajeTipo.value = tipo
+  dialogMensajeVisible.value = true
 }
 </script>
 
@@ -264,12 +322,12 @@ function registrarNotas(curso) {
   padding: 4px !important;
   min-width: 0 !important;
 }
-.btn-ver {
+.btn-editar {
   position: absolute;
   top: 8px;
   right: 48px;
 }
-.btn-editar {
+.btn-ver {
   position: absolute;
   top: 8px;
   right: 8px;

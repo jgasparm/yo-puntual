@@ -4,7 +4,7 @@
     <v-row>
       <v-col cols="12">
         <div class="text-h5 font-weight-bold text-primary mb-2">
-          📅 Calendario Escolar {{ anioEscolar }}
+          📅 Calendario Cívico Escolar {{ anioEscolar }}
         </div>
         <div class="text-body-2 text-grey-darken-1">
           Revisa los eventos escolares por mes. Puedes descargar el calendario en PDF.
@@ -206,7 +206,7 @@ async function calendarioEscolar() {
     console.log("Ejecutando consulta a la API...")
     const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaCalendarioEscolar.php"
     const params = {
-      ac_caes_tipo: 'CE',
+      ac_caes_tipo: 'CV',
       av_profile: profile,
     }
 

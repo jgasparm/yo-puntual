@@ -396,6 +396,7 @@
             <!-- Expansión Mobile de Plan Curricular -->
             <v-expand-transition>
               <v-card-text v-if="isExpanded(plan.ples_id)">
+                <h4 class="text-subtitle-2 font-weight-bold mb-2">Planes Curriculares</h4>
                 <v-list dense>
                   <!-- Listado de Planes Curriculares en mobile -->
                   <v-list-item
@@ -405,12 +406,13 @@
                     <div class="d-flex justify-space-between align-center w-100">
                       <div>
                         {{ item.peed_nombre }} — {{ item.aede_nombre }}
-                        <div class="text-caption">
-                          Horas: {{ item.pacu_horas }}
-                          <v-chip x-small :color="item.pacu_estado === 'A' ? 'green' : 'red'" class="chip-xs">
+                        <div class="text-caption d-flex flex-column align-start">
+                          <span>Horas: {{ item.pacu_horas }}</span>
+                          <v-chip x-small :color="item.pacu_estado === 'A' ? 'green' : 'red'" class="chip-xs mt-1">
                             {{ item.pacu_estado === 'A' ? 'Activo' : 'Inactivo' }}
                           </v-chip>
                         </div>
+
                       </div>
 
                       <!-- Botón para expandir Competencias Mobile -->
@@ -422,6 +424,7 @@
                     <!-- Expansión Mobile de Competencias -->
                     <v-expand-transition>
                       <div v-if="isEvaluationExpanded(item.pacu_id)" class="competencia-section pa-4">
+                        <h4 class="text-subtitle-2 font-weight-bold mb-2">Competencias</h4>
                         <v-list dense>
                           <v-btn
                             small
@@ -437,22 +440,129 @@
                           <div
                             v-for="(compItem) in paginatedCompetencias(item.pacu_id).map(c => ({ ...c, pacu_id: item.pacu_id }))"
                             :key="compItem.pcco_id"
-                            class="mb-2"
+                            class="mb-2 pa-2 competencia-mobile-card"
                           >
-                            <div class="d-flex justify-space-between align-center">
-                              <span class="font-weight-medium">{{ compItem.comp_nombre }}</span>
+                            <!-- Fila 1: Iconos -->
+                            <div class="d-flex justify-end mb-1">
                               <v-btn icon variant="text" @click.stop="abrirDialogoEditarCompetencia(compItem)">
                                 <v-icon>mdi-pencil</v-icon>
                               </v-btn>
+                              <v-btn
+                                icon
+                                variant="text"
+                                @click.stop="toggleExpandActividades(compItem.pcco_id)"
+                                :title="isActividadesExpanded(compItem.pcco_id) ? 'Ocultar actividades' : 'Ver actividades'"
+                              >
+                                <v-icon>
+                                  {{ isActividadesExpanded(compItem.pcco_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                                </v-icon>
+                              </v-btn>
                             </div>
-                            <div class="text-caption">
+
+                            <!-- Fila 2: Nombre -->
+                            <div class="text-body-2 font-weight-medium mb-1 text-left">
+                              {{ compItem.comp_nombre }}
+                            </div>
+
+                            <!-- Fila 3: Orden -->
+                            <div class="text-caption text-left mb-1">
                               Orden: {{ compItem.pcco_orden }}
-                              <td>
-                                <v-chip :color="compItem.pcco_estado === 'A' ? 'green' : 'red'" class="chip-xs">
-                                  {{ compItem.pcco_estado === 'A' ? 'Activo' : 'Inactivo' }}
-                                </v-chip>
-                              </td>
                             </div>
+
+                            <!-- Fila 4: Estado -->
+                            <div class="text-caption text-left">
+                              <v-chip x-small :color="compItem.pcco_estado === 'A' ? 'green' : 'red'" class="chip-xs">
+                                {{ compItem.pcco_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                              </v-chip>
+                            </div>
+
+                            <!-- ACTIVIDADES -->
+                            <v-expand-transition>
+                              <div
+                                v-if="isActividadesExpanded(compItem.pcco_id)"
+                                class="actividades-section mt-2"
+                              >
+                                <div class="d-flex justify-space-between align-center mb-2">
+                                  <h4 class="text-subtitle-2 font-weight-bold">Actividades</h4>
+                                  <v-btn small color="primary" variant="text" @click="abrirDialogoAgregarActividad(compItem.pcco_id)">
+                                    +Agregar
+                                  </v-btn>
+                                </div>
+                                <div v-if="planCompetenciaActividades[compItem.pcco_id]?.length">
+                                  <div
+                                    v-for="(act) in planCompetenciaActividades[compItem.pcco_id]"
+                                    :key="act.pcca_id"
+                                    class="mb-1 text-caption"
+                                  >
+                                  <div :key="act.pcca_id" class="mb-2 pa-2 actividad-mobile-card">
+                                    <div class="d-flex justify-end mb-1">
+                                      <v-btn icon variant="text" @click.stop="abrirDialogoEditarActividad(act)">
+                                        <v-icon>mdi-pencil</v-icon>
+                                      </v-btn>
+                                    </div>
+                                    <div class="text-body-2 font-weight-medium mb-1 text-left">
+                                      {{ act.acti_nombre }}
+                                    </div>
+                                    <div class="text-caption text-left mb-1">
+                                      Orden: {{ act.pcca_orden }}
+                                    </div>
+                                    <div class="text-caption text-left">
+                                      <v-chip x-small :color="act.pcca_estado === 'A' ? 'green' : 'red'" class="chip-xs">
+                                        {{ act.pcca_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                                      </v-chip>
+                                    </div>
+                                  </div>
+
+                                  </div>
+                                </div>
+                                <div v-else class="text-caption">No hay actividades registradas</div>
+                              </div>
+                            </v-expand-transition>
+
+                            <!-- CAPACIDADES -->
+                            <v-expand-transition>
+                              <div
+                                v-if="isActividadesExpanded(compItem.pcco_id)"
+                                class="capacidades-section mt-2"
+                              >
+                                <div class="d-flex justify-space-between align-center mb-2">
+                                  <h4 class="text-subtitle-2 font-weight-bold">Capacidades</h4>
+                                  <v-btn small color="primary" variant="text" @click="abrirDialogoAgregarCapacidad(compItem.pcco_id)">
+                                    +Agregar
+                                  </v-btn>
+                                </div>
+                                <div v-if="planCompetenciaCapacidades[compItem.pcco_id]?.length">
+                                  <div
+                                    v-for="(cap) in planCompetenciaCapacidades[compItem.pcco_id]"
+                                    :key="cap.pccc_id"
+                                    class="mb-1 text-caption"
+                                  >
+                                  <div :key="cap.pccc_id" class="mb-2 pa-2 capacidad-mobile-card">
+                                    <div class="d-flex justify-end mb-1">
+                                      <v-btn icon variant="text" @click.stop="abrirDialogoEditarCapacidad(cap)">
+                                        <v-icon>mdi-pencil</v-icon>
+                                      </v-btn>
+                                    </div>
+                                    <div class="text-body-2 font-weight-medium mb-1 text-left">
+                                      {{ cap.capa_nombre }}
+                                    </div>
+                                    <div class="text-caption text-left mb-1">
+                                      Orden: {{ cap.pccc_orden }}
+                                    </div>
+                                    <div class="text-caption text-left">
+                                      <v-chip x-small :color="cap.pccc_estado === 'A' ? 'green' : 'red'" class="chip-xs">
+                                        {{ cap.pccc_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                                      </v-chip>
+                                    </div>
+                                  </div>
+
+                                  </div>
+                                </div>
+                                <div v-else class="text-caption">No hay capacidades registradas</div>
+                              </div>
+                            </v-expand-transition>
+
+
                           </div>
 
                           <!-- Mensaje si no hay competencias -->
@@ -968,7 +1078,7 @@ async function obtenerPlanCurricular(plesId) {
 async function obtenerPlanCurricularCompetencias(pacuId) {
   try {
     const { data } = await axiosInstance.get(
-      `wsConsultaPlanCurricularCompetencias.php?ai_pacu_id=${pacuId}&av_profile=${profile}`
+      `wsConsultaPlanCurricularCompetencias.php?ai_pacu_id=${pacuId}&ac_pcco_estado=T&av_profile=${profile}`
     )
     if (data.status) {
       planCurricularCompetencias.value = {
@@ -1302,7 +1412,7 @@ async function obtenerCapacidadesPorCompetencia(pcco_id) {
 async function obtenerActividadesPorCompetencia(pcco_id) {
   try {
     const { data } = await axiosInstance.get(
-      `wsConsultaPCCompetenciasActividades.php?ai_pcco_id=${pcco_id}&av_profile=${profile}`
+      `wsConsultaPCCompetenciasActividades.php?ai_pcco_id=${pcco_id}&ac_pcca_estado=T&av_profile=${profile}`
     )
     if (data.status) {
       planCompetenciaActividades.value[pcco_id] = data.data
@@ -1431,5 +1541,30 @@ td {
   background-color: #f3e5f5; /* lila pastel */
   padding: 8px;
   border-radius: 4px;
+}
+.iconos-mobile {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  align-items: center;
+}
+@media (max-width: 600px) {
+  .competencia-section .v-list-item {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .text-caption {
+    text-align: left !important;
+  }
+}
+.actividad-mobile-card {
+  background-color: #e3f2fd; /* celeste pastel */
+  border-radius: 4px;
+  border: 1px solid #d0e3f5;
+}
+.capacidad-mobile-card {
+  background-color: #f3e5f5; /* lila pastel */
+  border-radius: 4px;
+  border: 1px solid #e1cce7;
 }
 </style>

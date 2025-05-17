@@ -7,7 +7,8 @@ import ConsultaAsistenciaAlumnos from '../components/Asistencia/PaginaConsultaAs
 import ConsultaAsistenciaEmpleados from '../components/Asistencia/PaginaConsultaAsistenciaEmpleados.vue';
 import MiAsistencia from '../components/Asistencia/PaginaConsultaAsistenciaAlumno.vue';
 import ConsultaAsistenciaEmpleado from '../components/Asistencia/PaginaConsultaAsistenciaEmpleado.vue';
-import CalendarioEscolar from '../components/Estudios/PaginaCalendarioEscolar.vue';
+import CalendarioCivicoEscolar from '../components/Estudios/PaginaCalendarioCivicoEscolar.vue';
+import CalendarizacionEscolar from '../components/Estudios/PaginaCalendarizacionEscolar.vue';
 import RegistroAsistencia from '../components/Asistencia/PaginaRegistroAsistencia.vue';
 import AlumnoMisNotas from '../components/Estudios/PaginaAlumnoMisNotas.vue';
 import DashboardAlumno from '../components/Dashboard/PaginaDashboardAlumno.vue';
@@ -102,14 +103,26 @@ const routes = [
         }
       },
       {
-        path: 'calendario-escolar',
-        name: 'CalendarioEscolar',
-        component: CalendarioEscolar,
+        path: 'calendario-civico-escolar',
+        name: 'CalendarioCivicoEscolar',
+        component: CalendarioCivicoEscolar,
         meta: {
           showBreadcrumb: true,
           breadcrumb: [
             { text: 'Principal', to: '/principal' },
-            { text: 'Calendario escolar' }
+            { text: 'Calendario cívico escolar' }
+          ]
+        }
+      },
+      {
+        path: 'calendarizacion-escolar',
+        name: 'CalendarizacionEscolar',
+        component: CalendarizacionEscolar,
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Calendarizacion escolar' }
           ]
         }
       },

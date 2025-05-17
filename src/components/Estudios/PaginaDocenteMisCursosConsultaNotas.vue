@@ -626,12 +626,14 @@ thead tr:nth-child(2) th {
   width: 100%;
   border-collapse: collapse; /* elimina espacios entre celdas */
   border: 1px solid #ccc; /* borde externo */
+  font-size: 0.8rem; /* o usa 12px si prefieres */
 }
 
 .custom-table th,
 .custom-table td {
   border: 1px solid #ccc;
-  padding: 8px;
+  font-size: 12px;
+  padding: 6px 4px; /* también puedes reducir padding */
   vertical-align: middle;
   text-align: center;
   background-color: white;
