@@ -78,59 +78,91 @@
       </v-col>
     </v-row>
 
+    <v-row v-if="legendAbreviaturas.length" class="mb-2">
+      <v-col>
+        <strong>Leyenda de abreviaturas:</strong>
+        <v-chip
+          v-for="({ sigla, nombre }, i) in legendAbreviaturas"
+          :key="i"
+          small
+          class="ma-1"
+          color="grey lighten-3"
+          text-color="black"
+          label
+        >
+          {{ sigla }} = {{ nombre }}
+        </v-chip>
+      </v-col>
+    </v-row>
+      
+
     <!-- Tabla Desktop -->
 <div v-if="isDesktop">
   <v-alert v-if="filteredItems.length === 0" type="info" class="mt-4">
     No hay notas disponibles para este bimestre.
   </v-alert>
+  <div v-if="filteredItems.length > 0">
+  <table class="custom-table">
+  <thead>
+    <tr>
+      <th rowspan="2" class="sticky-col col-num">N°</th>
+      <th rowspan="2" class="sticky-col col-name">Apellidos y Nombres</th>
+      <th rowspan="2" class="text-center">Promedio</th>
 
-  <v-data-table
-    v-if="dynamicHeaders.length > 0"
-    :headers="dynamicHeaders"
-    :items="filteredItems"
-    :items-per-page="10"
-    class="elevation-1 mt-4"
-  >
-    <!-- Cabecera personalizada -->
-    <template #headers="{ columns }">
-      <tr>
-        <th
-          v-for="column in columns"
-          :key="column.key"
-          :class="[
-            column.key !== 'numero' && column.key !== 'alumno' ? column.groupClass : '',
-            'pa-2 text-center'
-          ]"
-        >
-          <span :class="column.class || ''">{{ column.title }}</span>
+      <template v-for="hdr in summaryHeaders" :key="hdr.key">
+      <th rowspan="2" class="vertical-header" :title="hdr.title">
+        <div class="vertical-title">{{ hdr.title }}</div>
+      </th>
+    </template>
+
+      <template v-for="(group, gIndex) in groupedColumnHeaders" :key="gIndex">
+        <th :colspan="group.columns.length" :style="{ backgroundColor: gIndex % 2 === 0 ? '#f9f9f9' : '#f0f0f0' }">
+          {{ group.title }}
         </th>
-      </tr>
-    </template>
-
-    <!-- Contenido de filas -->
-    <template #item="{ item, columns }">
-      <tr>
-        <td v-for="(column) in columns" :key="column.key"
-            :class="[
-              column.key !== 'numero' && column.key !== 'alumno' ? column.groupClass : '',
-              column.key.includes('_prom') ? 'promedio-bold' : '',
-              'pa-2'
-            ]"
-        >
-
-        <div
-          v-if="column.key !== 'numero' && column.key !== 'alumno'"
-          class="cell-custom"
-          :style="getNotaCellStyle(item[column.key])"
-        >
-          <div class="nota-num">{{ getNotaNumero(item[column.key]) }}</div>
-          <div class="nota-letra">{{ getNotaLetra(item[column.key]) }}</div>
+      </template>
+    </tr>
+    <tr>
+      <template v-for="group in groupedColumnHeaders" :key="group.title">
+        <th v-for="col in group.columns" :key="col.key" :class="{ 'promedio-bold': col.label === 'LOGRO' }">
+          {{ col.label }}
+        </th>
+      </template>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="(item, index) in filteredItems" :key="index">
+      <td class="sticky-col col-num">{{ item.numero }}</td>
+      <td class="sticky-col col-name text-left">{{ item.alumno }}</td>
+      <td>
+        <div class="cell-custom" :style="getNotaCellStyle(item.promedio)">
+          {{ item.promedio }}
         </div>
-          <span v-else>{{ item[column.key] }}</span>
+      </td>
+
+      <template v-for="hdr in summaryHeaders" :key="hdr.key">
+        <td>
+          <div class="cell-custom" :style="getNotaCellStyle(item[hdr.key])">
+            {{ item[hdr.key] }}
+          </div>
         </td>
-      </tr>
-    </template>
-  </v-data-table>
+      </template>
+
+      <template v-for="group in groupedColumnHeaders" :key="group.title">
+        <td
+          v-for="col in group.columns"
+          :key="col.key"
+        >
+          <div v-if="item[col.key]" :style="getNotaCellStyle(item[col.key])" class="cell-custom">
+            {{ item[col.key] }}
+          </div>
+        </td>
+      </template>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
 </div>
 
 
@@ -220,6 +252,40 @@ import { useDisplay } from 'vuetify' // <-- Importar
 import axios from 'axios'
 import { getNotaColor, getNotaTextColor } from '@/utils/notas'
 
+const bimestres = ref([])
+const selectedBimestre = ref(null)
+
+const groupedColumnHeaders = computed(() => {
+  const grupos = []
+  const map = new Map()
+
+  dynamicHeaders.value.forEach(header => {
+    if (header.key === 'numero' || header.key === 'alumno') return
+
+    const match = header.title.match(/^(.+?)\s+-\s+(.+)$/)
+    if (!match) return
+
+    const competencia = match[1].trim()
+    const subtitulo = match[2].trim()
+
+    if (!map.has(competencia)) {
+      const nuevoGrupo = {
+        title: competencia,
+        columns: []
+      }
+      map.set(competencia, nuevoGrupo)
+      grupos.push(nuevoGrupo)
+    }
+
+    map.get(competencia).columns.push({
+      label: subtitulo,
+      key: header.key
+    })
+  })
+
+  return grupos
+})
+
 
 // Detecta si la pantalla es "md" o mayor
 const { mdAndUp } = useDisplay()
@@ -232,9 +298,22 @@ const searchQuery = ref("") // Variable reactiva para la búsqueda
 const router = useRouter()
 const route = useRoute()
 
-const evaluaciones = ref([])
+const periodos = ref([])
 
+if (route.query.periodos) {
+  try {
+    periodos.value = JSON.parse(decodeURIComponent(route.query.periodos))
+    bimestres.value = periodos.value
 
+    // Selecciona por defecto el que tenga estado "A"
+    let activo = bimestres.value.find(b => b.aepe_estado === "A")
+    if (!activo) activo = bimestres.value.find(b => b.peed_id === 1)
+    selectedBimestre.value = activo
+
+  } catch (error) {
+    console.error("Error al parsear periodos:", error)
+  }
+}
 
 const cursoSeleccionado = ref(
   route.query.curso
@@ -242,12 +321,10 @@ const cursoSeleccionado = ref(
     : null
 )
 
-const doad_id = ref(
-  route.query.doad_id || (cursoSeleccionado.value ? cursoSeleccionado.value.doad_id : null  
-  ));
-
-const bimestres = ref([])
-const selectedBimestre = ref(null)
+  /* const doad_id = ref(
+    route.query.doad_id || (cursoSeleccionado.value ? cursoSeleccionado.value.doad_id : null  
+    ));
+ */
 
 // Agrupamos los headers dinámicos por evaluación
 const groupedHeaders = computed(() => {
@@ -283,7 +360,7 @@ function getNotaCellStyle(valor) {
   };
 }
 
-function getNotaNumero(valor) {
+/* function getNotaNumero(valor) {
   const notaStr = typeof valor === 'string' ? valor : ''
   const match = notaStr.match(/^([\d.]+)/)
   return match ? match[1] : ''
@@ -295,37 +372,48 @@ function getNotaLetra(valor) {
   return match ? match[1] : ''
 }
 
-
-async function fetchBimestres() {
+ */
+ /* async function fetchBimestres() {
   try {
     const profile = localStorage.getItem("profile")
     const token = localStorage.getItem("token")
+
     const baseUrl = "https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativoPlanCurricular.php"
-    const params = { ai_doad_id: doad_id.value, av_profile: profile }
+    const params = {
+      ai_doad_id: doad_id.value,
+      av_profile: profile
+    }
+
     const configReq = {
       params,
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` }
     }
 
     const response = await axios.get(baseUrl, configReq)
+
     if (response.data.status) {
       bimestres.value = response.data.data
-      selectedBimestre.value = response.data.data[0] ?? null
+
+      // ✅ Buscar el bimestre con estado A
+      let bimestreActivo = bimestres.value.find(b => b.aepe_estado === "A")
+
+      // ✅ Si no hay ninguno con estado A, usar peed_id = 1 por defecto
+      const peed_id = bimestreActivo?.peed_id || 1
+
+      // Guardar bimestre seleccionado
+      selectedBimestre.value = bimestreActivo || bimestres.value.find(b => b.peed_id === 1)
+
+      // Llamar API de notas con peed_id
+      await fetchRegistroAuxiliar(peed_id)
+    } else {
+      console.warn("No se encontraron bimestres.")
     }
-
-
-
-
-
-
   } catch (error) {
-    console.error("Error cargando bimestres:", error)
+    console.error("Error al obtener bimestres:", error)
   }
 }
+ */
 
-const selectedPacuId = computed(() => {
-  return selectedBimestre.value?.pacu_id || null
-})
 
 const alumnos = ref([])
 
@@ -333,7 +421,12 @@ const alumnos = ref([])
 const dynamicHeaders = ref([])  
 const tableItems = ref([])
 
-const titulo = ref('Detalle de Notas')
+// Sólo los headers que acaban en "_res"
+const summaryHeaders = computed(() =>
+  dynamicHeaders.value.filter(h => h.key.endsWith('_res'))
+)
+
+const legendAbreviaturas = ref([]) 
 
 // Computed para filtrar alumnos por nombre
 const filteredItems = computed(() => {
@@ -354,239 +447,183 @@ const paginatedPages = computed(() => {
 })
 
 // Cuando cambie bimestre, reconstruye tabla y reinicia paginación
-watch(
-  () => selectedBimestre.value,
-  async (nuevo) => {
-    if (nuevo && nuevo.peed_id && nuevo.pacu_id) {
-      currentPage.value = 1
-      await fetchEvaluaciones()
-      parseDataForTable()
-    }
-  },
-  { immediate: true, deep: true } // <-- se ejecuta al inicio y detecta cambios internos
+watch(selectedBimestre, async (nuevo) => {
+  if (nuevo?.peed_id) {
+    await fetchRegistroAuxiliar(nuevo.peed_id)
+  }
+},
+  { deep: true } // <-- se ejecuta al inicio y detecta cambios internos
 )
 
-
-onMounted(() => {
-  fetchBimestres()
-  if (!cursoSeleccionado.value) return router.push({ name: 'DocenteMisCursos' })
-  // luego tu lógica existente para detalle…
+onMounted(async () => {
+  if (!cursoSeleccionado.value) {
+    router.push({ name: 'DocenteMisCursos' })
+    return
+  }
 })
+
+
   
   // Si viene la información del API en el query, la usamos
   if (route.query.detalle) {
-    const responseData = JSON.parse(decodeURIComponent(route.query.detalle))
-    if (responseData.status) {
-      alumnos.value = responseData.data
-      if (alumnos.value.length > 0) {
-        titulo.value = `Detalle de Notas - ${alumnos.value[0].aede_nombre || ''}`
-      }
-      parseDataForTable()
-    }
-  } else {
-    // Opcional: En caso de que no venga la información, se puede llamar al API como fallback
-    const doad_id = cursoSeleccionado.value.doad_id
-    fetchDetalle(doad_id)
-  }
-
-// Cargar evaluaciones
-async function fetchEvaluaciones() {
-  try {
-    const token = localStorage.getItem("token")
-    const profile = localStorage.getItem("profile")
-    const ai_usua_id = localStorage.getItem("usua_id")
-    const ai_peed_id = selectedBimestre.value?.peed_id || null
-
-    const ai_doad_id = cursoSeleccionado.value
-      ? cursoSeleccionado.value.doad_id
-      : null
-
-    const ai_pacu_id = selectedPacuId.value
-    // const ai_aude_id = cursoSeleccionado.value
-    //   ? cursoSeleccionado.value.aude_id
-    //   : null
-    const ac_anio_escolar = localStorage.getItem("anio_escolar")
-
-    const baseUrl =
-      "https://amsoftsolution.com/amss/ws/wsListaEvaluacionesDocentePeriodo.php"
-    const params = {
-      ai_usua_id,
-      ai_peed_id,
-      ai_doad_id,
-      ai_pacu_id,
-      ac_anio_escolar,
-      av_profile: profile
-    }
-    const configReq = {
-      params,
-      headers: { Authorization: `Bearer ${token}` }
-    }
-    const response = await axios.get(baseUrl, configReq)
-    if (response.data.status) {
-      evaluaciones.value = response.data.data
-      if (evaluaciones.value.length < 1) {
-        dynamicHeaders.value = []
-        tableItems.value = []
-      }
-    }
-    else {
-      evaluaciones.value = []
-      dynamicHeaders.value = []
-      tableItems.value = []
-    }
-  } catch (error) {
-    evaluaciones.value = [];
-    dynamicHeaders.value = []
-    tableItems.value = []
-    console.error("Error fetching evaluations", error)
+  const responseData = JSON.parse(decodeURIComponent(route.query.detalle))
+  if (responseData.status) {
+    alumnos.value = responseData.data
+    parseRegistroAuxiliar()
   }
 }
 
-async function fetchDetalle(doad_id) {
+async function fetchRegistroAuxiliar(peed_id) {
   try {
     const token = localStorage.getItem("token")
     const profile = localStorage.getItem("profile")
-    const ai_usua_id = localStorage.getItem("usua_id")
-    const ac_anio_escolar = localStorage.getItem("anio_escolar")
+    const ai_doad_id = cursoSeleccionado.value?.doad_id
+    const ai_aude_id = cursoSeleccionado.value?.aude_id
 
-    if (!token || !profile) {
-      console.warn("Falta token o profile en localStorage.")
-      return
-    }
-
-    const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"
+    const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliar.php"
     const params = {
-      ai_usua_id,
-      ai_doad_id: doad_id,
-      ac_anio_escolar,
+      ai_peed_id: peed_id,
+      ai_doad_id,
+      ai_aude_id,
       av_profile: profile
     }
 
     const configReq = {
       params,
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` }
     }
 
     const response = await axios.get(baseUrl, configReq)
     if (response.data.status) {
       alumnos.value = response.data.data
-      if (alumnos.value.length > 0) {
-        titulo.value = `Detalle de Notas - ${alumnos.value[0].aede_nombre || ''}`
-      }
-      parseDataForTable()
+      parseRegistroAuxiliar()
+    } else {
+      alumnos.value = []
+      dynamicHeaders.value = []
+      tableItems.value = []
     }
   } catch (error) {
-    console.error('Error al obtener detalle de notas:', error)
+    console.error("Error al obtener datos de registro auxiliar:", error)
   }
 }
 
-/**
- * Función para asignar un color de fondo según la evaluación.
- */
-/* function getColorForEvaluation(nombre) {
-  const colorMapping = {
-    'PA': '#FFCDD2',  // Participaciones
-    'PR': '#C8E6C9',  // Prácticas
-    'TA': '#BBDEFB',  // Tareas
-    'RC':  '#D1C4E9',  // Revisión
-    'EM': '#FFE082',  // Examen
-    'EB': '#FFCDD2',  // Examen
-  }
-  return colorMapping[nombre.toUpperCase()] || '#EEEEEE'
-} */
 
-/**
- * Genera dynamicHeaders y tableItems a partir de los datos del API.
- */
- function parseDataForTable() {
-  const bimestreId = selectedBimestre.value?.peed_id;
-  const dataBimestre = alumnos.value.filter(item => item.peed_id === bimestreId);
-
-  if (!dataBimestre.length) {
-    dynamicHeaders.value = [];
-    tableItems.value = [];
-    return;
+function parseRegistroAuxiliar() {
+  if (!alumnos.value.length) {
+    dynamicHeaders.value = []
+    tableItems.value = []
+    return
   }
 
-  const sortedEvaluations = [...evaluaciones.value].sort((a, b) => a.pcev_orden - b.pcev_orden);
-  const builtHeaders = [];
-  //let groupIndex = 0;
+  // 0) construir mapa (sigla → nombre)
+  const leyendaMap = new Map()
+  alumnos.value.forEach(alum => {
+    alum.competencias.forEach(comp => {
+      comp.actividades.forEach(act => {
+        // act.abreviatura y act.acti_nombre deben venir del API
+        if (!leyendaMap.has(act.abreviatura)) {
+          leyendaMap.set(act.abreviatura, act.acti_nombre)
+        }
+      })
+    })
+  })
+  // 1) vuelca el mapa a un array ordenado por la sigla
+  legendAbreviaturas.value = Array.from(leyendaMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([sigla, nombre]) => ({ sigla, nombre }))
 
-  if (isDesktop.value) {
-    builtHeaders.push({ title: 'N°', key: 'numero', align: 'start' });
-    builtHeaders.push({ title: 'Apellidos y Nombres', key: 'alumno', align: 'start' });
-  }
 
-  sortedEvaluations.forEach((evalObj, evalIndex) => {
-    const maxNotas = parseInt(evalObj.pcev_cantidad_evaluacion) || 0;
-    const evalAbre = evalObj.eval_abreviacion;
-    const evalNombre = evalObj.eval_nombre;
+  const allCompetencias = {}
+  alumnos.value.forEach(alumno => {
+    alumno.competencias.forEach(comp => {
+      if (!allCompetencias[comp.comp_id]) {
+        allCompetencias[comp.comp_id] = {
+          comp_nombre: comp.comp_nombre,
+          actividades: new Set()
+        }
+      }
+      comp.actividades.forEach(act => {
+        allCompetencias[comp.comp_id].actividades.add(act.abreviatura)
+      })
+    })
+  })
 
-    for (let i = 1; i <= maxNotas; i++) {
-      builtHeaders.push({
-        title: `${evalAbre} #${i}`,
-        key: `eval_${evalObj.eval_id}_nota_${i}`,
-        mobileTitle: `${evalNombre} #${i}`,
+  const headers = [
+    { title: "N°", key: "numero", class: "text-center sticky-column-left" },
+    { title: "Apellidos y Nombres", key: "alumno", class: "text-left sticky-column-left-2" },
+    { title: "Promedio", key: "promedio", class: "text-center" }
+  ]
+
+  // 1️⃣ Genera un mini-array con un header por cada competencia
+    const resumenCompetencias = Object.entries(alumnos.value[0].competencias).map(([ , comp]) => ({
+    title: comp.comp_nombre,               // p.ej. “Construye su identidad”
+    key:   `comp_${comp.comp_id}_res`,    // usa un sufijo único
+    class: "text-center vertical-header"  // aplicaremos CSS para rotar
+  }))
+
+  // 2️⃣ Inserta esos headers a partir del índice 2
+  headers.splice(3, 0, ...resumenCompetencias)
+
+
+  let groupIndex = 0
+  Object.entries(allCompetencias).forEach(([comp_id, comp]) => {
+    const groupClass = `eval-group-${groupIndex % 2 === 0 ? 'a' : 'b'}`
+
+    const actividades = Array.from(comp.actividades).sort() // para mantener orden
+    actividades.forEach((act) => {
+      headers.push({
+        title: `${comp.comp_nombre} - ${act}`,
+        key: `comp_${comp_id}_acti_${act}`,
+        mobileTitle: `${act}`,
         sortable: false,
-        groupIndex: evalIndex,
-        groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`,
-        class: 'promedio-bold'
-      });
+        groupClass,
+        class: "text-center"
+      })
+    })
+
+    headers.push({
+      title: `${comp.comp_nombre} - LOGRO`,
+      key: `comp_${comp_id}_logro`,
+      mobileTitle: `LOGRO`,
+      sortable: false,
+      groupClass,
+      class: "text-center promedio-bold"
+    })
+
+    groupIndex++
+  })
+
+  const rows = alumnos.value.map((alumno, index) => {
+    const row = {
+      numero: index + 1,
+      alumno: alumno.alumno,
+      promedio: `${alumno.promedio}\n(${alumno.promedio_letra})`
     }
 
-    builtHeaders.push({
-      title: `Prom. ${evalNombre}`,
-      key: `eval_${evalObj.eval_id}_prom`,
-      mobileTitle: `Prom. ${evalNombre}`,
-      sortable: false,
-      groupIndex: evalIndex,
-      groupClass: `eval-group-${evalIndex % 2 === 0 ? 'a' : 'b'}`,
-      class: 'promedio-bold'
-    });
-  });
+    // ——> Aquí: pon el resumen de cada competencia
+    alumno.competencias.forEach(comp => {
+      // si hay logro, muéstralo igual que antes
+      row[`comp_${comp.comp_id}_res`] =
+      comp.logro !== null
+        ? `${comp.logro}\n(${comp.logro_letra})`
+        : ""
+    })
 
-  if (isDesktop.value) {
-    builtHeaders.push({ title: 'Prom. Bim', key: 'promBim', sortable: false });
-  }
+    alumno.competencias.forEach(comp => {
+      const comp_id = comp.comp_id
+      comp.actividades.forEach(act => {
+        row[`comp_${comp_id}_acti_${act.abreviatura}`] =
+          act.nota !== null ? `${act.nota} (${act.nota_letra})` : ""
+      })
+      row[`comp_${comp_id}_logro`] =
+        comp.logro !== null ? `${comp.logro} (${comp.logro_letra})` : ""
+    })
 
-  const builtItems = dataBimestre.map((alumnoItem, index) => {
-    const row = {};
-    row.numero = index + 1;
-    row.alumno = alumnoItem.alumno;
+    return row
+  })
 
-    sortedEvaluations.forEach(evalObj => {
-      const maxNotas = parseInt(evalObj.pcev_cantidad_evaluacion) || 0;
-      const alumnoEval = alumnoItem.alumnos_cursos_promedios.find(e => e.eval_id === evalObj.eval_id);
-
-      if (alumnoEval) {
-        alumnoEval.alumnos_cursos_notas.forEach((notaItem, nIndex) => {
-          const colKey = `eval_${evalObj.eval_id}_nota_${nIndex + 1}`;
-          row[colKey] = `${notaItem.reau_evaluacion} (${notaItem.reau_evaluacion_letra})`;
-        });
-        for (let i = alumnoEval.alumnos_cursos_notas.length + 1; i <= maxNotas; i++) {
-          const colKey = `eval_${evalObj.eval_id}_nota_${i}`;
-          row[colKey] = '';
-        }
-        const promKey = `eval_${evalObj.eval_id}_prom`;
-        row[promKey] = `${alumnoEval.pcae_promedio_evaluacion} (${alumnoEval.pcae_promedio_evaluacion_letra})`;
-      } else {
-        for (let i = 1; i <= maxNotas; i++) {
-          const colKey = `eval_${evalObj.eval_id}_nota_${i}`;
-          row[colKey] = '';
-        }
-        const promKey = `eval_${evalObj.eval_id}_prom`;
-        row[promKey] = '';
-      }
-    });
-
-    row.promBim = `${alumnoItem.pcal_promedio_periodo} (${alumnoItem.pcal_promedio_periodo_letra})`;
-    return row;
-  });
-
-  dynamicHeaders.value = builtHeaders;
-  tableItems.value = builtItems;
-  console.log(dynamicHeaders.value);
-  console.log(tableItems.value);
+  dynamicHeaders.value = headers
+  tableItems.value = rows
 }
 
 
@@ -597,9 +634,14 @@ function goBack() {
 
 <style scoped>
 .cell-custom {
-  padding: 8px;
+  padding: 4px 8px;
   background-clip: padding-box;
   transition: background-color 0.3s ease;
+  border-radius: 6px;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
+  white-space: pre-line;
 }
 .eval-group-a {
   background-color: #f9f9f9;
@@ -640,4 +682,111 @@ function goBack() {
 .promedio-bold {
   font-weight: bold;
 }
+th.promedio-bold {
+  font-weight: bold;
+  background-color: #e0f7e9;
+  color: #2e7d32;
+}
+.sticky-column-left {
+  position: sticky;
+  left: 0;
+  background-color: white;
+  z-index: 2;
+}
+.sticky-column-left {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background-color: white;
+}
+
+.sticky-column-left-2 {
+  position: sticky;
+  left: 60px; /* ajusta si N° es más ancho */
+  z-index: 3;
+  background-color: white;
+}
+thead tr:nth-child(1) th,
+thead tr:nth-child(2) th {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 4;
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse; /* elimina espacios entre celdas */
+  border: 1px solid #ccc; /* borde externo */
+  font-size: 0.8rem; /* o usa 12px si prefieres */
+}
+
+.custom-table th,
+.custom-table td {
+  border: 1px solid #ccc;
+  font-size: 12px;
+  padding: 6px 4px; /* también puedes reducir padding */
+  vertical-align: middle;
+  text-align: center;
+  background-color: white;
+}
+
+.promedio-bold {
+  font-weight: bold;
+  background-color: #e0f7e9;
+  color: #2e7d32;
+}
+
+.cell-custom {
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
+}
+
+.sticky-col {
+  position: sticky;
+  background: white;
+  z-index: 3;
+  border-right: 1px solid #ccc;
+}
+
+
+.col-num {
+  width: 50px;
+  left: 0;
+}
+
+
+.col-name {
+  left: 50px;
+  z-index: 3;
+  text-align: left;
+  width: 250px; /* puedes ajustar este valor */
+  min-width: 200px; /* para evitar que se achique demasiado */
+  max-width: 300px;
+}
+/* 1) Acota el ancho para que el texto “wrapping” en vertical */
+.vertical-header {
+  position: relative;
+  width: 32px;       /* ancho de la celda */
+  height: 100px;     /* altura mínima para que no quede muy apretado */
+  padding: 0;
+  border-bottom: 1px solid #ccc;
+}
+
+
+/* 2) Asegúrate de que la fila de cabeceras crezca */
+.custom-table thead th {
+  height: auto !important;
+  padding-bottom: 8px; /* un poco más de espacio abajo */
+}
+
+/* 3) Tooltip sobre el th si el texto quedó truncado */
+.vertical-header[title] {
+  position: relative;
+  cursor: help;
+}
+
 </style>

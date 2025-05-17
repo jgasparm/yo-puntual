@@ -1,6 +1,6 @@
 <template>
-  <v-container class="pt-0 pb-4">
-    <v-container class="pt-0 pb-4">
+  <v-container class="pt-0 pb-2">
+    <v-container class="pt-0 pb-2">
   <!-- Mobile: Botón en primera fila (oculto en desktop) -->
   <v-row class="d-md-none mt-0 mb-2">
     <v-col cols="12" class="text-start">
@@ -11,7 +11,7 @@
   </v-row>
 
   <!-- Título centrado -->
-  <v-row class="mb-2">
+  <v-row class="mb-1">
     <v-col cols="12" class="text-center">
       <h2 class="text-h5 font-weight-bold text-primary">📖 Consulta de Notas</h2>
       <p class="text-subtitle-2 mt-1 text-grey-darken-1">
@@ -31,14 +31,14 @@
   </v-row>
 
   <!-- Desktop: curso a la izquierda y botón a la derecha -->
-  <v-row class="d-none d-md-flex mb-4 align-center">
-    <v-col md="6" class="text-md-left">
+  <v-row class="mb-2 align-center">
+    <v-col cols="12" md="6" class="text-md-left">
       <div class="text-subtitle-1 curso-highlight">
         <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
         <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
       </div>
     </v-col>
-    <v-col md="6" class="text-md-right">
+    <v-col cols="12" md="6" class="text-md-right">
       <v-btn color="primary" @click="goBack" prepend-icon="mdi-arrow-left">
         Regresar
       </v-btn>
@@ -48,7 +48,7 @@
 
 
     <!-- Datos del Curso -->
-    <v-row class="mb-4 text-body-2">
+    <v-row class="mb-2 text-body-2">
       <v-col cols="12" sm="6" md="3"><strong>Turno:</strong> {{ cursoSeleccionado?.turn_nombre }}</v-col>
       <v-col cols="12" sm="6" md="3"><strong>Nivel:</strong> {{ cursoSeleccionado?.nive_nombre }}</v-col>
       <v-col cols="12" sm="6" md="3"><strong>Grado:</strong> {{ cursoSeleccionado?.grad_nombre }}</v-col>
@@ -56,8 +56,8 @@
     </v-row>
 
     <!-- Filtros -->
-    <v-row class="mb-4">
-      <v-col cols="12" sm="6">
+    <v-row class="mb-2">
+      <v-col cols="12" sm="6" md="6">
         <v-select
           v-model="selectedBimestre"
           :items="bimestres"
@@ -68,7 +68,7 @@
           solo
         />
       </v-col>
-      <v-col cols="12" sm="6">
+      <v-col cols="12" sm="6" md="6">
         <v-text-field
           v-model="searchQuery"
           label="Buscar alumno"
@@ -78,17 +78,42 @@
       </v-col>
     </v-row>
 
+    <v-row v-if="legendAbreviaturas.length" class="mb-4">
+      <v-col cols="12" sm="6" md="6" class="pa-0">
+        <strong>Leyenda de abreviaturas:</strong>
+        <div>
+          <v-chip
+            v-for="({ sigla, nombre }, i) in legendAbreviaturas"
+            :key="i"
+            small class="ma-1"
+            color="grey lighten-3" text-color="black" label
+          >
+            {{ sigla }} = {{ nombre }}
+          </v-chip>
+        </div>
+      </v-col>
+    </v-row>
+              
     <!-- Tabla Desktop -->
 <div v-if="isDesktop">
   <v-alert v-if="filteredItems.length === 0" type="info" class="mt-4">
     No hay notas disponibles para este bimestre.
   </v-alert>
   <div v-if="filteredItems.length > 0">
+<div class="table-wrapper">
   <table class="custom-table">
-  <thead>
-    <tr>
-      <th rowspan="2" class="sticky-col col-num">N°</th>
-      <th rowspan="2" class="sticky-col col-name">Apellidos y Nombres</th>
+    <thead>
+      <tr>
+       <th rowspan="2" class="sticky-col col-num">N°</th>
+       <th rowspan="2" class="sticky-col col-name">Apellidos y Nombres</th>
+       <th rowspan="2" class="sticky-col col-prom text-center">Promedio</th>
+
+      <template v-for="hdr in summaryHeaders" :key="hdr.key">
+      <th rowspan="2" class="vertical-header" :title="hdr.title">
+        <div class="vertical-title">{{ hdr.title }}</div>
+      </th>
+    </template>
+
       <template v-for="(group, gIndex) in groupedColumnHeaders" :key="gIndex">
         <th :colspan="group.columns.length" :style="{ backgroundColor: gIndex % 2 === 0 ? '#f9f9f9' : '#f0f0f0' }">
           {{ group.title }}
@@ -107,6 +132,20 @@
     <tr v-for="(item, index) in filteredItems" :key="index">
       <td class="sticky-col col-num">{{ item.numero }}</td>
       <td class="sticky-col col-name text-left">{{ item.alumno }}</td>
+      <td class="sticky-col col-prom">
+        <div class="cell-custom" :style="getNotaCellStyle(item.promedio)">
+          {{ item.promedio }}
+        </div>
+      </td>
+
+      <template v-for="hdr in summaryHeaders" :key="hdr.key">
+        <td>
+          <div class="cell-custom" :style="getNotaCellStyle(item[hdr.key])">
+            {{ item[hdr.key] }}
+          </div>
+        </td>
+      </template>
+
       <template v-for="group in groupedColumnHeaders" :key="group.title">
         <td
           v-for="col in group.columns"
@@ -120,6 +159,7 @@
     </tr>
   </tbody>
 </table>
+</div>
 </div>
 
 
@@ -381,6 +421,13 @@ const alumnos = ref([])
 const dynamicHeaders = ref([])  
 const tableItems = ref([])
 
+// Sólo los headers que acaban en "_res"
+const summaryHeaders = computed(() =>
+  dynamicHeaders.value.filter(h => h.key.endsWith('_res'))
+)
+
+const legendAbreviaturas = ref([]) 
+
 // Computed para filtrar alumnos por nombre
 const filteredItems = computed(() => {
   if (!searchQuery.value) return tableItems.value
@@ -468,6 +515,24 @@ function parseRegistroAuxiliar() {
     return
   }
 
+  // 0) construir mapa (sigla → nombre)
+  const leyendaMap = new Map()
+  alumnos.value.forEach(alum => {
+    alum.competencias.forEach(comp => {
+      comp.actividades.forEach(act => {
+        // act.abreviatura y act.acti_nombre deben venir del API
+        if (!leyendaMap.has(act.abreviatura)) {
+          leyendaMap.set(act.abreviatura, act.acti_nombre)
+        }
+      })
+    })
+  })
+  // 1) vuelca el mapa a un array ordenado por la sigla
+  legendAbreviaturas.value = Array.from(leyendaMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([sigla, nombre]) => ({ sigla, nombre }))
+
+
   const allCompetencias = {}
   alumnos.value.forEach(alumno => {
     alumno.competencias.forEach(comp => {
@@ -484,9 +549,21 @@ function parseRegistroAuxiliar() {
   })
 
   const headers = [
-  { title: "N°", key: "numero", class: "text-center sticky-column-left" },
-  { title: "Apellidos y Nombres", key: "alumno", class: "text-left sticky-column-left-2" }
-]
+    { title: "N°", key: "numero", class: "text-center sticky-column-left" },
+    { title: "Apellidos y Nombres", key: "alumno", class: "text-left sticky-column-left-2" },
+    { title: "Promedio", key: "promedio", class: "text-center" }
+  ]
+
+  // 1️⃣ Genera un mini-array con un header por cada competencia
+    const resumenCompetencias = Object.entries(alumnos.value[0].competencias).map(([ , comp]) => ({
+    title: comp.comp_nombre,               // p.ej. “Construye su identidad”
+    key:   `comp_${comp.comp_id}_res`,    // usa un sufijo único
+    class: "text-center vertical-header"  // aplicaremos CSS para rotar
+  }))
+
+  // 2️⃣ Inserta esos headers a partir del índice 2
+  headers.splice(3, 0, ...resumenCompetencias)
+
 
   let groupIndex = 0
   Object.entries(allCompetencias).forEach(([comp_id, comp]) => {
@@ -519,18 +596,33 @@ function parseRegistroAuxiliar() {
   const rows = alumnos.value.map((alumno, index) => {
     const row = {
       numero: index + 1,
-      alumno: alumno.alumno
+      alumno: alumno.alumno,
+      promedio: `${alumno.promedio}\n(${alumno.promedio_letra})`
     }
+
+    // ——> Aquí: pon el resumen de cada competencia
+    alumno.competencias.forEach(comp => {
+      // si hay logro, muéstralo igual que antes
+      row[`comp_${comp.comp_id}_res`] =
+      comp.logro !== null
+        ? `${comp.logro}\n(${comp.logro_letra})`
+        : ""
+    })
 
     alumno.competencias.forEach(comp => {
       const comp_id = comp.comp_id
       comp.actividades.forEach(act => {
         row[`comp_${comp_id}_acti_${act.abreviatura}`] =
-          act.nota !== null ? `${act.nota} (${act.nota_letra})` : ""
+          act.nota !== null
+            ? `${act.nota}\n(${act.nota_letra})`
+            : ""
       })
       row[`comp_${comp_id}_logro`] =
-        comp.logro !== null ? `${comp.logro} (${comp.logro_letra})` : ""
+        comp.logro !== null
+          ? `${comp.logro}\n(${comp.logro_letra})`
+          : ""
     })
+
 
     return row
   })
@@ -546,134 +638,107 @@ function goBack() {
 </script>
 
 <style scoped>
-.cell-custom {
-  padding: 8px;
-  background-clip: padding-box;
-  transition: background-color 0.3s ease;
-}
-.eval-group-a {
-  background-color: #f9f9f9;
-}
-.eval-group-b {
-  background-color: #f0f0f0;
-}
-.prom-header-mobile {
-  font-weight: bold;
-  font-size: 16px;
-}
-.promedio-mobile {
-  font-weight: bold;
-  font-size: 18px;
-  margin-top: 4px;
-  display: inline-block;
-}
-.multiline2-ellipsis {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: normal;
+.table-wrapper {
+  overflow-x: auto;
+  position: relative; /* para que los sticky se calculen dentro de este contenedor */
 }
 
-.table-desktop {
-  width: 100%;
-  border-collapse: collapse;
-}
-.table-desktop th,
-.table-desktop td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  vertical-align: middle;
-  text-align: center;
-}
-.promedio-bold {
-  font-weight: bold;
-}
-th.promedio-bold {
-  font-weight: bold;
-  background-color: #e0f7e9;
-  color: #2e7d32;
-}
-.sticky-column-left {
-  position: sticky;
-  left: 0;
-  background-color: white;
-  z-index: 2;
-}
-.sticky-column-left {
-  position: sticky;
-  left: 0;
-  z-index: 3;
-  background-color: white;
-}
-
-.sticky-column-left-2 {
-  position: sticky;
-  left: 60px; /* ajusta si N° es más ancho */
-  z-index: 3;
-  background-color: white;
-}
-thead tr:nth-child(1) th,
-thead tr:nth-child(2) th {
-  position: sticky;
-  top: 0;
-  background-color: white;
-  z-index: 4;
-}
-
+/* -------------------------------------------
+   Base de la tabla
+-------------------------------------------- */
 .custom-table {
-  width: 100%;
-  border-collapse: collapse; /* elimina espacios entre celdas */
-  border: 1px solid #ccc; /* borde externo */
-  font-size: 0.8rem; /* o usa 12px si prefieres */
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+  width: max-content;  /* ancho según contenido provoca scroll horizontal */
+  position: relative;
 }
 
 .custom-table th,
 .custom-table td {
   border: 1px solid #ccc;
-  font-size: 12px;
-  padding: 6px 4px; /* también puedes reducir padding */
-  vertical-align: middle;
+  padding: 4px 2px;
+  background: white;
   text-align: center;
-  background-color: white;
+  vertical-align: middle;
 }
 
-.promedio-bold {
-  font-weight: bold;
-  background-color: #e0f7e9;
-  color: #2e7d32;
+/* -------------------------------------------
+   Cabeceras siempre visibles al desplazar vertical
+-------------------------------------------- */
+.custom-table thead th {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 5;
 }
 
+/* -------------------------------------------
+   Sólo estas tres columnas quedan fijas
+-------------------------------------------- */
+/* 1) N° */
+.custom-table th.col-num,
+.custom-table td.col-num {
+  position: sticky;
+  left: 0;
+  width: 50px;    /* ajusta al ancho que necesites */
+  background: white;
+  z-index: 6;
+}
+
+/* 2) Apellidos y Nombres */
+.custom-table th.col-name,
+.custom-table td.col-name {
+  position: sticky;
+  left: 50px;     /* = ancho de col-num */
+  min-width: 250px; /* ajusta según tu layout */
+  background: white;
+  z-index: 6;
+}
+
+/* 3) Promedio */
+.custom-table th.col-prom,
+.custom-table td.col-prom {
+  position: sticky;
+  left: calc(50px + 250px); /* = col-num + col-name */
+  min-width: 80px;           /* ajusta según tu layout */
+  background: white;
+  z-index: 6;
+}
+/* -------------------------------------------
+   Estilos de celdas de nota
+-------------------------------------------- */
 .cell-custom {
   padding: 4px 8px;
   border-radius: 6px;
   display: inline-block;
   min-width: 60px;
   text-align: center;
+  white-space: pre-line;
 }
 
-.sticky-col {
-  position: sticky;
-  background: white;
-  z-index: 3;
-  border-right: 1px solid #ccc;
+.promedio-bold {
+  font-weight: bold;
+  background-color: #e0f7e9;
+  color: #2e7d32;
 }
 
-
-.col-num {
-  width: 50px;
-  left: 0;
+.eval-group-a {
+  background-color: #f9f9f9;
 }
 
-
-.col-name {
-  left: 50px;
-  z-index: 3;
-  text-align: left;
-  width: 250px; /* puedes ajustar este valor */
-  min-width: 200px; /* para evitar que se achique demasiado */
-  max-width: 300px;
+.eval-group-b {
+  background-color: #f0f0f0;
 }
 
+/* Para los headers verticales truncados */
+.vertical-header {
+  position: relative;
+  width: 32px;
+  height: 100px;
+  padding: 0;
+  border-bottom: 1px solid #ccc;
+  cursor: help;
+}
 </style>
+
