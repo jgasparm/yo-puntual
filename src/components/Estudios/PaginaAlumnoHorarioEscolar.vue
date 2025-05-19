@@ -1,55 +1,47 @@
 <template>
   <v-container fluid>
     <v-row class="section-space">
-  <v-col cols="12">
-    <div class="text-h5 font-weight-bold text-primary mb-2">
-      🕘 Horario Escolar
-    </div>
-    <div class="text-body-2 text-grey-darken-1">
-      Consulta los cursos que tienes cada día. ¡No olvides tus útiles!
-    </div>
-  </v-col>
-</v-row>
+      <v-col cols="12">
+        <div class="text-h5 font-weight-bold text-primary mb-2">
+          🕘 Horario Escolar
+        </div>
+        <div class="text-body-2 text-grey-darken-1">
+          Consulta los cursos que tienes cada día. ¡No olvides tus útiles!
+        </div>
+      </v-col>
+    </v-row>
 
-        <v-sheet 
-          v-if="infoAlumno"
-          color="blue-lighten-5" 
-          class="pa-4 mb-2 rounded-lg elevation-1 section-space"
-        >
+    <v-sheet 
+      v-if="infoAlumno"
+      color="blue-lighten-5" 
+      class="pa-4 mb-2 rounded-lg elevation-1 section-space"
+    >
+      <v-row>
+        <!-- Fila 2: Tutor -->
+        <v-col cols="12">
+          <v-icon color="primary" start>mdi-account</v-icon>
+          <strong>Tutor:</strong> <span>{{ infoAlumno.tutor }}</span>
+        </v-col>
 
-        <v-row>
-          <!-- Fila 1: Título -->
-<!--           <v-col cols="12">
-            <div class="text-h6 font-weight-bold text-primary mb-2">
-              🧑‍🏫 Información del Alumno
-            </div>
-          </v-col> -->
-
-          <!-- Fila 2: Tutor -->
-          <v-col cols="12">
-            <v-icon color="primary" start>mdi-account</v-icon>
-            <strong>Tutor:</strong> <span>{{ infoAlumno.tutor }}</span>
-          </v-col>
-
-          <!-- Fila 3: Turno, Nivel, Grado y Sección -->
-          <v-col cols="12" sm="6" md="3">
-            <v-icon color="primary" start>mdi-clock-time-eight-outline</v-icon>
-            <strong>Turno:</strong> <span>{{ infoAlumno.turn_nombre }}</span>
-          </v-col>
-          <v-col cols="12" sm="6" md="3">
-            <v-icon color="primary" start>mdi-school</v-icon>
-            <strong>Nivel:</strong> <span>{{ infoAlumno.nive_nombre }}</span>
-          </v-col>
-          <v-col cols="12" sm="6" md="3">
-            <v-icon color="primary" start>mdi-numeric</v-icon>
-            <strong>Grado:</strong> <span>{{ infoAlumno.grad_nombre }}</span>
-          </v-col>
-          <v-col cols="12" sm="6" md="3">
-            <v-icon color="primary" start>mdi-alpha-s-circle-outline</v-icon>
-            <strong>Sección:</strong> <span>{{ infoAlumno.secc_nombre }}</span>
-          </v-col>
-        </v-row>
-      </v-sheet>
+        <!-- Fila 3: Turno, Nivel, Grado y Sección -->
+        <v-col cols="12" sm="6" md="3">
+          <v-icon color="primary" start>mdi-clock-time-eight-outline</v-icon>
+          <strong>Turno:</strong> <span>{{ infoAlumno.turn_nombre }}</span>
+        </v-col>
+        <v-col cols="12" sm="6" md="3">
+          <v-icon color="primary" start>mdi-school</v-icon>
+          <strong>Nivel:</strong> <span>{{ infoAlumno.nive_nombre }}</span>
+        </v-col>
+        <v-col cols="12" sm="6" md="3">
+          <v-icon color="primary" start>mdi-numeric</v-icon>
+          <strong>Grado:</strong> <span>{{ infoAlumno.grad_nombre }}</span>
+        </v-col>
+        <v-col cols="12" sm="6" md="3">
+          <v-icon color="primary" start>mdi-alpha-s-circle-outline</v-icon>
+          <strong>Sección:</strong> <span>{{ infoAlumno.secc_nombre }}</span>
+        </v-col>
+      </v-row>
+    </v-sheet>
 
 
 

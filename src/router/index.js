@@ -10,13 +10,13 @@ import ConsultaAsistenciaEmpleado from '../components/Asistencia/PaginaConsultaA
 import CalendarioCivicoEscolar from '../components/Estudios/PaginaCalendarioCivicoEscolar.vue';
 import CalendarizacionEscolar from '../components/Estudios/PaginaCalendarizacionEscolar.vue';
 import RegistroAsistencia from '../components/Asistencia/PaginaRegistroAsistencia.vue';
-import AlumnoMisNotas from '../components/Estudios/PaginaAlumnoMisNotas.vue';
+import AlumnoMisNotas from '../components/Estudios/Notas/PaginaAlumnoMisNotas.vue';
 import DashboardAlumno from '../components/Dashboard/PaginaDashboardAlumno.vue';
 import DocenteMisCursos from '../components/Estudios/PaginaDocenteMisCursos.vue';
 import MisCursos from '../components/Estudios/PaginaMisCursos.vue';
-import DocenteMisCursosRegistroNotas from '../components/Estudios/PaginaDocenteMisCursosRegistroNotas.vue';
-import DocenteMisCursosConsultaNotas from '../components/Estudios/PaginaDocenteMisCursosConsultaNotas.vue';
-import MisCursosConsultaNotas from '../components/Estudios/PaginaMisCursosConsultaNotas.vue';
+import DocenteMisCursosRegistroNotas from '../components/Estudios/Notas/PaginaDocenteMisCursosRegistroNotas.vue';
+import DocenteMisCursosConsultaNotas from '../components/Estudios/Notas/PaginaDocenteMisCursosConsultaNotas.vue';
+import MisCursosConsultaNotas from '../components/Estudios/Notas/PaginaMisCursosConsultaNotas.vue';
 import DocentesAnioEscolar from '../components/Mantenimiento/Docentes/PaginaDocentesAnioEscolar.vue';
 import MisAulas from '../components/Mantenimiento/PaginaMisAulas.vue';
 import AlumnoHorarioEscolar from '../components/Estudios/PaginaAlumnoHorarioEscolar.vue';

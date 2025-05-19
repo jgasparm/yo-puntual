@@ -20,14 +20,10 @@
         <!-- eslint-disable-next-line vue/valid-v-slot -->
         <template v-slot:item.accion="{ item }">
         <div class="table-action">
-          <v-btn icon variant="text" color="info" @click="verNotas(item)" aria-label="Ver notas">
+          <v-btn icon color="info" @click="verNotas(item, 'MisCursosConsultaNotas')">
             <v-icon>mdi-eye-outline</v-icon>
             <v-tooltip activator="parent" location="top">Ver notas</v-tooltip>
           </v-btn>
-
-          <!-- <v-btn icon color="secondary" class="action-btn" @click="registrarNotas(item)">
-            <v-icon size="24">mdi-pencil</v-icon>
-          </v-btn> -->
         </div>
       </template>
       </v-data-table>
@@ -47,14 +43,14 @@
     >
       <v-card outlined style="position: relative; text-align: left;">
         <!-- Botón de "ver" en la esquina superior derecha -->
-        <v-btn
-          icon
-          color="primary"
-          @click="verNotas(curso)"
-          style="position: absolute; top: 8px; right: 8px;"
-        >
-          <v-icon>mdi-eye</v-icon>
-        </v-btn>
+          <v-btn
+            icon
+            color="primary"
+            @click="verNotas(curso, 'MisCursosConsultaNotas')"
+            style="position: absolute; top: 8px; right: 8px;"
+          >
+            <v-icon>mdi-eye</v-icon>
+          </v-btn>
         <!-- Información del curso con padding-top para evitar superposición -->
         <v-card-text style="padding-top: 40px;">
           <div><strong>Curso:</strong> {{ curso.aede_nombre }}</div>
@@ -86,9 +82,9 @@
     <!-- Modal de "No se encontraron resultados" -->
     <v-dialog v-model="dialogNoResults" max-width="400">
       <v-card>
-        <v-card-title class="headline">No se encontraron resultados</v-card-title>
+        <v-card-title class="headline">Sin resultados</v-card-title>
         <v-card-text>
-          La consulta no arrojó resultados.
+          No existen calificaciones para el periodo seleccionado.
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -105,6 +101,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useDisplay } from 'vuetify'
 
+const router = useRouter()
 const dialogNoResults = ref(false)
 
 // Detecta si la pantalla es de tamaño md y superior
@@ -127,7 +124,7 @@ const headers = [
   { title: 'Acción', key: 'accion', sortable: false }
 ]
 
-const router = useRouter()
+
 
 // Variables para la paginación en mobile
 const currentPage = ref(1)
@@ -152,6 +149,73 @@ onMounted(() => {
 watch(selectedBimestre, () => {
   currentPage.value = 1
 })
+
+// —– FETCH PERIODOS + DETALLE ——————————————————————————————
+async function fetchPeriodosYDetalle(curso) {
+  const token   = localStorage.getItem("token")
+  const profile = localStorage.getItem("profile")
+  if (!token || !profile) throw new Error("Credenciales faltantes")
+
+  const { doad_id, aude_id, grad_id } = curso
+
+  // 1) Periodos
+  const perRes = await axios.get(
+    "https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativoPlanCurricular.php",
+    {
+      params: { ai_doad_id: doad_id, av_profile: profile },
+      headers: { Authorization: `Bearer ${token}` }
+    }
+  )
+  if (!perRes.data.status || !perRes.data.data.length) {
+    throw new Error("No hay periodos asociados a este curso")
+  }
+  const periodos = perRes.data.data
+  const bimestre = periodos.find(b => b.aepe_estado === "A") || periodos[0]
+
+  // 2) Detalle de notas
+  const detRes = await axios.get(
+    "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliar.php",
+    {
+      params: {
+        ai_doad_id: doad_id,
+        ai_aude_id: aude_id,
+        ai_peed_id: bimestre.peed_id,
+        ai_grad_id: grad_id,
+        av_profile: profile
+      },
+      headers: { Authorization: `Bearer ${token}` }
+    }
+  )
+  if (!detRes.data.status || !detRes.data.data.length) {
+    throw new Error(`No hay calificaciones para ${bimestre.peed_nombre}`)
+  }
+
+  return { periodos, bimestre, detalle: detRes.data }
+}
+
+// —– ABRE LA VENTANA DE NOTAS ——————————————————————————————
+async function verNotas(curso, ruta) {
+  try {
+    const { periodos, bimestre, detalle } = await fetchPeriodosYDetalle(curso)
+
+    router.push({
+      name: ruta,
+      query: {
+        curso:    encodeURIComponent(JSON.stringify(curso)),
+        periodos: encodeURIComponent(JSON.stringify(periodos)),
+        bimestre: encodeURIComponent(JSON.stringify({
+          peed_id:     bimestre.peed_id,
+          peed_nombre: bimestre.peed_nombre
+        })),
+        detalle:  encodeURIComponent(JSON.stringify(detalle))
+      }
+    })
+  } catch (err) {
+    // Si falla por "no hay datos", mostramos diálogo nativo
+    dialogNoResults.value = true
+    console.warn(err.message)
+  }
+}
 
 // Consulta al API usando axios y pasando los parámetros en la URL
 async function fetchAllData() {
@@ -200,55 +264,6 @@ const filteredCursos = computed(() => {
   //return bimestreObj ? bimestreObj.cursos : []
   return allData.value
 })
-
-// Navegación al hacer clic en "Ver Notas"
-async function verNotas(curso) {
-  // Obtenemos el bimestre actual (como en el código original)
-  const bimestre = allData.value.find(b => b.peed_id === Number(selectedBimestre.value))
-  // Datos necesarios para el API
-  const token = localStorage.getItem("token")
-  const profile = localStorage.getItem("profile")
-  const ai_usua_id = curso.usua_id
-  const ac_anio_escolar = localStorage.getItem("anio_escolar")
-  const doad_id = curso.doad_id
-  const aude_id = curso.aude_id
-  const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliarDocenteAlumnosDetalle.php"
-  const params = {
-    ai_usua_id,
-    ai_doad_id: doad_id,
-    ai_aude_id: aude_id,
-    ac_anio_escolar,
-    av_profile: profile
-  }
-  const configReq = {
-    params,
-    headers: { Authorization: `Bearer ${token}` },
-  }
-
-  try {
-    const response = await axios.get(baseUrl, configReq)
-    // Suponiendo que el API devuelve "messagecode" para indicar que no hay resultados
-    if (response.data.messageCode === "4") {
-      dialogNoResults.value = true
-      return  // No se navega a la página de detalle
-    } else {
-      console.log('Curso')
-      console.log(curso)
-      // Se navega a la página MisCursosDetalle y se pasa la respuesta del API
-      router.push({
-        name: 'MisCursosConsultaNotas',
-        query: {
-          curso: encodeURIComponent(JSON.stringify(curso)),
-          bimestre: encodeURIComponent(JSON.stringify(bimestre)),
-          detalle: encodeURIComponent(JSON.stringify(response.data))
-        }
-      })
-    }
-  } catch (error) {
-    console.error('Error al obtener detalle de notas:', error)
-  }
-}
-
 
 // Función para registrar notas
 // function registrarNotas(curso) {

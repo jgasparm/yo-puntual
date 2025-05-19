@@ -180,7 +180,6 @@ async function fetchAllData() {
     const token           = localStorage.getItem("token")
     const profile         = localStorage.getItem("profile")
     const ai_usua_id      = localStorage.getItem("usua_id")
-    const ac_anio_escolar = localStorage.getItem("anio_escolar")
     if (!token || !profile) return
 
     const { data } = await axios.get(
@@ -188,7 +187,6 @@ async function fetchAllData() {
       {
         params: {
           ai_usua_id,
-          ac_anio_escolar,
           av_profile: profile
         },
         headers: { Authorization: `Bearer ${token}` }

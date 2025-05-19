@@ -1,6 +1,6 @@
 <template>
-  <v-container class="pt-0 pb-4">
-    <v-container class="pt-0 pb-4">
+  <v-container class="pt-0 pb-2">
+    <v-container class="pt-0 pb-2">
   <!-- Mobile: Botón en primera fila (oculto en desktop) -->
   <v-row class="d-md-none mt-0 mb-2">
     <v-col cols="12" class="text-start">
@@ -11,7 +11,7 @@
   </v-row>
 
   <!-- Título centrado -->
-  <v-row class="mb-2">
+  <v-row class="mb-1">
     <v-col cols="12" class="text-center">
       <h2 class="text-h5 font-weight-bold text-primary">📖 Consulta de Notas</h2>
       <p class="text-subtitle-2 mt-1 text-grey-darken-1">
@@ -31,14 +31,14 @@
   </v-row>
 
   <!-- Desktop: curso a la izquierda y botón a la derecha -->
-  <v-row class="d-none d-md-flex mb-4 align-center">
-    <v-col md="6" class="text-md-left">
+  <v-row class="mb-2 align-center">
+    <v-col cols="12" md="6" class="text-md-left">
       <div class="text-subtitle-1 curso-highlight">
         <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
         <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
       </div>
     </v-col>
-    <v-col md="6" class="text-md-right">
+    <v-col cols="12" md="6" class="text-md-right">
       <v-btn color="primary" @click="goBack" prepend-icon="mdi-arrow-left">
         Regresar
       </v-btn>
@@ -48,7 +48,7 @@
 
 
     <!-- Datos del Curso -->
-    <v-row class="mb-4 text-body-2">
+    <v-row class="mb-2 text-body-2">
       <v-col cols="12" sm="6" md="3"><strong>Turno:</strong> {{ cursoSeleccionado?.turn_nombre }}</v-col>
       <v-col cols="12" sm="6" md="3"><strong>Nivel:</strong> {{ cursoSeleccionado?.nive_nombre }}</v-col>
       <v-col cols="12" sm="6" md="3"><strong>Grado:</strong> {{ cursoSeleccionado?.grad_nombre }}</v-col>
@@ -56,45 +56,51 @@
     </v-row>
 
     <!-- Filtros -->
-    <v-row class="mb-4">
-      <v-col cols="12" sm="6">
+    <v-row class="mb-2" text-body-2>
+      <v-col cols="12" sm="6" md="6">
         <v-select
           v-model="selectedBimestre"
           :items="bimestres"
           item-title="peed_nombre"
           return-object
           label="Bimestre"
-          dense
           solo
+          dense
+          class="text-body-2"
         />
       </v-col>
-      <v-col cols="12" sm="6">
+      <v-col cols="12" sm="6" md="6">
         <v-text-field
           v-model="searchQuery"
           label="Buscar alumno"
           clearable
           solo
+          dense
+          class="text-body-2"
         />
       </v-col>
     </v-row>
 
-    <v-row v-if="legendAbreviaturas.length" class="mb-2">
-      <v-col>
-        <strong>Leyenda de abreviaturas:</strong>
-        <v-chip
-          v-for="({ sigla, nombre }, i) in legendAbreviaturas"
-          :key="i"
-          small
-          class="ma-1"
-          color="grey lighten-3"
-          text-color="black"
-          label
-        >
-          {{ sigla }} = {{ nombre }}
-        </v-chip>
+    <!-- Leyenda de abreviaturas -->
+    <v-row v-if="legendAbreviaturas.length" class="mb-4 text-body-2">
+      <v-col cols="12" sm="6" md="6" class="pa-0 text-start">
+        <strong>Leyenda de abreviaturas</strong>
+        <div class="legend-chips mt-2">
+          <v-chip
+            v-for="({ sigla, nombre }, i) in legendAbreviaturas"
+            :key="i"
+            small
+            class="ma-1"
+            color="grey lighten-3"
+            text-color="black"
+            label
+          >
+            {{ sigla }} = {{ nombre }}
+          </v-chip>
+        </div>
       </v-col>
     </v-row>
-      
+
 
     <!-- Tabla Desktop -->
 <div v-if="isDesktop">
@@ -102,12 +108,13 @@
     No hay notas disponibles para este bimestre.
   </v-alert>
   <div v-if="filteredItems.length > 0">
+<div class="table-wrapper">
   <table class="custom-table">
-  <thead>
-    <tr>
-      <th rowspan="2" class="sticky-col col-num">N°</th>
-      <th rowspan="2" class="sticky-col col-name">Apellidos y Nombres</th>
-      <th rowspan="2" class="text-center">Promedio</th>
+    <thead>
+      <tr>
+       <th rowspan="2" class="sticky-col col-num">N°</th>
+       <th rowspan="2" class="sticky-col col-name">Apellidos y Nombres</th>
+       <th rowspan="2" class="sticky-col col-prom text-center">Promedio</th>
 
       <template v-for="hdr in summaryHeaders" :key="hdr.key">
       <th rowspan="2" class="vertical-header" :title="hdr.title">
@@ -133,7 +140,7 @@
     <tr v-for="(item, index) in filteredItems" :key="index">
       <td class="sticky-col col-num">{{ item.numero }}</td>
       <td class="sticky-col col-name text-left">{{ item.alumno }}</td>
-      <td>
+      <td class="sticky-col col-prom">
         <div class="cell-custom" :style="getNotaCellStyle(item.promedio)">
           {{ item.promedio }}
         </div>
@@ -160,6 +167,7 @@
     </tr>
   </tbody>
 </table>
+</div>
 </div>
 
 
@@ -613,11 +621,16 @@ function parseRegistroAuxiliar() {
       const comp_id = comp.comp_id
       comp.actividades.forEach(act => {
         row[`comp_${comp_id}_acti_${act.abreviatura}`] =
-          act.nota !== null ? `${act.nota} (${act.nota_letra})` : ""
+          act.nota !== null
+            ? `${act.nota}\n(${act.nota_letra})`
+            : ""
       })
       row[`comp_${comp_id}_logro`] =
-        comp.logro !== null ? `${comp.logro} (${comp.logro_letra})` : ""
+        comp.logro !== null
+          ? `${comp.logro}\n(${comp.logro_letra})`
+          : ""
     })
+
 
     return row
   })
@@ -633,160 +646,113 @@ function goBack() {
 </script>
 
 <style scoped>
+.table-wrapper {
+  overflow-x: auto;
+  position: relative; /* para que los sticky se calculen dentro de este contenedor */
+}
+
+/* -------------------------------------------
+   Base de la tabla
+-------------------------------------------- */
+.custom-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+  width: max-content;  /* ancho según contenido provoca scroll horizontal */
+  position: relative;
+}
+
+.custom-table th,
+.custom-table td {
+  font-size: 0.75rem;
+  border: 1px solid #ccc;
+  padding: 2px 4px;
+  background: white;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* -------------------------------------------
+   Cabeceras siempre visibles al desplazar vertical
+-------------------------------------------- */
+.custom-table thead th {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 5;
+}
+
+/* -------------------------------------------
+   Sólo estas tres columnas quedan fijas
+-------------------------------------------- */
+/* 1) N° */
+.custom-table th.col-num,
+.custom-table td.col-num {
+  position: sticky;
+  left: 0;
+  width: 50px;    /* ajusta al ancho que necesites */
+  background: white;
+  z-index: 6;
+}
+
+/* 2) Apellidos y Nombres */
+.custom-table th.col-name,
+.custom-table td.col-name {
+  position: sticky;
+  left: 50px;     /* = ancho de col-num */
+  min-width: 250px; /* ajusta según tu layout */
+  background: white;
+  z-index: 6;
+}
+
+/* 3) Promedio */
+.custom-table th.col-prom,
+.custom-table td.col-prom {
+  position: sticky;
+  left: calc(50px + 250px); /* = col-num + col-name */
+  min-width: 80px;           /* ajusta según tu layout */
+  background: white;
+  z-index: 6;
+}
+/* -------------------------------------------
+   Estilos de celdas de nota
+-------------------------------------------- */
 .cell-custom {
   padding: 4px 8px;
-  background-clip: padding-box;
-  transition: background-color 0.3s ease;
   border-radius: 6px;
   display: inline-block;
   min-width: 60px;
   text-align: center;
   white-space: pre-line;
 }
+
+.promedio-bold {
+  font-weight: bold;
+  background-color: #e0f7e9;
+  color: #2e7d32;
+}
+
 .eval-group-a {
   background-color: #f9f9f9;
 }
+
 .eval-group-b {
   background-color: #f0f0f0;
 }
-.prom-header-mobile {
-  font-weight: bold;
-  font-size: 16px;
-}
-.promedio-mobile {
-  font-weight: bold;
-  font-size: 18px;
-  margin-top: 4px;
-  display: inline-block;
-}
-.multiline2-ellipsis {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: normal;
-}
 
-.table-desktop {
-  width: 100%;
-  border-collapse: collapse;
-}
-.table-desktop th,
-.table-desktop td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  vertical-align: middle;
-  text-align: center;
-}
-.promedio-bold {
-  font-weight: bold;
-}
-th.promedio-bold {
-  font-weight: bold;
-  background-color: #e0f7e9;
-  color: #2e7d32;
-}
-.sticky-column-left {
-  position: sticky;
-  left: 0;
-  background-color: white;
-  z-index: 2;
-}
-.sticky-column-left {
-  position: sticky;
-  left: 0;
-  z-index: 3;
-  background-color: white;
-}
-
-.sticky-column-left-2 {
-  position: sticky;
-  left: 60px; /* ajusta si N° es más ancho */
-  z-index: 3;
-  background-color: white;
-}
-thead tr:nth-child(1) th,
-thead tr:nth-child(2) th {
-  position: sticky;
-  top: 0;
-  background-color: white;
-  z-index: 4;
-}
-
-.custom-table {
-  width: 100%;
-  border-collapse: collapse; /* elimina espacios entre celdas */
-  border: 1px solid #ccc; /* borde externo */
-  font-size: 0.8rem; /* o usa 12px si prefieres */
-}
-
-.custom-table th,
-.custom-table td {
-  border: 1px solid #ccc;
-  font-size: 12px;
-  padding: 6px 4px; /* también puedes reducir padding */
-  vertical-align: middle;
-  text-align: center;
-  background-color: white;
-}
-
-.promedio-bold {
-  font-weight: bold;
-  background-color: #e0f7e9;
-  color: #2e7d32;
-}
-
-.cell-custom {
-  padding: 4px 8px;
-  border-radius: 6px;
-  display: inline-block;
-  min-width: 60px;
-  text-align: center;
-}
-
-.sticky-col {
-  position: sticky;
-  background: white;
-  z-index: 3;
-  border-right: 1px solid #ccc;
-}
-
-
-.col-num {
-  width: 50px;
-  left: 0;
-}
-
-
-.col-name {
-  left: 50px;
-  z-index: 3;
-  text-align: left;
-  width: 250px; /* puedes ajustar este valor */
-  min-width: 200px; /* para evitar que se achique demasiado */
-  max-width: 300px;
-}
-/* 1) Acota el ancho para que el texto “wrapping” en vertical */
+/* Para los headers verticales truncados */
 .vertical-header {
   position: relative;
-  width: 32px;       /* ancho de la celda */
-  height: 100px;     /* altura mínima para que no quede muy apretado */
+  width: 32px;
+  height: 100px;
   padding: 0;
   border-bottom: 1px solid #ccc;
-}
-
-
-/* 2) Asegúrate de que la fila de cabeceras crezca */
-.custom-table thead th {
-  height: auto !important;
-  padding-bottom: 8px; /* un poco más de espacio abajo */
-}
-
-/* 3) Tooltip sobre el th si el texto quedó truncado */
-.vertical-header[title] {
-  position: relative;
   cursor: help;
 }
-
+.legend-chips {
+  display: flex;
+  flex-wrap: nowrap;    /* evita que se rompan en dos filas */
+  overflow-x: auto;     /* si faltase espacio, permite scroll horizontal */
+}
 </style>
+

@@ -1,14 +1,14 @@
 <template>
   <v-container class="pt-0 pb-2">
     <v-container class="pt-0 pb-2">
-  <!-- Mobile: Botón en primera fila (oculto en desktop) -->
-  <v-row class="d-md-none mt-0 mb-2">
-    <v-col cols="12" class="text-start">
-      <v-btn color="primary" @click="goBack" prepend-icon="mdi-arrow-left">
-        Regresar
-      </v-btn>
-    </v-col>
-  </v-row>
+      <!-- Mobile: Botón en primera fila (oculto en desktop) -->
+      <v-row class="d-md-none mt-0 mb-2">
+        <v-col cols="12" class="text-start">
+          <v-btn color="primary" @click="goBack" prepend-icon="mdi-arrow-left">
+            Regresar
+          </v-btn>
+        </v-col>
+      </v-row>
 
   <!-- Título centrado -->
   <v-row class="mb-1">
@@ -20,22 +20,16 @@
     </v-col>
   </v-row>
 
-  <!-- Mobile: curso centrado -->
-  <v-row class="d-md-none mt-0 mb-2">
-    <v-col cols="12" class="text-center">
-      <div class="text-subtitle-1 curso-highlight">
-        <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
-        <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
-      </div>
-    </v-col>
-  </v-row>
-
   <!-- Desktop: curso a la izquierda y botón a la derecha -->
   <v-row class="mb-2 align-center">
     <v-col cols="12" md="6" class="text-md-left">
       <div class="text-subtitle-1 curso-highlight">
         <v-icon small class="mr-1 text-secondary">mdi-book-open-page-variant</v-icon>
         <strong>Curso:</strong> {{ cursoSeleccionado?.aede_nombre }}
+      </div>
+      <div class="text-subtitle-1 curso-highlight mt-1">
+        <v-icon small class="mr-1 text-secondary">mdi-account</v-icon>
+        <strong>Docente:</strong> {{ cursoSeleccionado?.docente }}
       </div>
     </v-col>
     <v-col cols="12" md="6" class="text-md-right">
@@ -56,7 +50,7 @@
     </v-row>
 
     <!-- Filtros -->
-    <v-row class="mb-2">
+    <v-row class="mb-2" text-body-2>
       <v-col cols="12" sm="6" md="6">
         <v-select
           v-model="selectedBimestre"
@@ -64,8 +58,10 @@
           item-title="peed_nombre"
           return-object
           label="Bimestre"
-          dense
           solo
+          dense
+          class="text-body-2"
+          @change="onBimestreChange"
         />
       </v-col>
       <v-col cols="12" sm="6" md="6">
@@ -74,30 +70,37 @@
           label="Buscar alumno"
           clearable
           solo
+          dense
+          class="text-body-2"
         />
       </v-col>
     </v-row>
 
-    <v-row v-if="legendAbreviaturas.length" class="mb-4">
-      <v-col cols="12" sm="6" md="6" class="pa-0">
-        <strong>Leyenda de abreviaturas:</strong>
-        <div>
+    <!-- Leyenda de abreviaturas -->
+    <v-row v-if="isDesktop && legendAbreviaturas.length" class="mb-4 text-body-2">
+      <v-col cols="12" sm="12" md="12" class="pa-0 text-start">
+        <strong>Leyenda de abreviaturas</strong>
+        <div class="legend-chips mt-2">
           <v-chip
             v-for="({ sigla, nombre }, i) in legendAbreviaturas"
             :key="i"
-            small class="ma-1"
-            color="grey lighten-3" text-color="black" label
+            small
+            class="ma-1 legend-chip"
+            color="grey lighten-3"
+            text-color="black"
+            label
           >
             {{ sigla }} = {{ nombre }}
           </v-chip>
         </div>
       </v-col>
     </v-row>
-              
+
+
     <!-- Tabla Desktop -->
 <div v-if="isDesktop">
   <v-alert v-if="filteredItems.length === 0" type="info" class="mt-4">
-    No hay notas disponibles para este bimestre.
+    No hay calificaciones registradas para el <strong>{{ selectedBimestre.peed_nombre }}</strong>.
   </v-alert>
   <div v-if="filteredItems.length > 0">
 <div class="table-wrapper">
@@ -165,71 +168,15 @@
 
 </div>
 
-
     <!-- Tarjetas Móvil -->
-    <div v-else>
-      <v-alert v-if="dynamicHeaders.length === 0 || tableItems.length === 0" type="info">
-        No hay notas disponibles.
-      </v-alert>
-
-      <v-row v-else dense>
-        <v-col
-          v-for="(item, index) in paginatedItems"
-          :key="index"
-          cols="12"
-          class="mb-2"
-        >
-          <v-card outlined>
-            <v-card-title class="subtitle-2 font-weight-bold text-start">
-              <div class="multiline2-ellipsis">{{ item.numero }}. {{ item.alumno }}</div>
-            </v-card-title>
-            <v-card-text class="text-start">
-              <v-row dense>
-                <template v-for="(group, groupIndex) in groupedHeaders" :key="groupIndex">
-                  <v-col cols="12" :class="groupIndex % 2 === 0 ? 'eval-group-a' : 'eval-group-b'">
-                    <v-row dense>
-                      <v-col
-                        v-for="(header, i) in group"
-                        :key="i"
-                        cols="12"
-                      >
-                      <div :class="{ 'prom-header-mobile': header.key.includes('_prom') }">
-                        <strong>{{ header.mobileTitle || header.title }}:</strong>
-                        <span :style="getNotaCellStyle(item[header.key])">
-                          {{ item[header.key] }}
-                        </span>
-                      </div>
-                      </v-col>
-                    </v-row>
-                  </v-col>
-                </template>
-
-                <v-col cols="12" class="promedio-mobile">
-                  <strong>Promedio Bimestral:</strong>
-                  <div :style="getNotaCellStyle(item.promBim)">
-                    {{ item.promBim }}
-                  </div>
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
-
-      <!-- Paginación para móvil -->
-      <v-pagination
-        v-if="paginatedPages > 1"
-        v-model="currentPage"
-        :length="paginatedPages"
-        :total-visible="3"
-        show-first-last
-        first-icon="mdi-chevron-double-left"
-        last-icon="mdi-chevron-double-right"
-        prev-icon="mdi-chevron-left"
-        next-icon="mdi-chevron-right"
-        class="mt-2 custom-pagination"
-      />
-    </div>
+    <template v-else>
+        <MobileNotas
+          :items="filteredItems"
+          :groupedColumnHeaders="groupedColumnHeaders"
+          :legendAbreviaturas="legendAbreviaturas"
+          :nombrePeriodo="selectedBimestre.peed_nombre"
+        />
+    </template>
 
     <!-- Modal sin resultados -->
     <v-dialog v-model="dialogNoResults" max-width="400">
@@ -246,6 +193,7 @@
 </template>
 
 <script setup>
+import MobileNotas from '@/components/Estudios/Notas/MobileNotas.vue'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify' // <-- Importar
@@ -290,9 +238,6 @@ const groupedColumnHeaders = computed(() => {
 // Detecta si la pantalla es "md" o mayor
 const { mdAndUp } = useDisplay()
 const isDesktop = mdAndUp
-
-const currentPage = ref(1)
-const itemsPerPage = ref(5)
 const searchQuery = ref("") // Variable reactiva para la búsqueda
 
 const router = useRouter()
@@ -321,28 +266,16 @@ const cursoSeleccionado = ref(
     : null
 )
 
-  /* const doad_id = ref(
-    route.query.doad_id || (cursoSeleccionado.value ? cursoSeleccionado.value.doad_id : null  
-    ));
+
+/*  function getActivityName(colKey) {
+  // colKey viene como "comp_<id>_acti_<abreviatura>"
+  const parts = colKey.split('_acti_')
+  if (parts.length < 2) return colKey
+  const abreviatura = parts[1]
+  const entry = legendAbreviaturas.value.find(l => l.sigla === abreviatura)
+  return entry ? entry.nombre : abreviatura
+}
  */
-
-// Agrupamos los headers dinámicos por evaluación
-const groupedHeaders = computed(() => {
-  const groups = []
-  let tempGroup = []
-
-  dynamicHeaders.value.forEach(header => {
-    if (header.key.includes('_nota_')) {
-      tempGroup.push(header)
-    } else if (header.key.includes('_prom')) {
-      tempGroup.push(header)
-      groups.push(tempGroup)
-      tempGroup = []
-    }
-  })
-
-  return groups
-})
 
 function getNotaCellStyle(valor) {
   const notaStr = typeof valor === 'string' ? valor : '';
@@ -359,61 +292,6 @@ function getNotaCellStyle(valor) {
     textAlign: 'center'
   };
 }
-
-/* function getNotaNumero(valor) {
-  const notaStr = typeof valor === 'string' ? valor : ''
-  const match = notaStr.match(/^([\d.]+)/)
-  return match ? match[1] : ''
-}
-
-function getNotaLetra(valor) {
-  const notaStr = typeof valor === 'string' ? valor : ''
-  const match = notaStr.match(/\(([^)]+)\)/)
-  return match ? match[1] : ''
-}
-
- */
- /* async function fetchBimestres() {
-  try {
-    const profile = localStorage.getItem("profile")
-    const token = localStorage.getItem("token")
-
-    const baseUrl = "https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativoPlanCurricular.php"
-    const params = {
-      ai_doad_id: doad_id.value,
-      av_profile: profile
-    }
-
-    const configReq = {
-      params,
-      headers: { Authorization: `Bearer ${token}` }
-    }
-
-    const response = await axios.get(baseUrl, configReq)
-
-    if (response.data.status) {
-      bimestres.value = response.data.data
-
-      // ✅ Buscar el bimestre con estado A
-      let bimestreActivo = bimestres.value.find(b => b.aepe_estado === "A")
-
-      // ✅ Si no hay ninguno con estado A, usar peed_id = 1 por defecto
-      const peed_id = bimestreActivo?.peed_id || 1
-
-      // Guardar bimestre seleccionado
-      selectedBimestre.value = bimestreActivo || bimestres.value.find(b => b.peed_id === 1)
-
-      // Llamar API de notas con peed_id
-      await fetchRegistroAuxiliar(peed_id)
-    } else {
-      console.warn("No se encontraron bimestres.")
-    }
-  } catch (error) {
-    console.error("Error al obtener bimestres:", error)
-  }
-}
- */
-
 
 const alumnos = ref([])
 
@@ -436,7 +314,7 @@ const filteredItems = computed(() => {
   )
 })
 
-// Computed para paginación en vista móvil usando los items filtrados
+/* // Computed para paginación en vista móvil usando los items filtrados
 const paginatedItems = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   return filteredItems.value.slice(start, start + itemsPerPage.value)
@@ -444,7 +322,7 @@ const paginatedItems = computed(() => {
 
 const paginatedPages = computed(() => {
   return Math.ceil(filteredItems.value.length / itemsPerPage.value)
-})
+}) */
 
 // Cuando cambie bimestre, reconstruye tabla y reinicia paginación
 watch(selectedBimestre, async (nuevo) => {
@@ -461,8 +339,6 @@ onMounted(async () => {
     return
   }
 })
-
-
   
   // Si viene la información del API en el query, la usamos
   if (route.query.detalle) {
@@ -479,12 +355,14 @@ async function fetchRegistroAuxiliar(peed_id) {
     const profile = localStorage.getItem("profile")
     const ai_doad_id = cursoSeleccionado.value?.doad_id
     const ai_aude_id = cursoSeleccionado.value?.aude_id
+    const ai_grad_id = cursoSeleccionado.value?.grad_id
 
     const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaRegistroAuxiliar.php"
     const params = {
       ai_peed_id: peed_id,
       ai_doad_id,
       ai_aude_id,
+      ai_grad_id,
       av_profile: profile
     }
 
@@ -583,6 +461,7 @@ function parseRegistroAuxiliar() {
 
     headers.push({
       title: `${comp.comp_nombre} - LOGRO`,
+      //key: `comp_${comp_id}_logro`,
       key: `comp_${comp_id}_logro`,
       mobileTitle: `LOGRO`,
       sortable: false,
@@ -633,7 +512,11 @@ function parseRegistroAuxiliar() {
 
 
 function goBack() {
-  router.push({ name: 'DocenteMisCursos' })
+  router.push({ name: 'MisCursos' })
+}
+function onBimestreChange(bimestre) {
+  // bimestre.peed_id es el ai_peed_id que pide el API
+  fetchRegistroAuxiliar(bimestre.peed_id)
 }
 </script>
 
@@ -656,8 +539,9 @@ function goBack() {
 
 .custom-table th,
 .custom-table td {
+  font-size: 0.75rem;
   border: 1px solid #ccc;
-  padding: 4px 2px;
+  padding: 2px 4px;
   background: white;
   text-align: center;
   vertical-align: middle;
@@ -739,6 +623,48 @@ function goBack() {
   padding: 0;
   border-bottom: 1px solid #ccc;
   cursor: help;
+}
+.legend-chips {
+  display: flex;
+  flex-wrap: nowrap;   /* por defecto no envuelve */
+  gap: 4px;
+  overflow-x: auto;
+}
+
+/* En pantallas móviles (sm y xs), permitimos wrap */
+@media (max-width: 959px) {
+  .legend-chips {
+    flex-wrap: wrap;
+  }
+}
+@media (min-width: 960px) {
+  ::v-deep .legend-chips .legend-chip {
+    max-width: none !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* El contenido interno del chip también suele tener su propio wrapper */
+  ::v-deep .legend-chips .legend-chip .v-chip__content {
+    white-space: nowrap !important;
+  }
+}
+.highlight-average {
+  font-size: 1.1rem;
+  font-weight: bold;
+  background-color: #ffd54f;  /* amarillo claro */
+  color: #000;
+  padding: 8px 16px;
+}
+.allow-wrap {
+  white-space: normal !important;
+  word-break: break-word;
+}
+.no-bullet {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 0;
 }
 </style>
 
