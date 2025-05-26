@@ -20,7 +20,11 @@
       <v-card-actions>
         <v-spacer />
         <v-btn text @click="dialog = false">Cancelar</v-btn>
-        <v-btn color="primary" @click="emit('guardar', { ...local })">
+        <v-btn 
+          color="primary" 
+          :loading="loading"
+          :disabled="loading"
+          @click="emit('guardar', { ...local })">
           Guardar
         </v-btn>
       </v-card-actions>
@@ -34,7 +38,8 @@ import { reactive, watch, computed } from 'vue'
 /* props & emits */
 const props = defineProps({
   modelValue: Boolean,
-  competencia: Object
+  competencia: Object,
+  loading: Boolean
 })
 const emit = defineEmits(['update:modelValue', 'guardar'])
 

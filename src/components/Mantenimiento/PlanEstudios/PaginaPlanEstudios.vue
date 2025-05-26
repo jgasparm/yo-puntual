@@ -4,7 +4,9 @@
     <v-row class="py-3">
       <v-col cols="12">
         <h1 class="text-h5 font-weight-bold mb-1">📚 Plan de Estudios</h1>
-        <p class="text-subtitle-2">Gestiona el plan de estudios del año escolar {{ anioEscolar }}.</p>
+        <p class="text-subtitle-2">
+          Gestiona el plan de estudios del año escolar {{ anioEscolar }}.
+        </p>
       </v-col>
     </v-row>
 
@@ -70,49 +72,53 @@
           hide-default-header
           class="elevation-0"
         >
-        <template #body="{ items }">
-          <thead>
-            <tr>
-              <th>N°</th>
-              <th>Área Educativa</th>
-              <th>Nivel</th>
-              <th>Grado</th>
-              <th>Horas</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="(item, index) in items" :key="item.ples_id">
-              <tr :class="{ 'expanded-row': isExpanded(item.ples_id) }">
-                <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
-                <td>{{ item.ared_nombre }}</td>
-                <td>{{ item.nive_nombre }}</td>
-                <td>{{ item.grad_nombre }}</td>
-                <td>{{ item.ples_horas }}</td>
-                <td>
-                  <v-chip :color="item.ples_estado === 'A' ? 'green' : 'red'" small>
-                    {{ item.ples_estado === 'A' ? 'Activo' : 'Inactivo' }}
-                  </v-chip>
-                </td>
-                <td class="d-flex align-center">
-                  <v-btn icon variant="text" color="primary" @click.stop="abrirDialogoEditarPlan(item)">
-                    <v-icon>mdi-pencil</v-icon>
-                  </v-btn>
-                  <v-btn icon variant="text" color="primary" @click.stop="toggleExpand(item.ples_id)">
-                    <v-icon>{{ isExpanded(item.ples_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-                  </v-btn>
-                </td>
+          <template #body="{ items }">
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Área Educativa</th>
+                <th>Nivel</th>
+                <th>Grado</th>
+                <th>Horas</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
-
-              <tr v-if="isExpanded(item.ples_id)">
-                <td :colspan="7" class="pa-4" style="background: #fafafa;">
-                  <div class="d-flex justify-space-between align-center mb-2">
-                    <div class="font-weight-bold">Planes Curriculares</div>
-                    <v-btn small color="primary" variant="text" @click.stop="abrirDialogoAgregarCurricular(item)">
-                      +Agregar
+            </thead>
+            <tbody>
+              <template v-for="(item, index) in items" :key="item.ples_id">
+                <tr :class="{ 'expanded-row': isExpanded(item.ples_id) }">
+                  <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
+                  <td>{{ item.ared_nombre }}</td>
+                  <td>{{ item.nive_nombre }}</td>
+                  <td>{{ item.grad_nombre }}</td>
+                  <td>{{ item.ples_horas }}</td>
+                  <td>
+                    <v-chip :color="item.ples_estado === 'A' ? 'green' : 'red'" small>
+                      {{ item.ples_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                    </v-chip>
+                  </td>
+                  <td class="d-flex align-center">
+                    <v-btn icon variant="text" color="primary" @click.stop="abrirDialogoEditarPlan(item)">
+                      <v-icon>mdi-pencil</v-icon>
                     </v-btn>
-                  </div>
+                    <v-btn icon variant="text" color="primary" @click.stop="toggleExpand(item.ples_id)">
+                      <v-icon>
+                        {{ isExpanded(item.ples_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                      </v-icon>
+                    </v-btn>
+                  </td>
+                </tr>
+
+                <tr v-if="isExpanded(item.ples_id)">
+                  <td :colspan="7" class="pa-4" style="background: #fafafa;">
+                    <!-- Planes curriculares -->
+                    <div class="d-flex justify-space-between align-center mb-2">
+                      <div class="font-weight-bold">Planes Curriculares</div>
+                      <v-btn small color="primary" variant="text" @click.stop="abrirDialogoAgregarCurricular(item)">
+                        +Agregar
+                      </v-btn>
+                    </div>
+
                     <div v-if="planCurriculares[item.ples_id]?.length">
                       <v-simple-table dense>
                         <thead>
@@ -127,14 +133,12 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <!-- ❗️añadimos el filtro para descartar nulos -->
                           <template
-                            v-for="(curr, indexCurr) in (planCurriculares[item.ples_id] || []).filter(c => c && c.pacu_id)"
+                            v-for="(curr, idx) in planCurriculares[item.ples_id]"
                             :key="curr.pacu_id"
                           >
-                            <!-- Fila de cada plan curricular -->
                             <tr :class="{ 'expanded-row': isExpandedCompetencias(curr.pacu_id) }">
-                              <td>{{ indexCurr + 1 }}</td>
+                              <td>{{ idx + 1 }}</td>
                               <td>{{ curr.peed_nombre }}</td>
                               <td>{{ curr.aede_nombre }}</td>
                               <td>{{ curr.docente }}</td>
@@ -145,139 +149,102 @@
                                 </v-chip>
                               </td>
                               <td class="d-flex align-center">
-                                <v-btn icon variant="text" @click.stop="abrirDialogoEditarCurricular(curr, item.ples_id)">
+                                <v-btn
+                                  icon
+                                  variant="text"
+                                  @click.stop="abrirDialogoEditarCurricular(curr, item.ples_id)"
+                                >
                                   <v-icon>mdi-pencil</v-icon>
                                 </v-btn>
-                                <v-btn icon variant="text" @click.stop="toggleExpandCompetencias(curr.pacu_id)">
-                                  <v-icon>{{ isExpandedCompetencias(curr.pacu_id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                                <v-btn
+                                  icon
+                                  variant="text"
+                                  @click.stop="toggleExpandCompetencias(curr.pacu_id)"
+                                >
+                                  <v-icon>
+                                    {{ isExpandedCompetencias(curr.pacu_id)
+                                      ? 'mdi-chevron-up'
+                                      : 'mdi-chevron-down' }}
+                                  </v-icon>
                                 </v-btn>
                               </td>
                             </tr>
 
-                            <!-- Fila expandida: mostrar competencias -->
-                            <!-- COMPETENCIAS -->
+                            <!-- Competencias -->
                             <tr v-if="isExpandedCompetencias(curr.pacu_id)">
-                              <td colspan="7" class="pa-4" style="background:#fffde7;">
+                              <td colspan="7" class="pa-4" style="background: #fffde7;">
+                                <!-- Encabezado de Competencias -->
                                 <div class="d-flex justify-space-between align-center mb-2">
                                   <div class="font-weight-bold">Competencias</div>
-                                  <v-btn small color="primary" variant="text"
-                                        @click.stop="abrirDialogoAgregarCompetencia(curr, item)">
+                                  <v-btn
+                                    small
+                                    variant="text"
+                                    color="primary"
+                                    @click.stop="abrirDialogoAgregarCompetencia(curr, item)"
+                                  >
                                     +Agregar
                                   </v-btn>
                                 </div>
 
-                                <v-simple-table dense>
-                                  <thead>
-                                    <tr>
-                                      <th>N°</th><th>Nombre</th><th>Orden</th><th>Estado</th><th>Acciones</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    <template
-                                      v-for="(comp,cIdx) in (planCurricularCompetencias[curr.pacu_id]||[])"
-                                      :key="comp.pcco_id">
+                                <!-- Si hay competencias, muestro la tabla -->
+                                <div v-if="planCurricularCompetencias[curr.pacu_id]?.length">
+                                  <v-simple-table dense>
+                                    <thead>
                                       <tr>
-                                        <td>{{ cIdx+1 }}</td>
-                                        <td>{{ comp.comp_nombre }}</td>
-                                        <td>{{ comp.pcco_orden }}</td>
-                                        <td>
-                                          <v-chip :color="comp.pcco_estado==='A'?'green':'red'" small>
-                                            {{ comp.pcco_estado==='A'?'Activo':'Inactivo' }}
-                                          </v-chip>
-                                        </td>
-                                        <td>
-                                          <v-btn icon variant="text"
-                                          @click.stop="abrirDialogoEditarCompetencia(comp, curr.pacu_id)">
-                                            <v-icon>mdi-pencil</v-icon>
-                                          </v-btn>
-                                          <v-btn icon variant="text"
-                                                @click.stop="toggleExpandActividades(comp.pcco_id)">
-                                            <v-icon>
-                                              {{ isExpandedActividades(comp.pcco_id) ? 'mdi-chevron-up'
-                                                                                    : 'mdi-chevron-down' }}
-                                            </v-icon>
-                                          </v-btn>
-                                        </td>
+                                        <th>N°</th>
+                                        <th>Nombre</th>
+                                        <th>Orden</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
                                       </tr>
-
-                                      <!-- ACTIVIDADES & CAPACIDADES -->
-                                      <tr v-if="isExpandedActividades(comp.pcco_id)">
-                                        <td colspan="5">
-                                          <!-- Actividades -->
-                                          <div class="actividades-section mb-4">
-                                            <div class="d-flex justify-space-between mb-1">
-                                              <strong>Actividades</strong>
-                                              <v-btn small variant="text" color="primary"
-                                                    @click="abrirDialogoAgregarActividad(comp.pcco_id)">+Agregar</v-btn>
-                                            </div>
-                                            <v-simple-table dense v-if="planCompetenciaActividades[comp.pcco_id]?.length">
-                                              <thead><tr><th>N°</th><th>Nombre</th><th>Orden</th><th>Estado</th><th/></tr></thead>
-                                              <tbody>
-                                                <tr v-for="(act,aIdx) in planCompetenciaActividades[comp.pcco_id]"
-                                                    :key="act.pcca_id">
-                                                  <td>{{ aIdx+1 }}</td>
-                                                  <td>{{ act.acti_nombre }}</td>
-                                                  <td>{{ act.pcca_orden }}</td>
-                                                  <td>
-                                                    <v-chip :color="act.pcca_estado==='A'?'green':'red'" small>
-                                                      {{ act.pcca_estado==='A'?'Activo':'Inactivo' }}
-                                                    </v-chip>
-                                                  </td>
-                                                  <td>
-                                                    <v-btn icon variant="text"
-                                                          @click.stop="abrirDialogoEditarActividad(act)">
-                                                      <v-icon>mdi-pencil</v-icon>
-                                                    </v-btn>
-                                                  </td>
-                                                </tr>
-                                              </tbody>
-                                            </v-simple-table>
-                                            <em v-else>No hay actividades registradas.</em>
-                                          </div>
-
-                                          <!-- Capacidades -->
-                                          <div class="capacidades-section">
-                                            <div class="d-flex justify-space-between mb-1">
-                                              <strong>Capacidades</strong>
-                                              <v-btn small variant="text" color="primary"
-                                                    @click="abrirDialogoAgregarCapacidad(comp.pcco_id)">+Agregar</v-btn>
-                                            </div>
-                                            <v-simple-table dense
-                                              v-if="planCompetenciaCapacidades[comp.pcco_id]?.length">
-                                              <thead><tr><th>N°</th><th>Nombre</th><th>Orden</th><th>Estado</th><th/></tr></thead>
-                                              <tbody>
-                                                <tr v-for="(cap,k) in planCompetenciaCapacidades[comp.pcco_id]"
-                                                    :key="cap.pccc_id">
-                                                  <td>{{ k+1 }}</td>
-                                                  <td>{{ cap.capa_nombre }}</td>
-                                                  <td>{{ cap.pccc_orden }}</td>
-                                                  <td>
-                                                    <v-chip :color="cap.pccc_estado==='A'?'green':'red'" small>
-                                                      {{ cap.pccc_estado==='A'?'Activo':'Inactivo' }}
-                                                    </v-chip>
-                                                  </td>
-                                                  <td>
-                                                    <v-btn icon variant="text"
-                                                          @click.stop="abrirDialogoEditarCapacidad(cap)">
-                                                      <v-icon>mdi-pencil</v-icon>
-                                                    </v-btn>
-                                                  </td>
-                                                </tr>
-                                              </tbody>
-                                            </v-simple-table>
-                                            <em v-else>No hay capacidades registradas.</em>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    </template>
-                                  </tbody>
-                                </v-simple-table>
+                                    </thead>
+                                    <tbody>
+                                      <template
+                                        v-for="(comp, cIdx) in planCurricularCompetencias[curr.pacu_id]"
+                                        :key="comp.pcco_id"
+                                      >
+                                        <tr>
+                                          <td>{{ cIdx + 1 }}</td>
+                                          <td>{{ comp.comp_nombre }}</td>
+                                          <td>{{ comp.pcco_orden }}</td>
+                                          <td>
+                                            <v-chip :color="comp.pcco_estado === 'A' ? 'green' : 'red'" small>
+                                              {{ comp.pcco_estado === 'A' ? 'Activo' : 'Inactivo' }}
+                                            </v-chip>
+                                          </td>
+                                          <td class="d-flex align-center">
+                                            <v-btn
+                                              icon
+                                              variant="text"
+                                              @click.stop="abrirDialogoEditarCompetencia(comp, curr.pacu_id)"
+                                            >
+                                              <v-icon>mdi-pencil</v-icon>
+                                            </v-btn>
+                                            <v-btn
+                                              icon
+                                              variant="text"
+                                              @click.stop="toggleExpandActividades(comp.pcco_id)"
+                                            >
+                                              <v-icon>
+                                                {{ isExpandedActividades(comp.pcco_id)
+                                                  ? 'mdi-chevron-up'
+                                                  : 'mdi-chevron-down' }}
+                                              </v-icon>
+                                            </v-btn>
+                                          </td>
+                                        </tr>
+                                      </template>
+                                    </tbody>
+                                  </v-simple-table>
+                                </div>
+                                <!-- Si no hay competencias, muestro mensaje -->
+                                <div v-else class="text-center py-4">
+                                  <em>No hay competencias registradas.</em>
+                                </div>
                               </td>
                             </tr>
-
                           </template>
                         </tbody>
-
                       </v-simple-table>
                     </div>
                     <div v-else>No hay planes curriculares registrados.</div>
@@ -289,7 +256,7 @@
         </v-data-table>
       </v-card>
     </div>
-
+                
     <!-- VISTA MOBILE -->
     <div v-else>
       <v-row dense>
@@ -535,6 +502,7 @@
       :area-options="areaOptions"
       :nivel-options="nivelOptions"
       :grado-options="gradoOptions"
+      :loading="isSavingPlanEstudio"
       @guardar="guardarNuevoPlanEstudio"
     />
 
@@ -544,6 +512,7 @@
       :estado="planEstado"
       @update:horas="planHoras = $event"
       @update:estado="planEstado = $event"
+      :loading="isSavingPlanEstudio"
       @guardar="guardarPlanEstudio"
     />
 
@@ -551,6 +520,7 @@
       v-model="mostrarDialogoAgregarCurricular"
       :periodos-options="periodosOptions"
       :cursos-options="cursosOptions"
+      :loading="isSavingPlanCurricular"
       @guardar="guardarNuevoPlanCurricular"
     />
 
@@ -558,42 +528,53 @@
       v-model="mostrarDialogoEditarPlanCurricular"
       :horas="planCurricularHoras"
       :estado="planCurricularEstado"
+      :loading="isSavingPlanCurricular"
       @guardar="guardarPlanCurricular"
     />
 
     <DialogAgregarCompetencia
+      :key="`dlg-comp-${newCompetencia.pacu_id}-${Date.now()}`"
       v-model="mostrarDialogoAgregarCompetencia"
       :competencias="competenciasOptions"
+      v-model:pacu_id="newCompetencia.pacu_id"
+      v-model:comp_id="newCompetencia.comp_id"
+      v-model:pcco_orden="newCompetencia.pcco_orden"
+      :loading="isSavingCompetencia"
       @guardar="guardarNuevaCompetencia"
     />
 
     <DialogEditarCompetencia
       v-model="mostrarDialogoEditarCompetencia"
       :competencia="competenciaSeleccionada"
+      :loading="isSavingCompetencia"
       @guardar="guardarCompetenciaActualizada"
     />
 
     <DialogAgregarActividad
       v-model="mostrarDialogoAgregarActividad"
       :actividades="actividadesDisponibles"
+      :loading="isSavingActividad"
       @guardar="guardarNuevaActividad"
     />
 
     <DialogEditarActividad
       v-model="mostrarDialogoEditarActividad"
       :actividad="actividadSeleccionada"
+      :loading="isSavingActividad"
       @guardar="guardarActividadEditada"
     />
 
     <DialogAgregarCapacidad
       v-model="mostrarDialogoAgregarCapacidad"
       :capacidades="capacidadesDisponibles"
+      :loading="isSavingCapacidad"
       @guardar="guardarNuevaCapacidad"
     />
 
     <DialogEditarCapacidad
       v-model="mostrarDialogoEditarCapacidad"
       :capacidad="capacidadSeleccionada"
+      :loading="isSavingCapacidad"
       @guardar="guardarCapacidadEditada"
     />
 
@@ -602,7 +583,7 @@
 
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, reactive  } from 'vue'
 import { useDisplay } from 'vuetify'
 import axios from 'axios'
 
@@ -620,10 +601,25 @@ import DialogEditarActividad    from '@/components/Mantenimiento/PlanEstudios/Di
 import DialogAgregarCapacidad   from '@/components/Mantenimiento/PlanEstudios/DialogAgregarCapacidad.vue'
 import DialogEditarCapacidad    from '@/components/Mantenimiento/PlanEstudios/DialogEditarCapacidad.vue'
 
+const isSavingPlanEstudio = ref(false)
+const isSavingPlanCurricular = ref(false)
+const isSavingCompetencia = ref(false)
+const isSavingActividad   = ref(false)
+const isSavingCapacidad   = ref(false)
+
+const newCompetencia = reactive({
+   pacu_id: null,
+   comp_id: null,
+   pcco_orden: null
+})
+
+
+
 /* -------------------------------------------
    GUARDAR – Nueva competencia en un Plan Curricular
 ------------------------------------------- */
 async function guardarNuevaCompetencia ({ comp_id, pcco_orden, estado }) {
+  isSavingCompetencia.value = true
   try {
     // Asegúrate de tener el plan curricular padre
     if (!planCurricularPadre.value) return
@@ -658,6 +654,8 @@ async function guardarNuevaCompetencia ({ comp_id, pcco_orden, estado }) {
     snackbarMessage.value = err.message
     snackbarColor.value   = 'error'
     snackbar.value        = true
+  } finally {
+    isSavingCompetencia.value = false
   }
 }
 
@@ -666,6 +664,7 @@ async function guardarNuevaCompetencia ({ comp_id, pcco_orden, estado }) {
    GUARDAR – Actualizar una competencia
 ------------------------------------------- */
 async function guardarCompetenciaActualizada (datos) {
+  isSavingCompetencia.value = true
   try {
     if (!competenciaSeleccionada.value) return
 
@@ -702,6 +701,8 @@ async function guardarCompetenciaActualizada (datos) {
     snackbarMessage.value = err.message || 'Error al actualizar la competencia.'
     snackbarColor.value   = 'error'
     snackbar.value        = true
+  } finally {
+    isSavingCompetencia.value = false
   }
 }
 
@@ -735,6 +736,7 @@ async function cargarCompetenciasDisponibles (pacuId, aredId, niveId) {
 
 /* Guardar NUEVA actividad */
 async function guardarNuevaActividad ({ acti_id, pcca_orden, estado }) {   // 👈 NUEVO
+  isSavingActividad.value = true
   try {
     const payload = {
       ai_pcco_id    : actividadSeleccionada.value.pcco_id,
@@ -755,11 +757,14 @@ async function guardarNuevaActividad ({ acti_id, pcca_orden, estado }) {   // �
     snackbarMessage.value = e.message || 'Error al registrar la actividad'
     snackbarColor.value   = 'error'
     snackbar.value        = true
+  } finally {
+    isSavingActividad.value = false
   }
 }
 
 /* Guardar EDICIÓN de actividad */
 async function guardarActividadEditada ({ pcca_orden, estado }) {         // 👈 NUEVO
+  isSavingActividad.value = true
   try {
     const payload = {
       ai_pcca_id    : actividadSeleccionada.value.pcca_id,
@@ -780,6 +785,8 @@ async function guardarActividadEditada ({ pcca_orden, estado }) {         // �
     snackbarMessage.value = e.message || 'Error al actualizar la actividad'
     snackbarColor.value   = 'error'
     snackbar.value        = true
+  } finally {
+    isSavingActividad.value = false
   }
 }
 
@@ -789,6 +796,7 @@ async function guardarActividadEditada ({ pcca_orden, estado }) {         // �
 
 /* Guardar NUEVA capacidad */
 async function guardarNuevaCapacidad ({ capa_id, pccc_orden, estado }) {   // 👈 NUEVO
+  isSavingCapacidad.value = true
   try {
     const payload = {
       ai_pcco_id    : capacidadSeleccionada.value.pcco_id,
@@ -809,11 +817,14 @@ async function guardarNuevaCapacidad ({ capa_id, pccc_orden, estado }) {   // �
     snackbarMessage.value = e.message || 'Error al registrar la capacidad'
     snackbarColor.value   = 'error'
     snackbar.value        = true
+  } finally {
+    isSavingCapacidad.value = false
   }
 }
 
 /* Guardar EDICIÓN de capacidad */
 async function guardarCapacidadEditada ({ pccc_orden, estado }) {         // 👈 NUEVO
+  isSavingCapacidad.value = true
   try {
     const payload = {
       ai_pccc_id    : capacidadSeleccionada.value.pccc_id,
@@ -834,6 +845,8 @@ async function guardarCapacidadEditada ({ pccc_orden, estado }) {         // �
     snackbarMessage.value = e.message || 'Error al actualizar la capacidad'
     snackbarColor.value   = 'error'
     snackbar.value        = true
+  } finally {
+    isSavingCapacidad.value = false
   }
 }
 
@@ -930,6 +943,10 @@ const planCurricularPadre              = ref(null) //  para saber a qué pacu pe
 
 
 async function abrirDialogoAgregarCompetencia(planCurricular, planEstudio) {
+   newCompetencia.pacu_id    = planCurricular.pacu_id
+   newCompetencia.comp_id = null
+   newCompetencia.pcco_orden = null
+
   // 1.  Guarda el plan curricular al que se van a añadir competencias
   planCurricularPadre.value = planCurricular
 
@@ -1227,6 +1244,7 @@ function abrirDialogoEditarCurricular(curricular, plesIdPadre) {
 
 /** FUNCIONES GUARDAR */
 async function guardarNuevoPlanEstudio(plan) {
+  isSavingPlanEstudio.value = true
   try {
     const payload = {
       ai_grad_id: plan.grad_id,
@@ -1252,10 +1270,13 @@ async function guardarNuevoPlanEstudio(plan) {
     snackbarMessage.value = 'Error de conexión al registrar el plan de estudio.'
     snackbarColor.value = 'error'
     snackbar.value = true
+  } finally {
+    isSavingPlanEstudio.value = false
   }
 }
 
 async function guardarPlanEstudio() {
+  isSavingPlanEstudio.value = true
   try {
     if (!planSeleccionado.value) {
       snackbarMessage.value = 'No hay plan seleccionado para actualizar.'
@@ -1290,10 +1311,13 @@ async function guardarPlanEstudio() {
     snackbarMessage.value = 'Error de conexión al actualizar el plan de estudio.'
     snackbarColor.value = 'error'
     snackbar.value = true
+  } finally {
+    isSavingPlanEstudio.value = false
   }
 }
 
 async function guardarNuevoPlanCurricular(nuevoCurricular) {
+  isSavingPlanCurricular.value = true
   try {
     const payload = {
       ai_ples_id: planSeleccionado.value.ples_id, // ID del plan de estudio expandido
@@ -1323,10 +1347,13 @@ async function guardarNuevoPlanCurricular(nuevoCurricular) {
     snackbarMessage.value = 'Error de conexión al registrar el plan curricular.';
     snackbarColor.value = 'error';
     snackbar.value = true;
+  } finally {
+    isSavingPlanCurricular.value = false
   }
 }
 
 async function guardarPlanCurricular(nuevoCurricular) {
+  isSavingPlanCurricular.value = true
   try {
     if (!planCurricularSeleccionado.value) {
       snackbarMessage.value = 'No hay plan curricular seleccionado para actualizar.';
@@ -1367,6 +1394,8 @@ async function guardarPlanCurricular(nuevoCurricular) {
     snackbarMessage.value = 'Error de conexión al actualizar el plan curricular.';
     snackbarColor.value = 'error';
     snackbar.value = true;
+  } finally {
+    isSavingPlanCurricular.value = false
   }
 }
 
@@ -1376,8 +1405,8 @@ async function cargarPeriodos() {
     const { data } = await axiosInstance.get(`wsListaPeriodoEducativo.php?av_profile=${profile}`);
     if (data.status) {
       periodosOptions.value = data.data.map(p => ({
-        title: p.peed_nombre,
-        key: p.peed_id
+        title: p.periodo,
+        key: p.id
       }));
     }
   } catch (error) {

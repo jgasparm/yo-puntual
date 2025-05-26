@@ -28,7 +28,13 @@
 
       <v-card-actions class="justify-end">
         <v-btn variant="text" @click="cerrar">Cancelar</v-btn>
-        <v-btn color="primary" :disabled="!internalHoras" @click="guardar">Guardar</v-btn>
+        <v-btn 
+          color="primary"
+          :loading="loading"
+          :disabled="loading || !internalHoras" 
+          @click="guardar">
+          Guardar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -46,7 +52,8 @@ const estadoOptions = [
 const props = defineProps({
   modelValue: Boolean,
   horas: Number,
-  estado: String
+  estado: String,
+  loading: Boolean
 })
 
 const emit = defineEmits(['update:modelValue', 'update:horas', 'update:estado', 'guardar'])

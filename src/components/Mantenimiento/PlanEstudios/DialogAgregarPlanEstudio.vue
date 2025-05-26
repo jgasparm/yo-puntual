@@ -48,7 +48,11 @@
 
       <v-card-actions class="justify-end">
         <v-btn variant="text" @click="cerrar">Cancelar</v-btn>
-        <v-btn color="primary" :disabled="!puedeGuardar" @click="guardar">
+        <v-btn 
+          color="primary"
+          :loading="loading"
+          :disabled="loading || !puedeGuardar" 
+          @click="guardar">
           Guardar
         </v-btn>
       </v-card-actions>
@@ -63,7 +67,8 @@ const props = defineProps({
   modelValue: Boolean,
   areaOptions: Array,
   nivelOptions: Array,
-  gradoOptions: Array
+  gradoOptions: Array,
+  loading: Boolean
 })
 const emit = defineEmits(['update:modelValue', 'guardar'])
 

@@ -10,8 +10,13 @@
         <v-card-actions>
           <v-spacer/>
           <v-btn text @click="$emit('update:modelValue', false)">Cancelar</v-btn>
-          <v-btn color="primary" :disabled="!local.acti_id || !local.pcca_orden"
-                 @click="$emit('guardar', { ...local })">Guardar</v-btn>
+          <v-btn 
+            color="primary"
+            :loading="loading"
+            :disabled="loading || !local.acti_id || !local.pcca_orden"
+            @click="$emit('guardar', { ...local })">
+            Guardar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -23,7 +28,8 @@
     /* props + emit */
     const props = defineProps({
       modelValue : Boolean,
-      actividades: Array
+      actividades: Array,
+      loading: Boolean
     })
     const emit  = defineEmits(['update:modelValue','guardar'])
 

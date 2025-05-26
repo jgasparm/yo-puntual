@@ -707,14 +707,14 @@
                 :items="competenciasOptions"
                 item-text="title"
                 item-value="key"
-                v-model="newEvaluacion.comp_id"
+                v-model="newCompetencia.comp_id"
               />
             </v-col>
             <v-col cols="12">
               <v-text-field
                 label="Orden"
                 type="number"
-                v-model="newEvaluacion.pcco_orden"
+                v-model="newCompetencia.pcco_orden"
               />
             </v-col>
           </v-row>
@@ -722,7 +722,13 @@
         <v-card-actions>
           <v-spacer />
           <v-btn text @click="mostrarDialogoAgregarCompetencia = false">Cancelar</v-btn>
-          <v-btn color="primary" @click="guardarNuevaEvaluacion">Guardar</v-btn>
+          <v-btn 
+            color="primary"
+            :loading="isSavingCompetencia"
+            :disabled="isSavingCompetencia"
+            @click="guardarNuevaCompetencia">
+            Guardar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -755,7 +761,13 @@
         <v-card-actions>
           <v-spacer />
           <v-btn text @click="cerrarDialogoEditarEvaluacion">Cancelar</v-btn>
-          <v-btn color="primary" @click="guardarCompetenciaActualizada">Guardar</v-btn>
+          <v-btn
+            color="primary" 
+            :loading="isSavingCompetencia"
+            :disabled="isSavingCompetencia"
+            @click="guardarCompetenciaActualizada">
+            Guardar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -780,7 +792,11 @@
     </v-card-text>
     <v-card-actions>
       <v-btn text @click="mostrarDialogoAgregarActividad = false">Cancelar</v-btn>
-      <v-btn color="primary" :disabled="!nuevaActividad.acti_id || !nuevaActividad.pcca_orden" @click="guardarNuevaActividad">
+      <v-btn
+        color="primary" 
+        :disabled="isSavingActividad || !nuevaActividad.acti_id || !nuevaActividad.pcca_orden"
+        :loading="isSavingActividad"
+        @click="guardarNuevaActividad">
         Guardar
       </v-btn>
     </v-card-actions>
@@ -806,7 +822,13 @@
     </v-card-text>
     <v-card-actions>
       <v-btn text @click="mostrarDialogoEditarActividad = false">Cancelar</v-btn>
-      <v-btn color="primary" @click="guardarActividadEditada">Guardar</v-btn>
+      <v-btn 
+        color="primary"
+        :loading="isSavingCompetenciaActividad"
+        :disabled="isSavingCompetenciaActividad"
+        @click="guardarActividadEditada">
+        Guardar
+      </v-btn>
     </v-card-actions>
   </v-card>
 </v-dialog>
@@ -831,7 +853,11 @@
     </v-card-text>
     <v-card-actions>
       <v-btn text @click="mostrarDialogoAgregarCapacidad = false">Cancelar</v-btn>
-      <v-btn color="primary" :disabled="!nuevaCapacidad.capa_id || !nuevaCapacidad.pccc_orden" @click="guardarNuevaCapacidad">
+      <v-btn 
+        color="primary" 
+        :disabled="isSavingCapacidad || !nuevaCapacidad.capa_id || !nuevaCapacidad.pccc_orden"
+        :loading="isSavingCapacidad"
+        @click="guardarNuevaCapacidad">
         Guardar
       </v-btn>
     </v-card-actions>
@@ -857,7 +883,13 @@
     </v-card-text>
     <v-card-actions>
       <v-btn text @click="mostrarDialogoEditarCapacidad = false">Cancelar</v-btn>
-      <v-btn color="primary" @click="guardarCapacidadEditada">Guardar</v-btn>
+      <v-btn 
+        color="primary"
+        :loading="isSavingCapacidad"
+        :disabled="isSavingCapacidad"
+        @click="guardarCapacidadEditada">
+        Guardar
+      </v-btn>
     </v-card-actions>
   </v-card>
 </v-dialog>
@@ -869,6 +901,10 @@
 import { ref, computed, onMounted, watch, reactive } from 'vue'
 import axios from 'axios'
 import { useDisplay } from 'vuetify'
+
+const isSavingCompetencia = ref(false)
+const isSavingActividad   = ref(false)
+const isSavingCapacidad   = ref(false)
 
 const capacidadesDisponibles = ref([])
 const mostrarDialogoAgregarCapacidad = ref(false)
@@ -966,7 +1002,7 @@ const planSeleccionadoEstado = ref('')
 const competenciasOptions = ref([])
 const mostrarDialogoAgregarCompetencia = ref(false)
 const mostrarDialogoEditarCompetencia = ref(false)
-const newEvaluacion = reactive({
+const newCompetencia = reactive({
   pacu_id: null,
   comp_id: null,
   pcco_orden: null
@@ -1139,9 +1175,9 @@ function isEvaluationExpanded(pacuId) {
 
 // --- EVALUACIONES: Agregar / Editar ---
 function abrirDialogoAgregarCompetencia(planCurr, ples_id) {
-  newEvaluacion.pacu_id = planCurr.pacu_id
-  newEvaluacion.comp_id = null
-  newEvaluacion.pcco_orden = null
+  newCompetencia.pacu_id = planCurr.pacu_id
+  newCompetencia.comp_id = null
+  newCompetencia.pcco_orden = null
 
   const planPadre = planesEstudio.value.find(p => p.ples_id === ples_id)
   if (planPadre) {
@@ -1157,25 +1193,28 @@ function abrirDialogoAgregarCompetencia(planCurr, ples_id) {
 }
 
 
-async function guardarNuevaEvaluacion() {
+async function guardarNuevaCompetencia() {
+  isSavingCompetencia.value = true
   try {
     const params = new URLSearchParams()
-    params.append('ai_pacu_id', newEvaluacion.pacu_id)
-    params.append('ai_comp_id', newEvaluacion.comp_id)
+    params.append('ai_pacu_id', newCompetencia.pacu_id)
+    params.append('ai_comp_id', newCompetencia.comp_id)
     //params.append('adc_pcev_peso_porcentaje', competenciaSeleccionada.value.pcev_peso_porcentaje)
-    params.append('adc_pcco_orden', newEvaluacion.pcco_orden)
+    params.append('adc_pcco_orden', newCompetencia.pcco_orden)
     params.append('av_profile', profile)
 
     const { data } = await axiosInstance.post('wsRegistraPlanCurricularCompetencia.php', params)
     if (data.status) {
       mostrarDialogoAgregarCompetencia.value = false
       // Refrescamos las competencias
-      await obtenerPlanCurricularCompetencias(newEvaluacion.pacu_id)
+      await obtenerPlanCurricularCompetencias(newCompetencia.pacu_id)
     } else {
       console.error('Error al guardar nueva competencia:', data.message)
     }
   } catch (err) {
     console.error('Error al guardar nueva competencia:', err)
+  } finally {
+    isSavingCompetencia.value = false
   }
 }
 
@@ -1186,6 +1225,7 @@ function abrirDialogoEditarCompetencia(compItem) {
   mostrarDialogoEditarCompetencia.value = true
 }
 async function guardarCompetenciaActualizada() {
+  isSavingCompetencia.value = true
   try {
     const params = new URLSearchParams()
     params.append('ai_pcco_id', competenciaSeleccionada.value.pcco_id)
@@ -1208,6 +1248,8 @@ async function guardarCompetenciaActualizada() {
     }
   } catch (err) {
     console.error('Error al actualizar competencia:', err)
+  } finally {
+    isSavingCompetencia.value = false
   }
 }
 
@@ -1267,6 +1309,7 @@ function abrirDialogoAgregarCapacidad(pcco_id) {
 }
 
 async function guardarNuevaCapacidad() {
+  isSavingCapacidad.value = true
   const { pcco_id, capa_id, pccc_orden } = nuevaCapacidad.value
   const params = new URLSearchParams()
   params.append('ai_pcco_id', pcco_id)
@@ -1282,6 +1325,8 @@ async function guardarNuevaCapacidad() {
     }
   } catch (err) {
     console.error('Error al guardar capacidad:', err)
+  } finally {
+    isSavingCapacidad.value = false
   }
 }
 
@@ -1293,6 +1338,7 @@ function abrirDialogoEditarCapacidad(capacidad) {
 }
 
 async function guardarCapacidadEditada() {
+  isSavingCapacidad.value = true
   const { pccc_id, pcco_id, pccc_orden } = capacidadSeleccionada.value
   const estado = capacidadSeleccionadaEstado.value === 'Activo' ? 'A' : 'I'
   const params = new URLSearchParams()
@@ -1309,6 +1355,8 @@ async function guardarCapacidadEditada() {
     }
   } catch (err) {
     console.error('Error al actualizar capacidad:', err)
+  } finally {
+    isSavingCapacidad.value = false
   }
 }
 
@@ -1448,6 +1496,7 @@ function abrirDialogoAgregarActividad(pcco_id) {
 }
 
 async function guardarNuevaActividad() {
+  isSavingActividad.value = true
   const { pcco_id, acti_id, pcca_orden } = nuevaActividad.value
   if (!pcco_id || !acti_id || !pcca_orden) return
 
@@ -1467,6 +1516,8 @@ async function guardarNuevaActividad() {
     }
   } catch (error) {
     console.error('Error al guardar actividad:', error)
+  } finally {
+    isSavingActividad.value = false
   }
 }
 
@@ -1481,6 +1532,7 @@ function abrirDialogoEditarActividad(actividad) {
 
 
 async function guardarActividadEditada() {
+  isSavingActividad.value = true
   const { pcca_id, pcco_id, pcca_orden } = actividadSeleccionada.value
   const estado = actividadSeleccionadaEstado.value === 'Activo' ? 'A' : 'I'
 
@@ -1500,6 +1552,8 @@ async function guardarActividadEditada() {
     }
   } catch (error) {
     console.error('Error al actualizar actividad:', error)
+  } finally {
+    isSavingActividad.value = false
   }
 }
 

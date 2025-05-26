@@ -40,7 +40,11 @@
   
         <v-card-actions class="justify-end">
           <v-btn text @click="cerrar">Cancelar</v-btn>
-          <v-btn color="primary" :disabled="!internalPeriodo || !internalCurso || !internalHoras" @click="guardar">
+          <v-btn 
+            color="primary"
+            :loading="loading"
+            :disabled="loading ||!internalPeriodo || !internalCurso || !internalHoras" 
+            @click="guardar">
             Guardar
           </v-btn>
         </v-card-actions>
@@ -55,7 +59,8 @@
   const props = defineProps({
     modelValue: Boolean,
     periodosOptions: Array,
-    cursosOptions: Array
+    cursosOptions: Array,
+    loading: Boolean
   })
   
   // Emits

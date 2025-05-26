@@ -20,7 +20,8 @@
         <v-btn text
                @click="emit('update:modelValue', false)">Cancelar</v-btn>
         <v-btn color="primary"
-               :disabled="!local.capa_id || !local.pccc_orden"
+               :loading="loading"
+               :disabled="loading || !local.capa_id || !local.pccc_orden"
                @click="emit('guardar', { ...local })">Guardar</v-btn>
       </v-card-actions>
     </v-card>
@@ -33,7 +34,8 @@ import { reactive, watch, computed } from 'vue'
 /* props & emits */
 const props = defineProps({
   modelValue  : Boolean,
-  capacidades : Array
+  capacidades : Array,
+  loading: Boolean
 })
 const emit = defineEmits(['update:modelValue','guardar'])
 

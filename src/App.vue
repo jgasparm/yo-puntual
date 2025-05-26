@@ -2,20 +2,14 @@
   <v-app>
     <!-- Overlay global para loading -->
     <GlobalLoading />
-
-<!--     Contenedor principal de contenido
-    <v-main>
-      <v-container fluid class="pa-4">
-        Aquí se muestra la vista actual
-      </v-container>
-    </v-main> -->
-
     <router-view />
+    <ChatWidget />
   </v-app>
 </template>
 
 <script setup>
 import GlobalLoading from '@/components/GlobalLoading.vue'
+import ChatWidget from '@/components/ChatWidget.vue'
 </script>
 
 <style>
@@ -55,12 +49,6 @@ import GlobalLoading from '@/components/GlobalLoading.vue'
   max-width: 100%;  /* Evita que crezca más allá del contenedor */
   overflow: hidden;  /* Evita que elementos internos empujen el diseño */
 }
-
-/* .custom-pagination .v-pagination__navigation {
-  display: inline-flex !important;
-  opacity: 1 !important;
-  visibility: visible
-} */
 
 .custom-pagination .v-pagination__item,
 .custom-pagination .v-pagination__navigation {

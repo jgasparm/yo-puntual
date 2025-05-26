@@ -33,7 +33,13 @@
 
       <v-card-actions class="justify-end">
         <v-btn text  @click="dialogVisible = false">Cancelar</v-btn>
-        <v-btn color="primary" @click="onGuardar">Guardar</v-btn>
+        <v-btn 
+          color="primary"
+          :loading="loading"
+          :disabled="loading || !comp_id || !pcco_orden"
+          @click="onGuardar">
+          Guardar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -45,7 +51,8 @@ import { ref, computed, defineProps, defineEmits } from 'vue'
 /* ---------- props y emits estándar para v-model ---------------- */
 const props = defineProps({
   modelValue   : { type: Boolean, default: false }, // <-- v-model
-  competencias : { type: Array,   default: () => [] }
+  competencias : { type: Array,   default: () => [] },
+  loading      : { type: Boolean, default: false }
 })
 const emit = defineEmits(['update:modelValue', 'guardar'])
 

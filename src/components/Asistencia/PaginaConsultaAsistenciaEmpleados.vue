@@ -1,49 +1,61 @@
 <template>
   <v-container>
+    <v-row class="mb-4">
+      <v-col cols="12">
+        <h2 class="text-h5 font-weight-bold text-primary">
+          👨‍💼 Consulta de Asistencia de los Empleados
+        </h2>
+        <p class="text-body-2 text-grey-darken-1">
+          Visualiza los registros de asistencia del trabajador para un rango de fechas específico.
+        </p>
+      </v-col>
+    </v-row>
+
     <template v-if="isDesktop">
-      <v-card class="pa-2 mb-2">
-        <v-row dense align="center">
-          <v-col cols="3">
-            <v-select
-              label="Área"
-              :items="areas"
-              v-model="filtros.area"
-              item-title="area_descripcion"
-              item-value="area_id"
+      <v-card class="pa-4 mb-4">
+        <!-- Primera fila: Área + Empleado -->
+        <v-row dense align="center" class="mb-4">
+      <v-col cols="12" md="6">
+        <v-select
+          label="Área"
+          :items="areas"
+          v-model="filtros.area"
+          item-title="area_descripcion"
+          item-value="area_id"
+          dense
+          outlined
+        />
+      </v-col>
+      <v-col cols="12" md="6">
+        <v-autocomplete
+          label="Empleado"
+          :items="empleados"
+          v-model="filtros.empleado"
+          :item-title="itemTitle"
+          item-value="pers_id"
+          return-object
+          dense
+          outlined
+          clearable
+        />
+      </v-col>
+    </v-row>
+
+        <!-- Segunda fila: Fechas + Botón -->
+        <v-row dense align="center" class="mb-0">
+      <v-col cols="12" md="3">
+        <v-dialog v-model="menuFechaFinal" persistent max-width="320">
+          <template #activator="{ props }">
+            <v-text-field
+              v-bind="props"
+              label="Fecha Final"
+              v-model="filtros.fechaFinal"
+              prepend-icon="mdi-calendar"
               dense
               outlined
-              solo
-              hide-no-data
+              readonly
             />
-          </v-col>
-          <v-col cols="3">
-            <v-autocomplete
-              label="Empleado"
-              :items="empleados"
-              v-model="filtros.empleado"
-              :item-title="itemTitle"
-              item-value="pers_id"
-              return-object
-              dense
-              outlined
-              clearable
-              solo
-              hide-no-data
-            />
-          </v-col>
-          <v-col cols="2">
-            <v-dialog v-model="menuFechaInicio" persistent max-width="320">
-              <template #activator="{ props }">
-                <v-text-field
-                  v-bind="props"
-                  label="Fecha Inicial"
-                  v-model="filtros.fechaInicio"
-                  prepend-icon="mdi-calendar"
-                  dense
-                  outlined
-                  readonly
-                />
-              </template>
+          </template>
               <v-card>
                 <v-card-title class="text-subtitle-2 font-weight-bold">
                   Seleccionar Fecha
@@ -62,7 +74,8 @@
               </v-card>
             </v-dialog>
           </v-col>
-          <v-col cols="2">
+
+          <v-col cols="12" md="3" class="mx-2">
             <v-dialog v-model="menuFechaFinal" persistent max-width="320">
               <template #activator="{ props }">
                 <v-text-field
@@ -93,8 +106,9 @@
               </v-card>
             </v-dialog>
           </v-col>
-          <v-col cols="2" class="d-flex justify-end">
-            <v-btn color="primary" small @click="consultarAsistencia">
+
+          <v-col cols="12" md="2" class="mx-2 d-flex justify-end">
+            <v-btn color="primary" large @click="consultarAsistencia">
               <v-icon left size="18">mdi-magnify</v-icon>
               Consultar
             </v-btn>
@@ -388,8 +402,8 @@ export default {
   data() {
     return {
       filtros: {
-        area: 0,
-        empleado: 0,
+        area: '0',
+        empleado: '0',
         fechaInicio: this.formatearFecha(new Date()),
         fechaFinal: this.formatearFecha(new Date()),
       },
@@ -449,8 +463,7 @@ export default {
           const data = response.data.data;
           this.areasAll = data;
           this.areas = data;
-          // this.areas = [{ area_id: 0, area_descripcion: "TODOS" }, ...this.areasAll];
-          this.filtros.area = 0;
+          this.filtros.area = '0';
         } else {
           console.error("Error al obtener áreas:", response.data.message);
         }
@@ -467,10 +480,11 @@ export default {
           const data = response.data.data;
           this.empleadosAll = data;
           this.empleados = this.empleadosAll;
-          const todos = this.empleados.find(item => item.pers_id === 0);
+          //this.filtros.empleados = 0;
+           const todos = this.empleados.find(item => item.pers_id === '0');
           if (todos) {
             this.filtros.empleado = todos;
-          }
+          } 
         } else {
           console.error("Error al obtener empleados:", response.data.message);
         }
