@@ -324,21 +324,43 @@ export default {
         }));
         // Personaliza los íconos según el nombre del módulo.
         this.modulosLogin.forEach(mod => {
-          if (mod.modu_nombre === "Mi asistencia") {
-            mod.icono = "mdi-calendar-check";
-          } else if (mod.modu_nombre === "Mis estudios") {
-            mod.icono = "mdi-book";
-          } else if (mod.modu_nombre === "Mis cursos") {
-            mod.icono = "mdi-book"; 
-          } else if (mod.modu_nombre === "Mis trámites") {
-            mod.icono = "mdi-note-outline";
-          } else if (mod.modu_nombre === "Mis finanzas") {
-            mod.icono = "mdi-finance";
-          } else if (mod.modu_nombre === "Incidencias") {
-            mod.icono = "mdi-account-plus";
-          }
-          // Puedes agregar más condiciones según otros módulos.
-        });
+        switch (mod.modu_nombre) {
+          case "Mi asistencia":
+          case "Asistencia":
+            mod.icono = "mdi-calendar-check-outline";
+            break;
+          case "Mis estudios":
+            mod.icono = "mdi-school";
+            break;
+          case "Mis cursos":
+          case "Cursos":
+            mod.icono = "mdi-book-open-variant";
+            break;
+          case "Mis trámites":
+          case "Trámites":
+            mod.icono = "mdi-file-document-edit-outline";
+            break;
+          case "Mis finanzas":
+          case "Finanzas":
+            mod.icono = "mdi-cash-multiple";
+            break;
+          case "Incidencias":
+            mod.icono = "mdi-alert-circle-outline";
+            break;
+          case "Gestión educativa":
+            mod.icono = "mdi-account-cog-outline";
+            break;
+          case "Calendario escolar":
+            mod.icono = "mdi-calendar-month-outline";
+            break;
+          case "Dashboard":
+            mod.icono = "mdi-view-dashboard-outline";
+            break;
+          default:
+            mod.icono = "mdi-folder"; // fallback
+        }
+      });
+
       } else {
         console.error("No se encontraron datos del usuario en localStorage.");
       }

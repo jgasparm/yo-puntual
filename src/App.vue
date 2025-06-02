@@ -3,13 +3,19 @@
     <!-- Overlay global para loading -->
     <GlobalLoading />
     <router-view />
-    <ChatWidget />
+    <ChatWidget v-if="mostrarAsistente" />
   </v-app>
 </template>
 
 <script setup>
 import GlobalLoading from '@/components/GlobalLoading.vue'
 import ChatWidget from '@/components/ChatWidget.vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+// Ocultar en login
+const mostrarAsistente = computed(() => route.name !== 'login')
 </script>
 
 <style>

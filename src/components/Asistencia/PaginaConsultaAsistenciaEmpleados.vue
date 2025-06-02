@@ -12,122 +12,143 @@
     </v-row>
 
     <template v-if="isDesktop">
-      <v-card class="pa-4 mb-4">
-        <!-- Primera fila: Área + Empleado -->
-        <v-row dense align="center" class="mb-4">
-      <v-col cols="12" md="6">
-        <v-select
-          label="Área"
-          :items="areas"
-          v-model="filtros.area"
-          item-title="area_descripcion"
-          item-value="area_id"
-          dense
-          outlined
-        />
-      </v-col>
-      <v-col cols="12" md="6">
-        <v-autocomplete
-          label="Empleado"
-          :items="empleados"
-          v-model="filtros.empleado"
-          :item-title="itemTitle"
-          item-value="pers_id"
-          return-object
-          dense
-          outlined
-          clearable
-        />
-      </v-col>
-    </v-row>
+      <!-- Primera fila: Área + Cargo -->
+      <v-row dense align="center" class="mb-4">
+        <v-col cols="12" md="6">
+          <v-select
+            label="Área"
+            :items="areas"
+            v-model="filtros.area"
+            item-title="area_descripcion"
+            item-value="area_id"
+            dense
+            outlined
+            hide-details
+            clearable
+          />
+        </v-col>
 
-        <!-- Segunda fila: Fechas + Botón -->
-        <v-row dense align="center" class="mb-0">
-      <v-col cols="12" md="3">
-        <v-dialog v-model="menuFechaFinal" persistent max-width="320">
-          <template #activator="{ props }">
-            <v-text-field
-              v-bind="props"
-              label="Fecha Final"
-              v-model="filtros.fechaFinal"
-              prepend-icon="mdi-calendar"
-              dense
-              outlined
-              readonly
-            />
-          </template>
-              <v-card>
-                <v-card-title class="text-subtitle-2 font-weight-bold">
-                  Seleccionar Fecha
-                </v-card-title>
-                <v-date-picker
-                  v-model="fechaInicioObjeto"
-                  locale="es"
-                  color="primary"
-                  first-day-of-week="1"
-                  hide-header
-                />
-                <v-card-actions class="d-flex justify-end">
-                  <v-btn text @click="menuFechaInicio = false">Cancelar</v-btn>
-                  <v-btn color="primary" @click="actualizarFechaInicio">Aceptar</v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-          </v-col>
+        <v-col cols="12" md="6">
+          <v-select
+            label="Cargo"
+            :items="cargos"
+            v-model="filtros.cargo"
+            item-title="emca_descripcion"
+            return-object
+            dense
+            outlined
+            hide-details
+            clearable
+          />
+        </v-col>
+      </v-row>
 
-          <v-col cols="12" md="3" class="mx-2">
-            <v-dialog v-model="menuFechaFinal" persistent max-width="320">
-              <template #activator="{ props }">
-                <v-text-field
-                  v-bind="props"
-                  label="Fecha Final"
-                  v-model="filtros.fechaFinal"
-                  prepend-icon="mdi-calendar"
-                  dense
-                  outlined
-                  readonly
-                />
-              </template>
-              <v-card>
-                <v-card-title class="text-subtitle-2 font-weight-bold">
-                  Seleccionar Fecha
-                </v-card-title>
-                <v-date-picker
-                  v-model="fechaFinalObjeto"
-                  locale="es"
-                  color="primary"
-                  first-day-of-week="1"
-                  hide-header
-                />
-                <v-card-actions class="d-flex justify-end">
-                  <v-btn text @click="menuFechaFinal = false">Cancelar</v-btn>
-                  <v-btn color="primary" @click="actualizarFechaFinal">Aceptar</v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-          </v-col>
+      <!-- Segunda fila: Empleado + Fechas + Botones -->
+      <v-row dense align="center" class="mb-0">
+        <!-- Filtro Empleado -->
+        <v-col cols="12" md="4">
+          <v-autocomplete
+            label="Empleado"
+            :items="empleados"
+            v-model="filtros.empleado"
+            :item-title="itemTitle"
+            item-value="pers_id"
+            return-object
+            dense
+            outlined
+            clearable
+            hide-no-data
+            :disabled="!empleados.length"
+          />
+        </v-col>
 
-          <v-col cols="12" md="2" class="mx-2 d-flex justify-end">
-            <v-btn color="primary" large @click="consultarAsistencia">
-              <v-icon left size="18">mdi-magnify</v-icon>
-              Consultar
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-card>
+        <!-- Fecha Inicio -->
+        <v-col cols="12" md="3" class="px-1">
+          <v-dialog v-model="menuFechaInicio" persistent max-width="320">
+            <template #activator="{ props }">
+              <v-text-field
+                v-bind="props"
+                label="Fecha Inicio"
+                v-model="filtros.fechaInicio"
+                prepend-icon="mdi-calendar"
+                dense
+                outlined
+                readonly
+              />
+            </template>
+            <v-card>
+              <v-card-title class="text-subtitle-2 font-weight-bold">
+                Seleccionar Fecha
+              </v-card-title>
+              <v-date-picker
+                v-model="fechaInicioObjeto"
+                locale="es"
+                color="primary"
+                first-day-of-week="1"
+                hide-header
+              />
+              <v-card-actions class="d-flex justify-end">
+                <v-btn text @click="menuFechaInicio = false">Cancelar</v-btn>
+                <v-btn color="primary" @click="actualizarFechaInicio">Aceptar</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </v-col>
+
+        <!-- Fecha Final -->
+        <v-col cols="12" md="3" class="px-1">
+          <v-dialog v-model="menuFechaFinal" persistent max-width="320">
+            <template #activator="{ props }">
+              <v-text-field
+                v-bind="props"
+                label="Fecha Final"
+                v-model="filtros.fechaFinal"
+                prepend-icon="mdi-calendar"
+                dense
+                outlined
+                readonly
+              />
+            </template>
+            <v-card>
+              <v-card-title class="text-subtitle-2 font-weight-bold">
+                Seleccionar Fecha
+              </v-card-title>
+              <v-date-picker
+                v-model="fechaFinalObjeto"
+                locale="es"
+                color="primary"
+                first-day-of-week="1"
+                hide-header
+              />
+              <v-card-actions class="d-flex justify-end">
+                <v-btn text @click="menuFechaFinal = false">Cancelar</v-btn>
+                <v-btn color="primary" @click="actualizarFechaFinal">Aceptar</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </v-col>
+
+        <!-- Botones: Consultar -->
+        <v-col cols="12" md="2" class="d-flex justify-end">
+          <v-btn color="primary" large class="mr-2" @click="consultarAsistencia">
+            <v-icon left size="18">mdi-magnify</v-icon>
+            Consultar
+          </v-btn>
+        </v-col>
+      </v-row>
     </template>
     
     <!-- Filtros Mobile (manteniendo el diseño actual) -->
     <template v-else>
-      <!-- (Aquí se mantiene el bloque de filtros original para mobile) -->
+      <!-- Bloque para dispositivos móviles -->
       <v-card class="pa-2 mb-2">
         <v-card-title class="text-subtitle-3 font-weight-bold">
           <v-icon left size="18">mdi-domain</v-icon>
-          Áreas
+          Áreas y Cargos
         </v-card-title>
         <v-card-text>
           <v-row dense>
-            <v-col cols="12" md="6">
+            <v-col cols="12">
               <v-select
                 label="Área"
                 :items="areas"
@@ -138,123 +159,137 @@
                 outlined
                 solo
                 hide-no-data
+                clearable
+              />
+            </v-col>
+            <v-col cols="12">
+              <v-select
+                label="Cargo"
+                :items="cargos"
+                v-model="filtros.cargo"
+                item-title="emca_descripcion"
+                return-object
+                dense
+                outlined
+                solo
+                hide-no-data
+                clearable
               />
             </v-col>
           </v-row>
         </v-card-text>
       </v-card>
-      <v-row dense>
-        <v-col cols="12" md="6">
-          <v-card class="pa-2">
-            <v-card-title class="text-subtitle-3 font-weight-bold">
-              <v-icon left size="18">mdi-account</v-icon>
-              Empleado
-            </v-card-title>
-            <v-card-text>
-              <v-autocomplete
-                v-if="empleados.length"
-                label="Empleado"
-                :items="empleados"
-                v-model="filtros.empleado"
-                :item-title="itemTitle"
-                item-value="pers_id"
-                return-object
-                dense
-                outlined
-                clearable
-                solo
-                hide-no-data
-              />
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="6">
-          <v-card class="pa-2">
-            <v-card-title class="text-subtitle-3 font-weight-bold">
-              <v-icon left size="18">mdi-calendar</v-icon>
-              Rango de Fechas
-            </v-card-title>
-            <v-card-text>
-              <v-row dense>
-                <v-col cols="12" md="6">
-                  <v-dialog v-model="menuFechaInicio" persistent max-width="320">
-                    <template #activator="{ props }">
-                      <v-text-field
-                        v-bind="props"
-                        label="Fecha inicial"
-                        v-model="filtros.fechaInicio"
-                        prepend-icon="mdi-calendar"
-                        dense
-                        outlined
-                        readonly
-                      />
-                    </template>
-                    <v-card>
-                      <v-card-title class="text-subtitle-2 font-weight-bold">
-                        Seleccionar Fecha
-                      </v-card-title>
-                      <v-date-picker
-                        v-model="fechaInicioObjeto"
-                        locale="es"
-                        color="primary"
-                        first-day-of-week="1"
-                        hide-header
-                      />
-                      <v-card-actions class="d-flex justify-end">
-                        <v-btn text @click="menuFechaInicio = false">Cancelar</v-btn>
-                        <v-btn color="primary" @click="actualizarFechaInicio">Aceptar</v-btn>
-                      </v-card-actions>
-                    </v-card>
-                  </v-dialog>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-dialog v-model="menuFechaFinal" persistent max-width="320">
-                    <template #activator="{ props }">
-                      <v-text-field
-                        v-bind="props"
-                        label="Fecha final"
-                        v-model="filtros.fechaFinal"
-                        prepend-icon="mdi-calendar"
-                        dense
-                        outlined
-                        readonly
-                      />
-                    </template>
-                    <v-card>
-                      <v-card-title class="text-subtitle-2 font-weight-bold">
-                        Seleccionar Fecha
-                      </v-card-title>
-                      <v-date-picker
-                        v-model="fechaFinalObjeto"
-                        locale="es"
-                        color="primary"
-                        first-day-of-week="1"
-                        hide-header
-                      />
-                      <v-card-actions class="d-flex justify-end">
-                        <v-btn text @click="menuFechaFinal = false">Cancelar</v-btn>
-                        <v-btn color="primary" @click="actualizarFechaFinal">Aceptar</v-btn>
-                      </v-card-actions>
-                    </v-card>
-                  </v-dialog>
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" class="d-flex justify-end">
-          <v-btn color="primary" small @click="consultarAsistencia">
+
+      <v-card class="pa-2 mb-2">
+        <v-card-title class="text-subtitle-3 font-weight-bold">
+          <v-icon left size="18">mdi-account</v-icon>
+          Empleado
+        </v-card-title>
+        <v-card-text>
+          <v-autocomplete
+            v-if="empleados.length"
+            label="Empleado"
+            :items="empleados"
+            v-model="filtros.empleado"
+            :item-title="itemTitle"
+            item-value="pers_id"
+            return-object
+            dense
+            outlined
+            clearable
+            solo
+            hide-no-data
+          />
+        </v-card-text>
+      </v-card>
+
+      <v-card class="pa-2 mb-2">
+        <v-card-title class="text-subtitle-3 font-weight-bold">
+          <v-icon left size="18">mdi-calendar</v-icon>
+          Rango de Fechas
+        </v-card-title>
+        <v-card-text>
+          <v-row dense>
+            <v-col cols="12" md="6" class="mb-2">
+              <v-dialog v-model="menuFechaInicio" persistent max-width="320">
+                <template #activator="{ props }">
+                  <v-text-field
+                    v-bind="props"
+                    label="Fecha inicial"
+                    v-model="filtros.fechaInicio"
+                    prepend-icon="mdi-calendar"
+                    dense
+                    outlined
+                    readonly
+                  />
+                </template>
+                <v-card>
+                  <v-card-title class="text-subtitle-2 font-weight-bold">
+                    Seleccionar Fecha
+                  </v-card-title>
+                  <v-date-picker
+                    v-model="fechaInicioObjeto"
+                    locale="es"
+                    color="primary"
+                    first-day-of-week="1"
+                    hide-header
+                  />
+                  <v-card-actions class="d-flex justify-end">
+                    <v-btn text @click="menuFechaInicio = false">Cancelar</v-btn>
+                    <v-btn color="primary" @click="actualizarFechaInicio">Aceptar</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </v-col>
+            <v-col cols="12" md="6" class="mb-2">
+              <v-dialog v-model="menuFechaFinal" persistent max-width="320">
+                <template #activator="{ props }">
+                  <v-text-field
+                    v-bind="props"
+                    label="Fecha final"
+                    v-model="filtros.fechaFinal"
+                    prepend-icon="mdi-calendar"
+                    dense
+                    outlined
+                    readonly
+                  />
+                </template>
+                <v-card>
+                  <v-card-title class="text-subtitle-2 font-weight-bold">
+                    Seleccionar Fecha
+                  </v-card-title>
+                  <v-date-picker
+                    v-model="fechaFinalObjeto"
+                    locale="es"
+                    color="primary"
+                    first-day-of-week="1"
+                    hide-header
+                  />
+                  <v-card-actions class="d-flex justify-end">
+                    <v-btn text @click="menuFechaFinal = false">Cancelar</v-btn>
+                    <v-btn color="primary" @click="actualizarFechaFinal">Aceptar</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+
+      <v-row dense class="mb-2">
+        <v-col cols="12" class="d-flex justify-space-between">
+          <v-btn color="primary" block @click="consultarAsistencia">
             <v-icon left size="18">mdi-magnify</v-icon>
             Consultar
           </v-btn>
         </v-col>
       </v-row>
     </template>
+    <!-- ============================================= -->
 
     <!-- Resultados -->
     <v-card class="pa-2 mt-3 rounded-lg elevation-2">
       <v-card-title class="text-subtitle-3 font-weight-bold d-flex align-center">
-        <!--<v-icon left size="18">mdi-table</v-icon>-->
         Resultados de la Consulta
       </v-card-title>
       <v-divider></v-divider>
@@ -268,9 +303,9 @@
             no-data-text="No hay resultados disponibles"
             :loading="loading"
           >
-          <template v-slot:progress>
-            <v-progress-linear indeterminate color="primary"></v-progress-linear>
-          </template>
+            <template v-slot:progress>
+              <v-progress-linear indeterminate color="primary"></v-progress-linear>
+            </template>
 
             <template v-slot:header="{ headers }">
               <tr>
@@ -283,15 +318,16 @@
                 >
                   {{ header.title }}
                   <v-icon small v-if="header.isSorted">
-                    {{ header.isSortedDesc ? 'mdi-arrow-down' : 'mdi-arrow-up' }}
+                    {{ header.isSortedDesc ? "mdi-arrow-down" : "mdi-arrow-up" }}
                   </v-icon>
                 </th>
               </tr>
             </template>
+
             <template v-slot:item="{ item }">
               <tr>
                 <td class="text-left">{{ item.empleado }}</td>
-                <td class="text-center">{{ item.fecha }}</td>
+                <td class="text-center no-wrap">{{ item.fecha }}</td>
                 <td class="text-center">{{ item.hora }}</td>
                 <td class="text-center">
                   <v-chip :color="estadoColor(item.estado)" dark>
@@ -303,13 +339,14 @@
             </template>
           </v-data-table>
         </div>
+
         <!-- Vista para mobile: tarjetas -->
         <div v-else>
           <v-alert v-if="!resultados.length && !loading" type="info">
             No hay resultados disponibles
           </v-alert>
 
-        <!-- 🔹 Overlay para bloquear la vista mientras carga -->
+          <!-- Overlay para bloquear la vista mientras carga -->
           <v-overlay v-if="loading" absolute class="d-flex align-center justify-center">
             <v-progress-circular indeterminate size="64" color="primary"></v-progress-circular>
           </v-overlay>
@@ -361,7 +398,6 @@
             next-icon="mdi-chevron-right"
             class="mt-2 custom-pagination"
           />
-
         </div>
       </v-card-text>
       <v-card-actions v-if="resultados.length">
@@ -387,8 +423,8 @@
       </v-card>
     </v-dialog>
   </v-container>
-</template>
-
+</template> 
+  
 <script>
 import axios from "axios";
 import { useDisplay } from "vuetify";
@@ -408,8 +444,10 @@ export default {
         fechaFinal: this.formatearFecha(new Date()),
       },
       areasAll: [],
+      cargosAll: [],
       empleadosAll: [],
       areas: [],
+      cargos: [],
       empleados: [],
       menuFechaInicio: false,
       menuFechaFinal: false,
@@ -446,8 +484,9 @@ export default {
       console.warn("Falta token o profile en localStorage.");
       return;
     }
-    this.cargarEmpleados(profile, token);
     this.cargarAreas(profile, token);
+    this.cargarCargos(profile, token);
+    this.cargarEmpleados(profile, token);
   },
   methods: {
     // Función que devuelve la descripción para el item-title del autocomplete de empleados
@@ -492,6 +531,24 @@ export default {
         console.error("Error en cargarEmpleados:", error);
       }
     },
+    async cargarCargos(profile, token) {
+      try {
+        const url = `https://amsoftsolution.com/amss/ws/wsListaEmpleadoCargos.php?av_profile=${profile}`;
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const response = await axios.get(url, config);
+        if (response.data.status) {
+          const data = response.data.data;     // suponemos que viene [{ emca_id, emca_descripcion }, …]
+          this.cargosAll = data;
+          // Añadimos un item “Todos” opcional al inicio con emca_id = '0'
+          this.cargos = [{ emca_id: '0', emca_descripcion: 'TODOS' }, ...data];
+          this.filtros.cargo = this.cargos[0]; // valor inicial = “Todos”
+        } else {
+          console.error("Error al obtener cargos:", response.data.message);
+        }
+      } catch (error) {
+        console.error("Error en cargarCargos:", error);
+      }
+    },
     formatearFecha(fecha) {
       return new Intl.DateTimeFormat("es-ES", {
         day: "2-digit",
@@ -512,6 +569,7 @@ export default {
         const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaAsistenciaEmpleados.php";
         const params = {
           ai_area_id: this.filtros.area,
+          ai_emca_id: this.filtros.cargo.emca_id,
           ai_pers_id: this.filtros.empleado ? this.filtros.empleado.pers_id : 0,
           ai_hoes_id: 0,
           ac_fecha_inicial: fechaInicio,
@@ -586,6 +644,9 @@ export default {
 </script>
 
 <style scoped>
+.no-wrap {
+  white-space: nowrap;
+}
 .my-overlay {
   z-index: 9999;
   background-color: rgba(255, 0, 0, 0.3);

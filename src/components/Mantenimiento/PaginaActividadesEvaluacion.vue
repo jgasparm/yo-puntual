@@ -100,7 +100,6 @@
             v => !!v || 'Campo obligatorio',
             v => (v && v.length <= 100) || 'Máximo 100 caracteres'
           ]"
-          @input="validarFormAgregar"
         />
         <v-text-field
           label="Abreviación"
@@ -135,7 +134,7 @@
             v => !!v || 'Campo obligatorio',
             v => (v && v.length <= 100) || 'Máximo 100 caracteres'
           ]"
-          @input="validarFormAgregar"
+          @input="validarFormEditar"
         />
         <v-text-field
           label="Abreviación"
@@ -145,7 +144,7 @@
             v => !!v || 'Campo obligatorio',
             v => (v && v.length <= 2) || 'Máximo 2 caracteres'
           ]"
-          @input="validarFormAgregar"
+          @input="validarFormEditar"
         />
         <v-select label="Estado" :items="['Activo','Inactivo']" v-model="selectedActiEstado" />
       </v-card-text>
@@ -186,6 +185,29 @@ const totalPages = computed(() => Math.ceil(actividades.value.length / itemsPerP
 const mobileTotalPages = computed(() => Math.ceil(actividades.value.length / 5))
 const paginatedMobile = computed(() => actividades.value.slice((mobilePage.value - 1) * 5, mobilePage.value * 5))
 
+const formAgregarValido = ref(false)
+const formAgregar = ref(null)
+
+const formEditarValido = ref(false)
+const formEditar = ref(null)
+
+function validarFormAgregar() {
+  if (formAgregar.value) {
+    formAgregar.value.validate().then((res) => {
+      formAgregarValido.value = res.valid
+    })
+  }
+}
+
+function validarFormEditar() {
+  if (formEditar.value) {
+    formEditar.value.validate().then(res => {
+      formEditarValido.value = res.valid
+    })
+  }
+}
+
+
 async function obtenerEvaluaciones() {
   try {
     const { data } = await axiosInstance.get(`wsListaActividades.php?av_profile=${profile}`)
@@ -209,7 +231,11 @@ function abrirDialogoAgregar() {
 function cerrarAgregar() {
   mostrarDialogoAgregar.value = false
 }
+
 async function guardarNuevo() {
+  const { valid } = await formAgregar.value.validate()
+  if (!valid) return
+
   await axiosInstance.post('wsRegistraActividad.php', {
     av_acti_nombre: newActi.value.nombre,
     ac_acti_abreviacion: newActi.value.abrev,
@@ -228,7 +254,11 @@ function cerrarEditar() {
   mostrarDialogoEditar.value = false
   selectedActi.value = { acti_id: null, acti_nombre: '', acti_abreviacion: '', acti_estado: 'A' }
 }
+
 async function guardarEditado() {
+  const { valid } = await formEditar.value.validate()
+  if (!valid) return
+
   await axiosInstance.post('wsActualizaActividad.php', {
     ai_acti_id: selectedActi.value.acti_id,
     av_acti_nombre: selectedActi.value.acti_nombre,
@@ -239,6 +269,7 @@ async function guardarEditado() {
   cerrarEditar()
   obtenerEvaluaciones()
 }
+
 
 onMounted(obtenerEvaluaciones)
 </script>

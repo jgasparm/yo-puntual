@@ -339,7 +339,7 @@ async function guardarEstadoDocente() {
     const nuevoEstado = dialogoActualizarDocente.value.docenteEstado === 'Activo' ? 'A' : 'I'
     await axiosInstance.post('wsActualizaAnioEscolarDocente.php', {
       ai_aedo_id: d.aedo_id,
-      ac_Aulas: nuevoEstado,
+      ac_aedo_estado: nuevoEstado,
       av_profile: profile,
     })
     cerrarDialogoActualizarDocente()
