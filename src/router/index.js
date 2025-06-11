@@ -30,15 +30,18 @@ import DocentePlanEstudios from '../components/Estudios/PaginaDocentePlanEstudio
 import Matricula from '../components/Mantenimiento/PaginaMatricula.vue';
 import Alumnos from '../components/Mantenimiento/PaginaAlumno.vue';
 import Empleados from '../components/Mantenimiento/PaginaEmpleado.vue';
+import PagosPendientesAlumno from '../components/Finanzas/PaginaPagosPendientesAlumno.vue';
+import Pagos from '../components/Finanzas/PaginaPagos.vue';
+
 
 const routes = [
   {
     path: '/',
     name: 'login',
     //Desa
-    //component: () => import('@/components/LoginDesa.vue'),
+    component: () => import('@/components/LoginDesa.vue'),
     //Prod
-      component: () => import('@/components/Login.vue'),
+    //component: () => import('@/components/Login.vue'),
       meta: {
         showBreadcrumb: false
       }
@@ -299,6 +302,18 @@ const routes = [
           ]
         }
       },
+      {
+        path: 'pagos-pendientes-alumno',
+        name: 'PagosPendientesAlumno',
+        component: PagosPendientesAlumno,
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Pagos pendientes del alumno' }
+          ]
+        }
+      },
 /*       {
         path: 'docente-horario-escolar',
         name: 'DocenteHorarioEscolar',
@@ -351,10 +366,23 @@ const routes = [
           showBreadcrumb: true,
           breadcrumb: [
             { text: 'Principal', to: '/principal' },
-            { text: 'Matricula' }
+            { text: 'Matrícula' }
           ]
         }
       },
+      {
+        path: 'pagos-alumnos',
+        name: 'Pagos',
+        component: Pagos,
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Matrícula', to: '/principal/Matrícula' },
+            { text: 'Pagos' }
+          ]
+        }
+      }, 
       {
         path: 'alumnos',
         name: 'Alumnos',

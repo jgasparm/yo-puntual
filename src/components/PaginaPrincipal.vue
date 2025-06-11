@@ -284,7 +284,8 @@ export default {
         "Mi plan de estudios":"DocentePlanEstudios",
         "Matrícula":"Matricula",
         "Alumnos":"Alumnos",
-        "Empleados":"Empleados"
+        "Empleados":"Empleados",
+        "Mis pagos pendientes":"PagosPendientesAlumno"
       };
 
       // Verificar si la vista seleccionada existe en la lista

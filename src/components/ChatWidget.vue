@@ -59,7 +59,7 @@
 
                 <!-- Botón “mostrar más” si quedan más registros -->
                 <button
-                  v-if="msg.pagination.hasMore"
+                  v-if="msg.items && msg.pagination.hasMore"
                   @click="loadMore(msg)"
                   class="load-more-btn"
                 >
@@ -106,18 +106,18 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick } from 'vue';
 
-const dialog = ref(false)
-const userInput = ref('')
-const messages = ref([])
-const lastUserMessage = ref('')
-const userLogged = true
+const dialog = ref(false);
+const userInput = ref('');
+const messages = ref([]);
+const lastUserMessage = ref('');
+const userLogged = true;
 
-const token  = localStorage.getItem('token')
-const perfil = localStorage.getItem('perfil')
+const token  = localStorage.getItem('token');
+const perfil = localStorage.getItem('perfil');
 
-// Filtros base
+// Filtros base (el offset/limit se añadirá dinámicamente)
 const filtrosBase = {
   ai_pers_id:         0,
   ai_area_id:        '0',
@@ -134,35 +134,42 @@ const filtrosBase = {
   ai_asde_id:        0,
   ac_anio_escolar:  localStorage.getItem('anio_escolar'),
   av_profile:       localStorage.getItem('profile')
-}
+};
 
-const API = process.env.VUE_APP_API_BASE_URL
+const API = process.env.VUE_APP_API_BASE_URL;
 
+/**
+ * 1) En `send()` pedimos al backend el primer bloque (offset=0, limit=5).
+ * 2) El backend nos devolverá un JSON que contiene:
+ *       { from: 'function', data: [Array de hasta 5 filas], meta: { total, offset, limit, hasMore, nextOffset } }
+ * 3) Creamos un objeto `msg` con `msg.items = data` y `msg.pagination = meta`.
+ * 4) Si `meta.hasMore === true`, el botón “Mostrar 5 registros más…“ aparee.
+ */
 async function send() {
-  if (!userInput.value.trim()) return
+  if (!userInput.value.trim()) return;
 
-  lastUserMessage.value = userInput.value
+  lastUserMessage.value = userInput.value;
 
-  // Mensaje del usuario
+  // 1️⃣ Mensaje del usuario
   messages.value.push({
     id: Date.now(),
     from: 'user',
     text: lastUserMessage.value
-  })
+  });
 
-  // Placeholder “Escribiendo…”
+  // 2️⃣ Placeholder “Escribiendo…”
   messages.value.push({
     id: Date.now() + 1,
     from: 'bot',
     text: 'Escribiendo…'
-  })
+  });
 
-  // Filtros iniciales (offset=0, limit=5)
+  // 3️⃣ Filtros iniciales (offset=0, limit=5)
   const filtros = {
     ...filtrosBase,
     offset: 0,
     limit: 5
-  }
+  };
 
   try {
     const res = await fetch(`${API}/chat`, {
@@ -176,72 +183,83 @@ async function send() {
         perfil,
         filtros
       })
-    })
-    const payload = await res.json()
+    });
 
-    messages.value.pop() // Quitamos el placeholder
+    const payload = await res.json();
 
+    // 4️⃣ Quitamos el placeholder
+    messages.value.pop();
+
+    // 5️⃣ Si el backend indica “from: 'function'” y tenemos un array en `data`:
     if (payload.from === 'function' && Array.isArray(payload.data)) {
+      // payload.data ya es el “chunk” de hasta 5 filas
+      // payload.meta contiene: { total, offset, limit, hasMore, nextOffset }
+
+      // a) Si no hay ningún registro
       if (payload.data.length === 0) {
         messages.value.push({
           id: Date.now() + 2,
           from: 'bot',
           text: '⚠️ No se encontraron registros de asistencia.'
-        })
+        });
       } else {
-        const formattedItems = payload.data.map(r => ({
-          alumno: r.alumno || r.persona,
-          fecha:  r.fecha,
-          hora:   r.hora,
-          estado: r.estado
-        }))
-
+        // b) Creamos el objeto msg con items y paginación tal cual vino del backend
         messages.value.push({
           id: Date.now() + 2,
           from: 'bot',
-          items: formattedItems.slice(0, filtros.limit),
+          items: payload.data,          // ya es un array de hasta 5 filas
           pagination: {
-            total:      formattedItems.length,
-            offset:     filtros.offset,
-            limit:      filtros.limit,
-            hasMore:    formattedItems.length > filtros.limit,
-            nextOffset: filtros.offset + filtros.limit
+            total:      payload.meta.total,
+            offset:     payload.meta.offset,
+            limit:      payload.meta.limit,
+            hasMore:    payload.meta.hasMore,
+            nextOffset: payload.meta.nextOffset
           }
-        })
+        });
       }
     } else {
+      // 6️⃣ Si vino texto libre o algo distinto
       messages.value.push({
         id: Date.now() + 2,
         from: 'bot',
         text: payload.reply || '❌ Ocurrió un error inesperado.'
-      })
+      });
     }
 
-    // Scroll al fondo
-    await nextTick()
-    const box = document.querySelector('.messages')
-    if (box) box.scrollTop = box.scrollHeight
+    // 7️⃣ Scroll al fondo
+    await nextTick();
+    const box = document.querySelector('.messages');
+    if (box) box.scrollTop = box.scrollHeight;
 
   } catch (err) {
-    messages.value.pop()
+    // 8️⃣ Si hubo un error de red o similar
+    messages.value.pop();
     messages.value.push({
       id: Date.now() + 2,
       from: 'bot',
       text: `❌ Hubo un error: ${err.message}`
-    })
+    });
   }
 
-  userInput.value = ''
+  userInput.value = '';
 }
 
+/**
+ * loadMore: al hacer click en “Mostrar X registros más…”
+ * hacemos otra petición al mismo endpoint, pero ahora con offset = nextOffset
+ * El backend devolverá otro “chunk” y un nuevo meta.hasMore
+ * A ese nuevo array (chunk) lo concatenamos a msg.items y actualizamos msg.pagination.
+ */
 async function loadMore(msg) {
-  const { nextOffset, limit } = msg.pagination
+  // 1) Extraemos la paginación actual
+  const { offset: prevOffset, limit } = msg.pagination;
 
+  // 2) Preparamos los filtros para pedir el siguiente bloque
   const filtros = {
     ...filtrosBase,
-    offset: nextOffset,
+    offset: prevOffset + limit,
     limit
-  }
+  };
 
   try {
     const res = await fetch(`${API}/chat`, {
@@ -255,37 +273,36 @@ async function loadMore(msg) {
         perfil,
         filtros
       })
-    })
-    const payload = await res.json()
+    });
+
+    const payload = await res.json();
 
     if (payload.from === 'function' && Array.isArray(payload.data)) {
-      const formattedItems = payload.data.map(r => ({
-        alumno: r.alumno || r.persona,
-        fecha:  r.fecha,
-        hora:   r.hora,
-        estado: r.estado
-      }))
+      // payload.data es el siguiente bloque (hasta `limit` filas)
+      // payload.meta trae el nuevo meta.hasMore, meta.nextOffset, etc.
 
+      // 3) Concatenamos el “chunk” nuevo a los items existentes
       msg.items = [
         ...msg.items,
-        ...formattedItems.slice(0, limit)
-      ]
+        ...payload.data
+      ];
 
+      // 4) Actualizamos la paginación con base en payload.meta
       msg.pagination = {
-        total:      formattedItems.length,
-        offset:     nextOffset,
-        limit,
-        hasMore:    nextOffset + limit < formattedItems.length,
-        nextOffset: nextOffset + limit
-      }
+        total:      payload.meta.total,
+        offset:     payload.meta.offset,
+        limit:      payload.meta.limit,
+        hasMore:    payload.meta.hasMore,
+        nextOffset: payload.meta.nextOffset
+      };
 
-      await nextTick()
-      const box = document.querySelector('.messages')
-      if (box) box.scrollTop = box.scrollHeight
+      // 5) Scroll al fondo
+      await nextTick();
+      const box = document.querySelector('.messages');
+      if (box) box.scrollTop = box.scrollHeight;
     }
-
   } catch (err) {
-    console.error('Error en loadMore:', err)
+    console.error('Error en loadMore:', err);
   }
 }
 </script>

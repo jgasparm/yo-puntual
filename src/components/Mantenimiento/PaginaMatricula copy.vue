@@ -94,7 +94,8 @@
         :items-per-page="itemsPerPage"
         class="tabla-matricula"
         no-data-text="No hay alumnos matriculados"
-        :item-key="item => item.alum_id" hide-default-footer
+        item-key="usua_id"
+        hide-default-footer
       >
         <template #top v-if="loading">
           <v-progress-linear color="primary" indeterminate></v-progress-linear>
@@ -131,10 +132,10 @@
               icon
               variant="text"
               color="info"
-              @click.stop="togglePagosAlumno(item.alum_id, item.usua_id)"
+              @click.stop="togglePagosAlumno(item.usua_id)"
             >
               <v-icon>
-                {{ expandedRow === item.alum_id ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                {{ expandedRow === item.usua_id ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
               </v-icon>
             </v-btn>
           </div>
@@ -159,7 +160,7 @@
         <!-- Personalización completa del body para controlar expansión -->
        <template #body="{ items }">
         <tbody>
-          <template v-for="(item, index) in items" :key="item.alum_id">
+          <template v-for="(item, index) in items" :key="item.usua_id">
             <!-- Fila principal -->
             <tr v-if="item">
               <td class="text-center col-width-5">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
@@ -188,10 +189,10 @@
                       icon
                       variant="text"
                       color="info"
-                      @click.stop="togglePagosAlumno(item.alum_id, item.usua_id)"
+                      @click.stop="togglePagosAlumno(item.usua_id)"
                     >
                       <v-icon>
-                        {{ expandedRow === item.alum_id ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                        {{ expandedRow === item.usua_id ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
                       </v-icon>
                     </v-btn>
                   </div>
@@ -199,11 +200,11 @@
               </tr>
 
               <!-- Fila expandida para pagos -->
-              <tr v-if="expandedRow === item.alum_id">
+              <tr v-if="expandedRow === item.usua_id">
                 <td colspan="9" class="pa-4 bg-grey-lighten-4">
                   <div class="d-flex justify-space-between align-center mb-2">
                     <v-chip small class="ml-2">
-                      Total: {{ getPagosAlumno(item.alum_id).length }}
+                      Total: {{ getPagosAlumno(item.usua_id).length }}
                     </v-chip>
                   </div>
                   
@@ -219,7 +220,7 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr v-for="pago in getPagosAlumno(item.alum_id)" :key="pago.id">
+                        <tr v-for="pago in getPagosAlumno(item.usua_id)" :key="pago.id">
                           <td>{{ pago.nombre_servicio }}</td>
                           <td>{{ pago.mes_descripcion }} {{ pago.Año }}</td>
                           <td>{{ formatFecha(pago.fecha_vencimiento) }}</td>
@@ -229,7 +230,7 @@
                             </v-chip>
                           </td>
                         </tr>
-                        <tr v-if="getPagosAlumno(item.alum_id).length === 0">
+                        <tr v-if="getPagosAlumno(item.usua_id).length === 0">
                           <td colspan="4" class="text-center py-4">
                             <v-alert type="info" density="compact">
                               No hay pagos registrados
@@ -272,11 +273,11 @@
             </v-btn>
             <v-btn 
               icon 
-              @click.stop="togglePagosAlumno(item.alum_id, item.usua_id)"
-              :color="expandedRow === item.alum_id ? 'primary' : ''"
+              @click.stop="togglePagosAlumno(item.usua_id)"
+              :color="expandedRow === item.usua_id ? 'primary' : ''"
             >
               <v-icon>
-                {{ expandedRow === item.alum_id ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                {{ expandedRow === item.usua_id ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
               </v-icon>
             </v-btn>
           </div>
@@ -298,14 +299,14 @@
 
           <!-- Sección de pagos expandida -->
           <v-expand-transition>
-            <div v-if="expandedRow === item.alum_id">
+            <div v-if="expandedRow === item.usua_id">
               <v-divider></v-divider>
               <v-card-title class="text-subtitle-1 font-weight-bold">
                 Pagos del Alumno
               </v-card-title>
               <v-card-text>
                 <v-row
-                  v-for="pago in getPagosAlumno(item.alum_id)"
+                  v-for="pago in getPagosAlumno(item.usua_id)"
                   :key="pago.id"
                   class="mb-2"
                 >
@@ -326,7 +327,7 @@
                   </v-col>
                 </v-row>
                 <v-alert
-                  v-if="getPagosAlumno(item.alum_id).length === 0"
+                  v-if="getPagosAlumno(item.usua_id).length === 0"
                   type="info"
                   class="mt-2"
                 >
@@ -765,27 +766,24 @@ export default {
     },
 
     // Nuevos métodos para pagos
-    togglePagosAlumno(alumId, usuaId) {
-
+    togglePagosAlumno(usuaId) {
       // Si ya está expandido, colapsa
-      if (this.expandedRow === alumId) {
+      if (this.expandedRow === usuaId) {
         this.expandedRow = null;
       } 
       // Si es una nueva fila
       else {
         // 2. Expande la nueva fila después de un pequeño delay (opcional)
-        this.expandedRow = alumId;
+        this.expandedRow = usuaId;
           
         // 3. Carga los pagos solo si no se han cargado antes
-        if (usuaId) {
-          const pagosYaCargados = this.pagosAlumnos.some(p => p.alumId === alumId);
-          if (!pagosYaCargados) {
-            this.cargarPagosAlumno(usuaId, alumId);
-          }
+        const pagosYaCargados = this.pagosAlumnos.some(p => p.usuaId === usuaId);
+        if (!pagosYaCargados) {
+          this.cargarPagosAlumno(usuaId);
         }
       }
     },
-    async cargarPagosAlumno(usuaId, alumId) {
+    async cargarPagosAlumno(usuaId) {
       this.loadingPagos = true;
       try {
         const url = "https://amsoftsolution.com/amss/ws/wsConsultaPagosAlumno.php";
@@ -801,7 +799,7 @@ export default {
           // Agregamos los pagos al array manteniendo referencia al usuario
           this.pagosAlumnos = [
             ...this.pagosAlumnos,
-            ...resp.data.data.map(p => ({ ...p, usuaId, alumId: alumId }))
+            ...resp.data.data.map(p => ({ ...p, usuaId }))
           ];
         }
       } catch (err) {
@@ -811,8 +809,8 @@ export default {
       }
     },
     
-    getPagosAlumno(alumId) {
-      return this.pagosAlumnos.filter(p => p.alumId === alumId);
+    getPagosAlumno(usuaId) {
+      return this.pagosAlumnos.filter(p => p.usuaId === usuaId);
     },
     
     formatFecha(fecha) {
