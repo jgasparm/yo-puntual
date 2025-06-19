@@ -313,7 +313,6 @@
                   v-for="header in headers"
                   :key="header.key"
                   class="text-center"
-                  :style="getColumnStyle(header.key)"
                   @click="header.sort"
                   style="cursor: pointer;"
                 >
@@ -324,43 +323,20 @@
                 </th>
               </tr>
             </template>
+
             <template v-slot:item="{ item }">
               <tr>
-                <td :style="getColumnStyle('empleado')" class="text-left">
-                  {{ item.empleado }}
-                  <v-tooltip location="top">
-                    <template #activator="{ props }">
-                      <v-icon v-bind="props" size="18" class="ml-1 text-primary" style="cursor: help;">
-                        mdi-information-outline
-                      </v-icon>
-                    </template>
-                    <span>
-                      Área: {{ item.area }}<br />
-                      Cargo: {{ item.cargo }}
-                    </span>
-                  </v-tooltip>
+                <td class="text-left">{{ item.empleado }}</td>
+                <td class="text-center no-wrap">{{ item.fecha }}</td>
+                <td class="text-center">{{ item.hora }}</td>
+                <td class="text-center">
+                  <v-chip :color="estadoColor(item.estado)" dark>
+                    {{ item.estado }}
+                  </v-chip>
                 </td>
-                <td :style="getColumnStyle('fecha')" class="text-center">{{ item.fecha }}</td>
-                <td :style="getColumnStyle('entrada')" class="text-center">
-                  <v-chip v-if="item.entrada" small color="green" dark>{{ item.entrada }}</v-chip>
-                  <span v-else>-</span>
-                </td>
-                <td :style="getColumnStyle('tardanza')" class="text-center">
-                  <v-chip v-if="item.tardanza" small color="orange" dark>{{ item.tardanza }}</v-chip>
-                  <span v-else>-</span>
-                </td>
-                <td :style="getColumnStyle('salida_anticipada')" class="text-center">
-                  <v-chip v-if="item.salida_anticipada" small color="red" dark>{{ item.salida_anticipada }}</v-chip>
-                  <span v-else>-</span>
-                </td>
-                <td :style="getColumnStyle('salida')" class="text-center">
-                  <v-chip v-if="item.salida" small color="green" dark>{{ item.salida }}</v-chip>
-                  <span v-else>-</span>
-                </td>
+                <td class="text-center">{{ item.area }}</td>
               </tr>
             </template>
-
-
           </v-data-table>
         </div>
 
@@ -383,7 +359,7 @@
               class="mb-2"
             >
               <v-card outlined>
-                <v-card-title class="subtitle-2 font-weight-bold text-start" style="white-space: normal; word-break: break-word;">
+                <v-card-title class="subtitle-2 font-weight-bold text-start">
                   {{ item.empleado }}
                 </v-card-title>
                 <v-card-text class="text-start">
@@ -391,27 +367,17 @@
                     <v-col cols="12">
                       <strong>Fecha:</strong> {{ item.fecha }}
                     </v-col>
-                    <v-col cols="6" v-if="item.entrada">
-                      <strong>Entrada:</strong>
-                      <v-chip small color="green" dark>{{ item.entrada }}</v-chip>
+                    <v-col cols="12">
+                      <strong>Hora:</strong> {{ item.hora }}
                     </v-col>
-                    <v-col cols="6" v-if="item.tardanza">
-                      <strong>Tardanza:</strong>
-                      <v-chip small color="orange" dark>{{ item.tardanza }}</v-chip>
-                    </v-col>
-                    <v-col cols="6" v-if="item.salida_anticipada">
-                      <strong>Salida Ant.:</strong>
-                      <v-chip small color="red" dark>{{ item.salida_anticipada }}</v-chip>
-                    </v-col>
-                    <v-col cols="6" v-if="item.salida">
-                      <strong>Salida:</strong>
-                      <v-chip small color="green" dark>{{ item.salida }}</v-chip>
+                    <v-col cols="12">
+                      <strong>Estado:</strong>
+                      <v-chip :color="estadoColor(item.estado)" dark small>
+                        {{ item.estado }}
+                      </v-chip>
                     </v-col>
                     <v-col cols="12">
                       <strong>Área:</strong> {{ item.area }}
-                    </v-col>
-                    <v-col cols="12">
-                      <strong>Cargo:</strong> {{ item.cargo }}
                     </v-col>
                   </v-row>
                 </v-card-text>
@@ -491,12 +457,11 @@ export default {
       currentPage: 1,
       itemsPerPage: 5,
       headers: [
-        { title: "Empleado", key: "empleado", align: "center" },
-        { title: "Fecha", key: "fecha", align: "center" },
-        { title: "Entrada", key: "entrada", align: "center" },
-        { title: "Tardanza", key: "tardanza", align: "center" },
-        { title: "Salida Anticipada", key: "salida_anticipada", align: "center" },
-        { title: "Salida", key: "salida", align: "center" },
+        { title: "Empleado", key: "empleado", align: "center", sortable: true },
+        { title: "Fecha", key: "fecha", align: "center", sortable: true },
+        { title: "Hora", key: "hora", align: "center", sortable: true },
+        { title: "Estado", key: "estado", align: "center", sortable: true },
+        { title: "Área", key: "area", align: "center", sortable: true },
       ],
       loading: false,
       dialogNoResults: false,
@@ -524,17 +489,6 @@ export default {
     this.cargarEmpleados(profile, token);
   },
   methods: {
-    getColumnStyle(key) {
-      const widths = {
-        empleado: '50%',
-        fecha: '20%',
-        entrada: '7.5%',
-        tardanza: '7.5%',
-        salida_anticipada: '7.5%',
-        salida: '7.5%',
-      };
-      return { width: widths[key] || 'auto' };
-    },
     // Función que devuelve la descripción para el item-title del autocomplete de empleados
     itemTitle(item) {
       return item ? item.persona_descripcion : "";
@@ -607,14 +561,12 @@ export default {
       return `${anio}-${mes}-${dia}`;
     },
     async consultarAsistencia() {
-      this.loading = true;
+      this.loading = true; 
       const profile = localStorage.getItem("profile");
-
       try {
         const fechaInicio = this.toApiDate(this.filtros.fechaInicio);
         const fechaFinal = this.toApiDate(this.filtros.fechaFinal);
         const baseUrl = "https://amsoftsolution.com/amss/ws/wsConsultaAsistenciaEmpleados.php";
-
         const params = {
           ai_area_id: this.filtros.area,
           ai_emca_id: this.filtros.cargo.emca_id,
@@ -629,41 +581,27 @@ export default {
           ai_asde_id: 0,
           av_profile: profile,
         };
-
         const token = localStorage.getItem("token");
         const configReq = {
           params,
           headers: { Authorization: `Bearer ${token}` },
         };
-
         const response = await axios.get(baseUrl, configReq);
-
-        if (response.data.status && Array.isArray(response.data.data)) {
-          this.resultados = [];
-
-          response.data.data.forEach(item => {
-            const fila = {
+        if (response.data.status) {
+          if (Array.isArray(response.data.data)) {
+            this.resultados = response.data.data.map(item => ({
               empleado: item.empleado_descripcion,
               fecha: item.fecha_asistencia,
-              entrada: '',
-              tardanza: '',
-              salida_anticipada: '',
-              salida: '',
-              area: item.area_descripcion,
-              cargo: item.cargo_descripcion
-            };
-
-            item.registros.forEach(reg => {
-              const estado = reg.horario_estado_descripcion.toUpperCase();
-              if (estado === 'ENTRADA') fila.entrada = reg.hora_asistencia;
-              else if (estado === 'TARDANZA') fila.tardanza = reg.hora_asistencia;
-              else if (estado === 'SALIDA ANTICIPADA') fila.salida_anticipada = reg.hora_asistencia;
-              else if (estado === 'SALIDA') fila.salida = reg.hora_asistencia;
-            });
-
-            this.resultados.push(fila);
-          });
+              hora: item.hora_asistencia,
+              estado: item.horario_estado_descripcion,
+              area: item.area_descripcion
+            }));
+          } else {
+            this.resultados = [];
+            this.dialogNoResults = true;
+          }
         } else {
+          console.error("Error en la respuesta:", response.data.message);
           this.resultados = [];
           this.dialogNoResults = true;
         }

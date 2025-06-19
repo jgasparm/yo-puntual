@@ -29,16 +29,6 @@
             {{ item.estado }}
           </v-chip>
         </template>
-        <template #item.actions="{ item }">
-          <v-btn
-            v-if="item.estado === 'Pendiente'"
-            color="primary"
-            size="small"
-            @click="pagar(item)"
-          >
-            Pagar
-          </v-btn>
-        </template>
       </v-data-table>
     </div>
 
@@ -58,20 +48,11 @@
               </v-chip>
             </v-card-title>
             <v-card-subtitle>
-              {{ item.Mes }} {{ item.Año }}
+              {{ item.mes_descripcion }} {{ item.Año }}
             </v-card-subtitle>
             <v-card-text>
               <div><strong>Vencimiento:</strong> {{ formatFecha(item.fecha_vencimiento) }}</div>
             </v-card-text>
-            <v-card-actions v-if="item.estado === 'Pendiente'">
-              <v-btn
-                color="primary"
-                block
-                @click="pagar(item)"
-              >
-                Pagar ahora
-              </v-btn>
-            </v-card-actions>
           </v-card>
         </v-col>
       </v-row>
@@ -83,7 +64,7 @@
     </div>
 
     <!-- Diálogo de confirmación de pago -->
-    <v-dialog v-model="dialogPago" max-width="500px">
+<!--     <v-dialog v-model="dialogPago" max-width="500px">
       <v-card>
         <v-card-title>Confirmar pago</v-card-title>
         <v-card-text>
@@ -96,7 +77,7 @@
           <v-btn color="primary" @click="confirmarPago">Confirmar</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
 
     <v-overlay
       v-model="loading"
@@ -141,16 +122,15 @@ export default {
     })
 
     // Opciones para selects
-    const estadosPago = ref(['Pagado', 'Pendiente', 'Vencido'])
+    const estadosPago = ref(['Pagado', 'Pendiente', 'Vencido', 'Anulado'])
     
     // Headers para la tabla de desktop
     const headersPagos = [
       { title: 'Servicio', value: 'nombre_servicio' },
       { title: 'Año', value: 'Año' },
-      { title: 'Mes', value: 'Mes' },
+      { title: 'Mes', value: 'mes_descripcion' },
       { title: 'Vencimiento', value: 'fecha_vencimiento' },
-      { title: 'Estado', value: 'estado' },
-      { title: 'Acciones', value: 'actions', sortable: false }
+      { title: 'Estado', value: 'estado' }
     ]
 
     // Computed properties
@@ -232,6 +212,7 @@ export default {
         const response = await apiClient.get('wsConsultaPagosAlumno.php', {
           params: {
             ai_usua_id: user_id,
+            ac_todos:'N',
             av_profile: profile
           }
         })
@@ -248,9 +229,17 @@ export default {
       }
     }
 
+    const updateIsMobile = () => {
+      isMobile.value = window.innerWidth < 600
+    }
+
     onMounted(() => {
+       window.addEventListener('resize', updateIsMobile)
+       updateIsMobile() 
       cargarPagos()
     })
+
+
 
     return {
       pagos,

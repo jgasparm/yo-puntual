@@ -212,22 +212,35 @@
                     <table class="elevation-1">
                       <thead>
                         <tr>
-                          <th class="text-left">Servicio</th>
-                          <th class="text-left">Período</th>
-                          <th class="text-left">Vencimiento</th>
-                          <th class="text-left">Estado</th>
+                          <th class="text-center">Servicio</th>
+                          <th class="text-center">Período</th>
+                          <th class="text-center">Importe S/</th>
+                          <th class="text-center">Vencimiento</th>
+                          <th class="text-center">Estado</th>
+                          <th class="text-center">Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr v-for="pago in getPagosAlumno(item.alum_id)" :key="pago.id">
                           <td>{{ pago.nombre_servicio }}</td>
                           <td>{{ pago.mes_descripcion }} {{ pago.Año }}</td>
+                          <td>{{ formatMoneda(pago.importe) }}</td>
                           <td>{{ formatFecha(pago.fecha_vencimiento) }}</td>
                           <td>
                             <v-chip :color="getColorEstado(pago.estado)" small>
                               {{ pago.estado }}
                             </v-chip>
                           </td>
+                          <td>
+                          <v-btn 
+                            icon 
+                            variant="text" 
+                            color="primary" 
+                            @click.stop="editarPago(pago)"
+                          >
+                            <v-icon>mdi-pencil</v-icon>
+                          </v-btn>
+                        </td>
                         </tr>
                         <tr v-if="getPagosAlumno(item.alum_id).length === 0">
                           <td colspan="4" class="text-center py-4">
@@ -283,9 +296,11 @@
           <v-card-title class="font-weight-bold">
             N° {{ (currentPage - 1) * itemsPerPage + (index + 1) }}
           </v-card-title>
-          <v-card-title class="font-weight-bold">
-            <v-icon left class="mr-2">mdi-account</v-icon>
-            {{ item.alumno }}
+          <v-card-title class="font-weight-bold d-flex align-start">
+            <v-icon class="mr-2 mt-1">mdi-account</v-icon>
+            <span class="text-wrap" style="text-align: left; white-space: normal; word-break: break-word;">
+              {{ item.alumno }}
+            </span>
           </v-card-title>
 
           <v-card-text>
@@ -312,8 +327,19 @@
                   <v-col cols="12">
                     <v-card outlined>
                       <v-card-text>
+                        <div class="text-right mt-2">
+                          <v-btn 
+                            icon 
+                            variant="text" 
+                            color="primary" 
+                            @click.stop="editarPago(pago)"
+                          >
+                            <v-icon>mdi-pencil</v-icon>
+                          </v-btn>
+                        </div>
                         <div><strong>Servicio:</strong> {{ pago.nombre_servicio }}</div>
                         <div><strong>Período:</strong> {{ pago.mes_descripcion }} {{ pago.Año }}</div>
+                        <div><strong>Importe S/:</strong> {{ formatMoneda(pago.importe) }}</div>
                         <div><strong>Vencimiento:</strong> {{ formatFecha(pago.fecha_vencimiento) }}</div>
                         <div>
                           <strong>Estado:</strong>
@@ -383,32 +409,53 @@
       </v-card>
     </v-dialog>
 
-    <!-- Diálogo Actualizar Matrícula -->
-    <v-dialog v-model="dialogoActualizar" max-width="400">
-      <v-card>
-        <v-card-title>
-          <span class="text-h6">Actualizar Matrícula</span>
-        </v-card-title>
-        <v-card-text>
-          <div><strong>Alumno: </strong>{{ matriculaSeleccionada?.alumno }}</div>
-          <v-select
-            label="Estado de la Matrícula"
-            v-model="matriculaSeleccionadaEstado"
-            :items="['Activo','Inactivo']"
-            dense
-            outlined
-            class="mt-3"
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="dialogoActualizar = false">Cancelar</v-btn>
-          <v-btn color="primary" @click="actualizarMatricula">Guardar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <v-snackbar v-model="snackbar.visible" :color="snackbar.color">
+      {{ snackbar.message }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="snackbar.visible = false">Cerrar</v-btn>
+      </template>
+    </v-snackbar>
 
+    <!-- Diálogo Actualizar Matrícula -->
+    <v-dialog v-model="dialogoEditarPago" max-width="500">
+    <v-card>
+      <v-card-title class="text-h6">
+        <v-icon left>mdi-cash-edit</v-icon>
+        Actualizar Estado de Pago
+      </v-card-title>
+      <v-card-text>
+        <v-row>
+          <v-col cols="12">
+            <div><strong>Alumno:</strong> {{ obtenerNombreAlumno(pagoSeleccionado?.alumId) }}</div>
+            <div><strong>Servicio:</strong> {{ pagoSeleccionado?.nombre_servicio }}</div>
+            <div><strong>Período:</strong> {{ pagoSeleccionado?.mes_descripcion }} {{ pagoSeleccionado?.peri_annio }}</div>
+          </v-col>
+          
+          <v-col cols="12">
+            <v-select
+              label="Estado del Pago"
+              v-model="nuevoEstadoPago"
+              :items="estadosPago"
+              item-title="text"
+              item-value="value"
+              outlined
+              dense
+            ></v-select>
+          </v-col>
+        </v-row>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click="dialogoEditarPago = false">Cancelar</v-btn>
+        <v-btn color="primary" @click="guardarEstadoPago" :loading="guardandoPago">
+          <v-icon left>mdi-content-save</v-icon>
+          Guardar
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   </v-container>
+
 </template>
 
 <script>
@@ -435,6 +482,12 @@ export default {
   },
   data() {
     return {
+
+      snackbar: {
+      visible: false,
+      message: '',
+      color: 'success'
+    },
 
       expandedRow: null,
 
@@ -487,11 +540,23 @@ export default {
       matriculaSeleccionada: null,
       matriculaSeleccionadaEstado: "",
 
+      dialogoEditarPago: false,
+      pagoSeleccionado: null,
+      nuevoEstadoPago: "",
+      guardandoPago: false,
+      estadosPago: [
+        { text: "Pendiente", value: "P" },
+        { text: "Pagado", value: "G" },
+        { text: "Vencido", value: "V" },
+        { text: "Anulado", value: "A" },
+      ],
+
       // Nuevas propiedades para pagos
       headersPagos: [
         { title: 'Servicio', value: 'nombre_servicio' },
         { title: 'Año', value: 'Año' },
         { title: 'Mes', value: 'mes_descripcion' },
+        { title: 'Importe S/', value: 'importe' },
         { title: 'Vencimiento', value: 'fecha_vencimiento' },
         { title: 'Estado', value: 'estado' }
       ],
@@ -792,6 +857,7 @@ export default {
         const config = {
           params: {
             ai_usua_id: usuaId,
+            ac_todos:'S',
             av_profile: this.profile
           },
           headers: { Authorization: `Bearer ${this.token}` }
@@ -814,6 +880,16 @@ export default {
     getPagosAlumno(alumId) {
       return this.pagosAlumnos.filter(p => p.alumId === alumId);
     },
+
+    formatMoneda(value) {
+      if (!value) return '0.00';
+      const num = Number(value);
+      if (isNaN(num)) return value;
+      return num.toLocaleString('es-PE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    },
     
     formatFecha(fecha) {
       if (!fecha) return '';
@@ -828,6 +904,107 @@ export default {
         case 'Vencido': return 'red';
         default: return 'grey';
       }
+    },
+    editarPago(pago) {
+      this.pagoSeleccionado = pago;
+      this.nuevoEstadoPago = this.obtenerValorEstado(pago.estado);
+      this.dialogoEditarPago = true;
+    },
+    
+    obtenerNombreAlumno(alumId) {
+      const alumno = this.matriculados.find(a => a.alum_id === alumId);
+      return alumno ? alumno.alumno : 'Alumno no encontrado';
+    },
+    
+    obtenerValorEstado(estado) {
+      switch(estado) {
+        case 'Pendiente': return 'P';
+        case 'Pagado': return 'G';
+        case 'Vencido': return 'V';
+        case 'Anulado': return 'A';
+        default: return 'P';
+      }
+    },
+    
+    async guardarEstadoPago() {
+      if (!this.pagoSeleccionado || !this.nuevoEstadoPago) return;
+      const usuario = ref(localStorage.getItem("usua_id"));
+      this.guardandoPago = true;
+      
+      try {
+    const url = "https://amsoftsolution.com/amss/ws/wsActualizaGestionPagosPeriodo.php";
+    
+    // Usar URLSearchParams para el formato application/x-www-form-urlencoded
+    const formData = new URLSearchParams();
+    formData.append('ai_gepa_codigo', this.pagoSeleccionado.id);
+    formData.append('ac_peri_annio', this.pagoSeleccionado.Año);
+    formData.append('ac_peri_mes', this.pagoSeleccionado.Mes);
+    formData.append('ac_gepp_estado', this.nuevoEstadoPago);
+    formData.append('ai_usua_id', usuario.value);
+    formData.append('av_profile', this.profile);
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'Content-Type': 'application/x-www-form-urlencoded' // Cabecera necesaria
+      }
+    };
+
+    // Enviar formData como cuerpo de la solicitud
+    const resp = await axios.post(url, formData, config);
+        
+        if (resp.data.status) {
+          // Recargar los pagos del alumno para actualizar la información
+          await this.recargarPagosAlumno();
+          
+          // Cerrar diálogo y mostrar mensaje de éxito
+          this.dialogoEditarPago = false;
+          this.mostrarMensajeExito("Estado de pago actualizado correctamente");
+        } else {
+          console.error("Error al actualizar pago:", resp.data.message);
+          this.mostrarMensajeError("Error al actualizar el estado del pago");
+        }
+      } catch (err) {
+        console.error("Error guardando estado de pago:", err);
+        this.mostrarMensajeError("Error al guardar los cambios");
+      } finally {
+        this.guardandoPago = false;
+      }
+    },
+    
+    async recargarPagosAlumno() {
+      if (!this.pagoSeleccionado) return;
+      
+      try {
+        // Eliminar pagos existentes para este alumno
+        this.pagosAlumnos = this.pagosAlumnos.filter(
+          p => p.alumId !== this.pagoSeleccionado.alumId
+        );
+        
+        // Volver a cargar los pagos del alumno
+        await this.cargarPagosAlumno(
+          this.pagoSeleccionado.usuaId, 
+          this.pagoSeleccionado.alumId
+        );
+      } catch (err) {
+        console.error("Error recargando pagos:", err);
+      }
+    },
+    
+    mostrarMensajeExito(mensaje) {
+      this.snackbar = {
+        visible: true,
+        message: mensaje,
+        color: 'success'
+      };
+    },
+    
+    mostrarMensajeError(mensaje) {
+      this.snackbar = {
+        visible: true,
+        message: mensaje,
+        color: 'error'
+      };
     }
   },
   watch: {

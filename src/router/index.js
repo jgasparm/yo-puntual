@@ -39,9 +39,9 @@ const routes = [
     path: '/',
     name: 'login',
     //Desa
-    component: () => import('@/components/LoginDesa.vue'),
+    //component: () => import('@/components/LoginDesa.vue'),
     //Prod
-    //component: () => import('@/components/Login.vue'),
+    component: () => import('@/components/Login.vue'),
       meta: {
         showBreadcrumb: false
       }
