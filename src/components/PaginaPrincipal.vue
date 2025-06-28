@@ -275,6 +275,7 @@ export default {
         "Cursos del docente detalle": "DocenteMisCursosDetalle",
         "Mis cursos detalle": "MisCursosDetalle",
         "Dashboard del alumno": "DashboardAlumno",
+        "Dashboard del administrador": "DashboardAdministrador",
         "Docentes del año escolar": "DocentesAnioEscolar",
         "Aulas": "MisAulas",
         "Mi horario escolar":"AlumnoHorarioEscolar",
@@ -294,6 +295,7 @@ export default {
         this.$router.push({ name: vistasDisponibles[vista] })
         this.activeSubmenu = vista;
       } else {
+        console.warn(vistasDisponibles);
         console.warn(`Vista no encontrada para: ${vista}`);
       }
 

@@ -73,8 +73,22 @@
       <v-card-text>
         <div v-if="isDesktop">
           <v-data-table :headers="headers" :items="resultados" class="elevation-2 bg-light-blue-lighten-5" :loading="loading" no-data-text="No hay resultados disponibles">
-            <template v-slot:item.estado="{ item }">
-              <v-chip :color="estadoColor(item.estado)" dark>{{ item.estado }}</v-chip>
+            <template v-slot:item.entrada="{ item }">
+              <v-chip v-if="item.entrada" color="green" size="small" class="ma-1">{{ item.entrada }}</v-chip>
+            </template>
+            <template v-slot:item.tardanza="{ item }">
+              <v-chip v-if="item.tardanza" color="orange" size="small" class="ma-1">{{ item.tardanza }}</v-chip>
+            </template>
+            <template v-slot:item.salida_anticipada="{ item }">
+              <v-chip v-if="item.salida_anticipada" color="red" size="small" class="ma-1">{{ item.salida_anticipada }}</v-chip>
+            </template>
+            <template v-slot:item.salida="{ item }">
+              <v-chip v-if="item.salida" color="green" size="small" class="ma-1">{{ item.salida }}</v-chip>
+            </template>
+            <template v-slot:no-data>
+              <v-alert type="info" class="mt-3">
+                No hay resultados disponibles
+              </v-alert>
             </template>
           </v-data-table>
         </div>
@@ -92,9 +106,23 @@
                   <v-icon left size="18">mdi-calendar-clock</v-icon>
                   {{ item.fecha }}
                 </v-card-title>
-                <v-card-text class="text-start">
-                  <div><strong>Hora:</strong> {{ item.hora }}</div>
-                  <div><strong>Estado:</strong> <v-chip :color="estadoColor(item.estado)" dark small>{{ item.estado }}</v-chip></div>
+                <v-card-text class="text-start d-flex flex-wrap gap-2">
+                  <div v-if="item.entrada">
+                    <strong>Entrada:</strong>
+                    <v-chip color="green" size="small">{{ item.entrada }}</v-chip>
+                  </div>
+                  <div v-if="item.tardanza">
+                    <strong>Tardanza:</strong>
+                    <v-chip color="orange" size="small">{{ item.tardanza }}</v-chip>
+                  </div>
+                  <div v-if="item.salida_anticipada">
+                    <strong>Salida anticipada:</strong>
+                    <v-chip color="red" size="small">{{ item.salida_anticipada }}</v-chip>
+                  </div>
+                  <div v-if="item.salida">
+                    <strong>Salida:</strong>
+                    <v-chip color="green" size="small">{{ item.salida }}</v-chip>
+                  </div>
                 </v-card-text>
               </v-card>
             </v-col>
@@ -157,8 +185,10 @@ export default {
       itemsPerPage: 5,
       headers: [
         { title: "Fecha", key: "fecha", align: "center" },
-        { title: "Hora", key: "hora", align: "center" },
-        { title: "Estado", key: "estado", align: "center" }
+        { title: "Entrada", key: "entrada", align: "center" },
+        { title: "Tardanza", key: "tardanza", align: "center" },
+        { title: "Salida Anticipada", key: "salida_anticipada", align: "center" },
+        { title: "Salida", key: "salida", align: "center" },
       ]
     };
   },
@@ -251,11 +281,29 @@ export default {
         };
         const response = await axios.get(url, configReq);
         if (response.data.status && Array.isArray(response.data.data)) {
-          this.resultados = response.data.data.map(item => ({
+          this.resultados = response.data.data.map(item => {
+          const registros = item.registros || [];
+          const resultado = {
             fecha: item.fecha_asistencia,
-            hora: item.hora_asistencia,
-            estado: item.horario_estado_descripcion
-          }));
+            entrada: null,
+            tardanza: null,
+            salida_anticipada: null,
+            salida: null,
+          };
+
+          registros.forEach(reg => {
+            const estado = reg.horario_estado_descripcion.toUpperCase();
+            const hora = reg.hora_asistencia;
+
+            if (estado === "ENTRADA") resultado.entrada = hora;
+            else if (estado === "TARDANZA") resultado.tardanza = hora;
+            else if (estado === "SALIDA ANTICIPADA") resultado.salida_anticipada = hora;
+            else if (estado === "SALIDA") resultado.salida = hora;
+          });
+
+          return resultado;
+        });
+
         } else {
           this.resultados = [];
           this.dialogNoResults = true;
@@ -271,10 +319,10 @@ export default {
       const encabezado = [
         `Fecha: ${this.filtros.fechaInicio} a ${this.filtros.fechaFinal}`,
         '',
-        'Fecha,Hora,Estado'
+        'Fecha,Entrada,Tardanza,Salida anticipada,Salida'
       ];
       const filas = this.resultados.map(row => (
-        `${row.fecha},${row.hora},${row.estado}`
+        `${row.fecha},${row.entrada || ""},${row.tardanza || ""},${row.salida_anticipada || ""},${row.salida || ""}`
       ));
       const csvContent = 'data:text/csv;charset=utf-8,' + [...encabezado, ...filas].join('\n');
       const encodedUri = encodeURI(csvContent);

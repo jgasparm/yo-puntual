@@ -20,8 +20,8 @@ if (/Mobi|Android/i.test(navigator.userAgent)) {
 }
 
 app.use(VueReCaptcha, {
-  //siteKey: '6Ld07gwrAAAAAPQolqEzChfuERxtUSf5OP0d0d9U', // Clave pública de reCAPTCHA desa v3
-  siteKey: '6Lc_iiIrAAAAAKXaEHtat0wq6oAylY2pThaFJ65b', // Clave pública de reCAPTCHA prod v3
+  siteKey: '6Ld07gwrAAAAAPQolqEzChfuERxtUSf5OP0d0d9U', // Clave pública de reCAPTCHA desa v3
+  //siteKey: '6Lc_iiIrAAAAAKXaEHtat0wq6oAylY2pThaFJ65b', // Clave pública de reCAPTCHA prod v3
   loaderOptions: {
     useRecaptchaNet: false,
     autoHideBadge: true,

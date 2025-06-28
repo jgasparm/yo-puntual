@@ -11,6 +11,7 @@ import CalendarioCivicoEscolar from '../components/Estudios/PaginaCalendarioCivi
 import CalendarizacionEscolar from '../components/Estudios/PaginaCalendarizacionEscolar.vue';
 import RegistroAsistencia from '../components/Asistencia/PaginaRegistroAsistencia.vue';
 import AlumnoMisNotas from '../components/Estudios/Notas/PaginaAlumnoMisNotas.vue';
+import DashboardAdministrador from '../components/Dashboard/PaginaDashboardAdministrador.vue';
 import DashboardAlumno from '../components/Dashboard/PaginaDashboardAlumno.vue';
 import DocenteMisCursos from '../components/Estudios/PaginaDocenteMisCursos.vue';
 import MisCursos from '../components/Estudios/PaginaMisCursos.vue';
@@ -39,9 +40,9 @@ const routes = [
     path: '/',
     name: 'login',
     //Desa
-    //component: () => import('@/components/LoginDesa.vue'),
+    component: () => import('@/components/LoginDesa.vue'),
     //Prod
-    component: () => import('@/components/Login.vue'),
+    //component: () => import('@/components/Login.vue'),
       meta: {
         showBreadcrumb: false
       }
@@ -150,6 +151,18 @@ const routes = [
           breadcrumb: [
             { text: 'Principal', to: '/principal' },
             { text: 'Mis notas' }
+          ]
+        }
+      },
+      {
+        path: 'dashboard-admistrador',
+        name: 'DashboardAdministrador',
+        component: DashboardAdministrador,
+        meta: {
+          showBreadcrumb: true,
+          breadcrumb: [
+            { text: 'Principal', to: '/principal' },
+            { text: 'Dashboard' }
           ]
         }
       },
