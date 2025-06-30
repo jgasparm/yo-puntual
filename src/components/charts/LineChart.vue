@@ -1,6 +1,6 @@
 <template>
   <div class="chart-container">
-    <LineChartComponent :data="chartData" :options="options" />
+    <LineChartComponent :data="chartData" :options="chartOptions" />
   </div>
 </template>
 
@@ -25,19 +25,13 @@ export default {
     LineChartComponent
   },
   props: {
-    data: { type: Object, required: true }
+    data: { type: Object, required: true },
+    options: { type: Object, default: () => ({}) }
   },
   data() {
     return {
       chartData: {},
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'top' },
-          title: { display: false }
-        }
-      }
+      chartOptions: {}
     };
   },
   watch: {
@@ -46,6 +40,13 @@ export default {
       deep: true,
       handler(newVal) {
         this.chartData = JSON.parse(JSON.stringify(newVal));
+      }
+    },
+    options: {
+      immediate: true,
+      deep: true,
+      handler(newVal) {
+        this.chartOptions = JSON.parse(JSON.stringify(newVal));
       }
     }
   }

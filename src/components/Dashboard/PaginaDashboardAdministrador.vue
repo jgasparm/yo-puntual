@@ -75,7 +75,7 @@
       <!-- Gráfico horizontal de promedios por área educativa -->
       <v-col cols="12" md="6" class="d-flex">
         <v-card elevation="2" class="pa-4 fill-height" style="height: 300px; width: 100%;">
-          <div class="text-subtitle-1 font-weight-medium mb-2">Top promedios bajos por Área Educativa</div>
+          <div class="text-subtitle-1 font-weight-medium mb-2">Top 10 promedios por Área Educativa</div>
           <bar-chart-horizontal
             :data="chartPromediosAreas"
             :options="{
@@ -109,7 +109,25 @@
       <v-col cols="12" md="6">
         <v-card elevation="2" class="pa-4">
           <div class="text-subtitle-1 font-weight-medium mb-2">Total incidencias vs casos potenciales de bullying</div>
-          <line-chart :data="chartIncidencias" />
+          <line-chart
+            :data="chartIncidencias"
+            :options="{
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    stepSize: 1,
+                    precision: 0,
+                    callback: function(value) {
+                      return Number.isInteger(value) ? value : null;
+                    }
+                  }
+                }
+              }
+            }"
+          />
         </v-card>
       </v-col>
     </v-row>
@@ -218,8 +236,8 @@ export default {
     // ],
 
       chartNotasNivel: {
-        labels: ['Inicial', 'Primaria', 'Secundaria'],
-        datasets: [{ label: 'Promedio', data: [15.2, 14.7, 13.8], backgroundColor: '#1976d2' }],
+        labels: [],
+        datasets: []
       },
        chartAsistenciaAlumnos: {
         labels: ['Mar', 'Abr', 'May', 'Jun'],
@@ -242,19 +260,8 @@ export default {
         ]
       },
       chartPromediosAreas: {
-        labels: [
-          'Matemática', 'Comunicación', 'Ciencia y Tecnología', 'Inglés',
-          'Arte', 'Educación Física', 'Religión', 'Personal Social',
-          'Historia'
-        ],
-        datasets: [{
-          label: 'Promedio',
-          data: [
-            5.5, 7.7, 10.8, 11.0, 11.2, 11.7, 12.5, 13.8,
-            13.9, 14.1
-          ],
-          backgroundColor: '#42a5f5'
-        }]
+        labels: [],
+        datasets: []
       },
       chartAsistencia: {
         labels: ['Mar', 'Abr', 'May', 'Jun'],
@@ -281,11 +288,8 @@ export default {
         }]
       },
       chartIncidencias: {
-        labels: ['Mar', 'Abr', 'May', 'Jun'],
-        datasets: [
-          { label: 'Incidencias', data: [14, 10, 8, 18], borderColor: '#4caf50' },
-          { label: 'Casos potenciales de bullying', data: [2, 1, 0, 3], borderColor: '#ff9800' },
-        ]
+        labels: [],
+        datasets: []
       },
       headersPuntuales: [
         { title: 'Alumno', key: 'nombre' },
@@ -324,6 +328,179 @@ export default {
     }
   },
   methods: {
+    colorEstado(estado) {
+      const colores = {
+        'Entrada': '#4caf50',
+        'Tardanza': '#ff9800',
+        'Salida anticipada': '#f44336',
+        'Salida': '#2196f3',
+        'Inasistencia': '#9e9e9e'
+      };
+      return colores[estado] || '#607d8b'; // color por defecto
+    },
+    async obtenerAsistenciaMensualAlumnos() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPorcentajeAsistenciaEstadoMensualAlumnos.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.status && Array.isArray(json.data)) {
+          const estados = [...new Set(json.data.map(d => d.estado))];
+          const meses = [...new Set(json.data.map(d => d.mes))];
+
+          const datasets = estados.map(estado => {
+            return {
+              label: estado,
+              data: meses.map(mes => {
+                const found = json.data.find(d => d.estado === estado && d.mes === mes);
+                return found ? parseFloat(found.porcentaje) : 0;
+              }),
+              backgroundColor: this.colorEstado(estado)
+            };
+          });
+
+          this.chartAsistenciaAlumnos = {
+            labels: meses,
+            datasets
+          };
+        }
+      } catch (error) {
+        console.error('Error al obtener asistencia mensual alumnos:', error);
+      }
+    },
+
+    async obtenerAsistenciaMensualDocentes() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPorcentajeAsistenciaEstadoMensualDocentes.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.status && Array.isArray(json.data)) {
+          const estados = [...new Set(json.data.map(d => d.estado))];
+          const meses = [...new Set(json.data.map(d => d.mes))];
+
+          const datasets = estados.map(estado => {
+            return {
+              label: estado,
+              data: meses.map(mes => {
+                const found = json.data.find(d => d.estado === estado && d.mes === mes);
+                return found ? parseFloat(found.porcentaje) : 0;
+              }),
+              backgroundColor: this.colorEstado(estado)
+            };
+          });
+
+          this.chartAsistenciaEmpleados = {
+            labels: meses,
+            datasets
+          };
+        }
+      } catch (error) {
+        console.error('Error al obtener asistencia mensual empleados:', error);
+      }
+    },
+    async obtenerIncidenciasVsCpb() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardIncidenciasCpbPorMes.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const json = await res.json();
+
+        if (json.status && Array.isArray(json.data)) {
+          const labels = json.data.map(item => item.nombre_mes);
+          const incidencias = json.data.map(item => parseInt(item.total_incidencias));
+          const bullying = json.data.map(item => parseInt(item.total_bullying));
+
+          this.chartIncidencias = {
+            labels,
+            datasets: [
+              { label: 'Incidencias', data: incidencias, borderColor: '#4caf50' },
+              { label: 'Casos potenciales de bullying', data: bullying, borderColor: '#ff9800' }
+            ]
+          };
+        } else {
+          this.chartIncidencias = {
+            labels: [],
+            datasets: []
+          };
+          console.warn('No se obtuvieron datos de incidencias vs bullying:', json.message);
+        }
+      } catch (error) {
+        console.error('Error al obtener datos de incidencias vs bullying:', error);
+      }
+    },
+    async obtenerPorcentajeNotasPorLetra() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioPorcentajeLetra.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const json = await res.json();
+
+        if (json.status && Array.isArray(json.data)) {
+          const labels = json.data.map(item => item.letra);
+          const data = json.data.map(item => parseFloat(item.porcentaje));
+
+          this.chartNotasPie = {
+            labels,
+            datasets: [{
+              label: '% de notas',
+              data,
+              backgroundColor: ['#4caf50', '#2196f3', '#ffeb3b', '#f44336', '#9c27b0', '#00bcd4']
+            }]
+          };
+        } else {
+          this.chartNotasPie = {
+            labels: [],
+            datasets: []
+          };
+          console.warn('No se obtuvieron datos de % de notas por letra:', json.message);
+        }
+      } catch (error) {
+        console.error('Error al obtener % de notas por letra:', error);
+      }
+    },
+    async obtenerPromediosPorAreaEducativa() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioNotasAreaEducativa.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const json = await res.json();
+
+        if (json.status && Array.isArray(json.data)) {
+          const labels = json.data.map(item => item.area_educativa);
+          const data = json.data.map(item => parseFloat(item.promedio));
+          this.chartPromediosAreas = {
+            labels,
+            datasets: [{
+              label: 'Promedio',
+              data,
+              backgroundColor: '#42a5f5'
+            }]
+          };
+        } else {
+          this.chartPromediosAreas = {
+            labels: [],
+            datasets: []
+          };
+          console.warn('No se obtuvo promedio por área educativa:', json.message);
+        }
+      } catch (error) {
+        console.error('Error al obtener promedio por área educativa:', error);
+      }
+    },
     async obtenerPromediosPorSeccion() {
       try {
         const token = localStorage.getItem('token');
@@ -344,6 +521,10 @@ export default {
             }]
           };
         } else {
+          this.chartNotasNivel = {
+            labels: [],
+            datasets: []
+          };
           console.warn('No se obtuvo promedio por sección:', json.message);
         }
       } catch (err) {
@@ -370,6 +551,10 @@ export default {
             }]
           };
         } else {
+          this.chartNotasNivel = {
+            labels: [],
+            datasets: []
+          };
           console.warn('No se obtuvo promedio por grado:', json.message);
         }
       } catch (err) {
@@ -398,6 +583,10 @@ export default {
             }]
           };
         } else {
+          this.chartNotasNivel = {
+            labels: [],
+            datasets: []
+          };
           console.warn('No se obtuvo promedio por nivel:', json.message);
         }
       } catch (error) {
@@ -511,6 +700,9 @@ export default {
       return `S/ ${parseFloat(val).toFixed(2)}`;
     },
     actualizarDashboard() {
+      // ✅ Siempre actualiza los KPIs
+      this.obtenerKPIs();
+
       if (!this.gradosFiltrados.map(g => g.grad_id).includes(this.filtros.grado)) {
         this.filtros.grado = '0';
       }
@@ -526,10 +718,16 @@ export default {
             this.tituloNotas = `Promedio de Notas por sección`;
             this.obtenerPromediosPorSeccion();
           }
-      // ✅ Siempre actualiza los KPIs
-      this.obtenerKPIs();
+      // Actualiza promedios por área educativa
+      this.obtenerPromediosPorAreaEducativa();
+      // Actualiza Porcentaje de notas por letra
+      this.obtenerPorcentajeNotasPorLetra();
+      // Actuliza cantidades por mes de incidencias vs bullying
+      this.obtenerIncidenciasVsCpb();
+      // Actualiza asistencia mensual de alumnos y docentes
+      this.obtenerAsistenciaMensualAlumnos();
+      this.obtenerAsistenciaMensualDocentes();
     }
-
   }
 };
 </script>
