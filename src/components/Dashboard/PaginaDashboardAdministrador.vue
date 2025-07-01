@@ -101,7 +101,7 @@
     <v-row class="mt-6" dense>
         <v-col cols="12" md="6">
           <v-card elevation="2" class="pa-4" style="height: 368px; width: 100%;">
-            <div class="text-subtitle-1 font-weight-medium mb-2">% de notas de los alumnos según su clasificación</div>
+            <div class="text-subtitle-1 font-weight-medium mb-2">% de notas de los alumnos según su calificación</div>
             <pie-chart :data="chartNotasPie" />
           </v-card>
         </v-col>
@@ -149,27 +149,28 @@
       </v-col>
     </v-row>
 
-    <!-- Tabla de morosidad -->
     <v-row class="mt-6">
       <!-- Puntualidad en Pensiones -->
       <v-col cols="6">
         <v-card elevation="2" class="pa-4">
-          <div class="text-subtitle-1 font-weight-medium mb-2">Puntualidad en pensiones del mes actual</div>
-          <v-data-table :headers="headersMorosos" :items="puntuales" dense>
-            <template v-slot:item.nombre="{ item }">
-              <span class="d-flex align-center">
-                {{ item.nombre }}
-                <v-tooltip location="right">
+          <div class="text-subtitle-1 font-weight-medium mb-2">Top 10 Puntualidad de Pensiones</div>
+          <v-data-table :headers="headersPuntuales" :items="puntuales" dense>
+            <template v-slot:item.alumno="{ item }">
+              <div class="d-flex align-center justify-space-between">
+                <span class="text-left">{{ item.alumno }}</span>
+                <v-tooltip location="left">
                   <template #activator="{ props }">
-                    <v-icon small color="primary" class="ml-1" v-bind="props">mdi-information</v-icon>
+                    <v-icon small color="primary" v-bind="props">mdi-information</v-icon>
                   </template>
-                  <span>{{ item.grado }}</span>
+                  <div>
+                    <div>Nivel: {{ item.nivel }}</div>
+                    <div>Grado: {{ item.grado }}</div>
+                  </div>
                 </v-tooltip>
-              </span>
+              </div>
             </template>
-            <template v-slot:item.monto_pendiente="{ item }">
-              <v-chip color="blue" dark>{{ currency(item.monto_pendiente) }}</v-chip>
-            </template>
+
+
           </v-data-table>
         </v-card>
       </v-col>
@@ -177,19 +178,55 @@
       <!-- Morosidad en Pensiones -->
       <v-col cols="6">
         <v-card elevation="2" class="pa-4">
-          <div class="text-subtitle-1 font-weight-medium mb-2">Morosidad total de Pensiones</div>
-          <v-data-table :headers="headersMorosos" :items="morosos" dense>
-            <template v-slot:item.nombre="{ item }">
-              <span class="d-flex align-center">
-                {{ item.nombre }}
+          <div class="text-subtitle-1 font-weight-medium mb-2">Top 10 Morosidad de Pensiones</div>
+
+          <div v-if="$vuetify.display.smAndDown">
+            <v-row dense>
+              <v-col cols="12" v-for="item in topMorosos.slice(0, 5)" :key="item.alumno">
+                <v-card outlined>
+                  <v-card-text>
+                    <div class="d-flex justify-space-between align-center mb-2">
+                      <span class="d-flex align-center text-left">{{ item.alumno }}</span>
+                      <v-tooltip location="left">
+                        <template #activator="{ props }">
+                          <v-icon small color="primary" v-bind="props">mdi-information</v-icon>
+                        </template>
+                        <div>
+                          <div>Nivel: {{ item.nivel }}</div>
+                          <div>Grado: {{ item.grado }}</div>
+                        </div>
+                      </v-tooltip>
+                    </div>
+                    <div><strong>Monto:</strong> {{ currency(item.monto_pendiente) }}</div>
+                    <div><strong>Días:</strong> {{ item.dias_morosidad }}</div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </div>
+
+          <v-data-table
+            v-else
+            :headers="headersTopMorosos"
+            :items="topMorosos"
+            :items-per-page="10"
+            dense
+          >
+            <template v-slot:item.alumno="{ item }">
+              <div class="d-flex align-center justify-space-between">
+                <span class="text-left">{{ item.alumno }}</span>
                 <v-tooltip location="right">
                   <template #activator="{ props }">
-                    <v-icon small color="primary" class="ml-1" v-bind="props">mdi-information</v-icon>
+                    <v-icon small color="primary" class="ml-2" v-bind="props">mdi-information</v-icon>
                   </template>
-                  <span>{{ item.grado }}</span>
+                  <div>
+                    <div>Nivel: {{ item.nivel }}</div>
+                    <div>Grado: {{ item.grado }}</div>
+                  </div>
                 </v-tooltip>
-              </span>
+              </div>
             </template>
+
             <template v-slot:item.monto_pendiente="{ item }">
               <v-chip color="red" dark>{{ currency(item.monto_pendiente) }}</v-chip>
             </template>
@@ -206,6 +243,7 @@ import BarChart from '@/components/charts/BarChart.vue';
 import LineChart from '@/components/charts/LineChart.vue';
 import BarChartHorizontal from '@/components/charts/BarChartHorizontal.vue';
 import PieChart from '@/components/charts/PieChart.vue';
+import { useLoadingStore } from '@/stores/loadingStore';
 
 export default {
   name: 'DashboardAdministrador',
@@ -240,24 +278,12 @@ export default {
         datasets: []
       },
        chartAsistenciaAlumnos: {
-        labels: ['Mar', 'Abr', 'May', 'Jun'],
-        datasets: [
-          { label: 'Entrada', data: [88, 80, 85, 88], backgroundColor: '#4caf50' },
-          { label: 'Tardanza', data: [8, 5, 6, 3], backgroundColor: '#ff9800' },
-          { label: 'Salida anticipada', data: [5, 1, 3, 2], backgroundColor: '#f44336' },
-          { label: 'Salida', data: [80, 72, 81, 80], backgroundColor: '#2196f3' },
-          { label: 'Inasistencia', data: [3, 4, 2, 4], backgroundColor: '#9e9e9e' }
-        ]
+        labels: [],
+        datasets: []
       },
        chartAsistenciaEmpleados: {
-        labels: ['Mar', 'Abr', 'May', 'Jun'],
-        datasets: [
-          { label: 'Entrada', data: [82, 88, 90, 91], backgroundColor: '#4caf50' },
-          { label: 'Tardanza', data: [14, 15, 16, 13], backgroundColor: '#ff9800' },
-          { label: 'Salida anticipada', data: [2, 1, 3, 2], backgroundColor: '#f44336' },
-          { label: 'Salida', data: [81, 62, 71, 70], backgroundColor: '#2196f3' },
-          { label: 'Inasistencia', data: [1, 4, 2, 4], backgroundColor: '#9e9e9e' }
-        ]
+        labels: [],
+        datasets: []
       },
       chartPromediosAreas: {
         labels: [],
@@ -280,41 +306,34 @@ export default {
         ]
       },
       chartNotasPie: {
-        labels: ['A', 'B', 'C', 'D'],
-        datasets: [{
-          label: 'Clasificación',
-          data: [30, 40, 20, 10],
-          backgroundColor: ['#4caf50', '#2196f3', '#ffeb3b', '#f44336']
-        }]
+        labels: [],
+        datasets: []
       },
       chartIncidencias: {
         labels: [],
         datasets: []
       },
       headersPuntuales: [
-        { title: 'Alumno', key: 'nombre' },
-        { title: 'Grado', key: 'grado' },
-        { title: 'Monto Pendiente', key: 'monto_pendiente' },
+        { title: 'Alumno', key: 'alumno', align: 'start' }
       ],
-      puntuales: [
-        { nombre: 'César Rojas', grado: '3ro Primaria', monto_pendiente: 240 },
-        { nombre: 'Pedro Pérez', grado: '1ro Secundaria', monto_pendiente: 360 },
-        { nombre: 'Clara Díaz', grado: '5to Primaria', monto_pendiente: 180 },
-      ],
+      puntuales: [],
       headersMorosos: [
-        { title: 'Alumno', key: 'nombre' },
-        { title: 'Monto Pendiente', key: 'monto_pendiente' },
+        { title: 'Alumno', key: 'alumno', align: 'start' },
+        { title: 'Monto Pendiente', key: 'monto_pendiente' }
       ],
-      morosos: [
-        { nombre: 'Ada Rojas', grado: '3ro Primaria', monto_pendiente: 240 },
-        { nombre: 'Luisa Pérez', grado: '1ro Secundaria', monto_pendiente: 360 },
-        { nombre: 'Luz Díaz', grado: '5to Primaria', monto_pendiente: 180 },
-      ]
+      topMorosos: [],
+        headersTopMorosos: [
+          { title: 'Alumno', key: 'alumno', align: 'start' },
+          { title: 'Monto Pendiente', key: 'monto_pendiente' }
+        ],
     };
   },
   async mounted() {
+    const loadingStore = useLoadingStore();
+    loadingStore.mostrarLoading();
     await  this.obtenerPeriodosEducativos();
     await  this.obtenerFiltrosAlumno();
+    loadingStore.ocultarLoading();
     this.actualizarDashboard();
   },
   watch: {
@@ -328,6 +347,42 @@ export default {
     }
   },
   methods: {
+    async obtenerTop10PuntualesPensiones() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardTop10PuntualidadPensiones.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.status) {
+          this.puntuales = json.data;
+        } else {
+          this.puntuales = [];
+          console.warn('No se obtuvo puntualidad:', json.message);
+        }
+      } catch (err) {
+        console.error('Error al obtener puntualidad:', err);
+      }
+    },
+    async obtenerTop10MorosidadPensiones() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardTop10MorodidadPensiones.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.status) {
+          this.topMorosos = json.data;
+        } else {
+          this.topMorosos = [];
+          console.warn('No se obtuvo morosidad:', json.message);
+        }
+      } catch (err) {
+        console.error('Error al obtener morosidad:', err);
+      }
+    },
     colorEstado(estado) {
       const colores = {
         'Entrada': '#4caf50',
@@ -370,7 +425,6 @@ export default {
         console.error('Error al obtener asistencia mensual alumnos:', error);
       }
     },
-
     async obtenerAsistenciaMensualDocentes() {
       try {
         const token = localStorage.getItem('token');
@@ -487,7 +541,7 @@ export default {
             datasets: [{
               label: 'Promedio',
               data,
-              backgroundColor: '#42a5f5'
+              backgroundColor: ['#4caf50']
             }]
           };
         } else {
@@ -699,37 +753,52 @@ export default {
     currency(val) {
       return `S/ ${parseFloat(val).toFixed(2)}`;
     },
-    actualizarDashboard() {
-      // ✅ Siempre actualiza los KPIs
-      this.obtenerKPIs();
+    async actualizarDashboard() {
+      const loadingStore = useLoadingStore();
+      loadingStore.mostrarLoading();
 
-      if (!this.gradosFiltrados.map(g => g.grad_id).includes(this.filtros.grado)) {
-        this.filtros.grado = '0';
+      try {
+        // ✅ Siempre actualiza los KPIs
+        await this.obtenerKPIs();
+
+        if (!this.gradosFiltrados.map(g => g.grad_id).includes(this.filtros.grado)) {
+          this.filtros.grado = '0';
+        }
+
+        // Actualiza título y gráfico según nivel
+        if (this.filtros.nivel === 'T') {
+          this.tituloNotas = 'Promedio de Notas por Nivel';
+          await this.obtenerPromediosPorNivel();
+        } else if (this.filtros.grado === '0') {
+            this.tituloNotas = 'Promedio de Notas por Grado';
+            await this.obtenerPromediosPorGrado();
+            } else {
+              this.tituloNotas = `Promedio de Notas por sección`;
+              await this.obtenerPromediosPorSeccion();
+            }
+        await Promise.all([
+          // Actualiza promedios por área educativa
+          this.obtenerPromediosPorAreaEducativa(),
+          // Actualiza Porcentaje de notas por letra
+          this.obtenerPorcentajeNotasPorLetra(),
+          // Actuliza cantidades por mes de incidencias vs bullying
+          this.obtenerIncidenciasVsCpb(),
+          // Actualiza asistencia mensual de alumnos y docentes
+          this.obtenerAsistenciaMensualAlumnos(),
+          this.obtenerAsistenciaMensualDocentes(),
+          // Actualiza los top 10 de puntualidad en pensiones
+          this.obtenerTop10PuntualesPensiones(),
+          // Actualiza los top 10 de morosidad en pensiones
+          this.obtenerTop10MorosidadPensiones()
+      ]);
+      } catch (error) {
+        console.error('Error al actualizar dashboard:', error);
+      } finally {
+        loadingStore.ocultarLoading();
       }
-
-      // Actualiza título y gráfico según nivel
-      if (this.filtros.nivel === 'T') {
-        this.tituloNotas = 'Promedio de Notas por Nivel';
-        this.obtenerPromediosPorNivel();
-      } else if (this.filtros.grado === '0') {
-          this.tituloNotas = 'Promedio de Notas por Grado';
-          this.obtenerPromediosPorGrado();
-          } else {
-            this.tituloNotas = `Promedio de Notas por sección`;
-            this.obtenerPromediosPorSeccion();
-          }
-      // Actualiza promedios por área educativa
-      this.obtenerPromediosPorAreaEducativa();
-      // Actualiza Porcentaje de notas por letra
-      this.obtenerPorcentajeNotasPorLetra();
-      // Actuliza cantidades por mes de incidencias vs bullying
-      this.obtenerIncidenciasVsCpb();
-      // Actualiza asistencia mensual de alumnos y docentes
-      this.obtenerAsistenciaMensualAlumnos();
-      this.obtenerAsistenciaMensualDocentes();
     }
   }
-};
+}
 </script>
 
 <style scoped>
