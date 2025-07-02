@@ -250,12 +250,13 @@ export default {
   components: { BarChart, LineChart, BarChartHorizontal, PieChart },
   data() {
   return {
+      profile: localStorage.getItem('profile'),
       anioEscolar: localStorage.getItem('anio_escolar'),
       tituloNotas: 'Promedio de Notas por Nivel',
       filtros: {
         //periodo: '1er bimestre',
-        nivel: 'Todos', // antes: null
-        grado: 'Todos'  // opcional, para evitar errores similares
+        nivel: 'T', // antes: null
+        grado: '0'  // opcional, para evitar errores similares
       },
       periodos: [],
       niveles: [],
@@ -334,7 +335,7 @@ export default {
     await  this.obtenerPeriodosEducativos();
     await  this.obtenerFiltrosAlumno();
     loadingStore.ocultarLoading();
-    this.actualizarDashboard();
+    //this.actualizarDashboard();
   },
   watch: {
     filtros: {
@@ -350,13 +351,13 @@ export default {
     async obtenerTop10PuntualesPensiones() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardTop10PuntualidadPensiones.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardTop10PuntualidadPensiones.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=${this.profile}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const json = await res.json();
 
         if (json.status) {
-          this.puntuales = json.data;
+          this.puntuales = Array.isArray(json.data) ? json.data : [];
         } else {
           this.puntuales = [];
           console.warn('No se obtuvo puntualidad:', json.message);
@@ -368,13 +369,13 @@ export default {
     async obtenerTop10MorosidadPensiones() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardTop10MorodidadPensiones.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardTop10MorodidadPensiones.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=${this.profile}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const json = await res.json();
 
         if (json.status) {
-          this.topMorosos = json.data;
+          this.topMorosos = Array.isArray(json.data) ? json.data : [];
         } else {
           this.topMorosos = [];
           console.warn('No se obtuvo morosidad:', json.message);
@@ -396,7 +397,7 @@ export default {
     async obtenerAsistenciaMensualAlumnos() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPorcentajeAsistenciaEstadoMensualAlumnos.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPorcentajeAsistenciaEstadoMensualAlumnos.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=${this.profile}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const json = await res.json();
@@ -428,7 +429,7 @@ export default {
     async obtenerAsistenciaMensualDocentes() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPorcentajeAsistenciaEstadoMensualDocentes.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPorcentajeAsistenciaEstadoMensualDocentes.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=${this.profile}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const json = await res.json();
@@ -460,7 +461,7 @@ export default {
     async obtenerIncidenciasVsCpb() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardIncidenciasCpbPorMes.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardIncidenciasCpbPorMes.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=${this.profile}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -493,7 +494,7 @@ export default {
     async obtenerPorcentajeNotasPorLetra() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioPorcentajeLetra.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioPorcentajeLetra.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=${this.profile}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -526,7 +527,7 @@ export default {
     async obtenerPromediosPorAreaEducativa() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioNotasAreaEducativa.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioNotasAreaEducativa.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=${this.profile}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -558,7 +559,7 @@ export default {
     async obtenerPromediosPorSeccion() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioNotasSeccion.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioNotasSeccion.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=${this.profile}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const json = await res.json();
@@ -588,7 +589,7 @@ export default {
     async obtenerPromediosPorGrado() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioNotasGrado.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioNotasGrado.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&av_profile=${this.profile}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const json = await res.json();
@@ -618,7 +619,7 @@ export default {
     async obtenerPromediosPorNivel() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioNotasNivel.php?aepe_id=${this.filtros.periodo}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardPromedioNotasNivel.php?aepe_id=${this.filtros.periodo}&av_profile=${this.profile}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -673,7 +674,7 @@ export default {
     async obtenerKPIs() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardKPIsAdministrador.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=demo`, {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsDashboardKPIsAdministrador.php?aepe_id=${this.filtros.periodo}&nive_id=${this.filtros.nivel}&grad_id=${this.filtros.grado}&av_profile=${this.profile}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -701,7 +702,7 @@ export default {
     async obtenerFiltrosAlumno() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://amsoftsolution.com/amss/ws/wsConsultaFiltrosAlumno.php?av_profile=demo', {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsConsultaFiltrosAlumno.php?av_profile=${this.profile}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -726,7 +727,7 @@ export default {
     async obtenerPeriodosEducativos() {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativo.php?av_profile=demo', {
+        const res = await fetch(`https://amsoftsolution.com/amss/ws/wsListaPeriodoEducativo.php?av_profile=${this.profile}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
